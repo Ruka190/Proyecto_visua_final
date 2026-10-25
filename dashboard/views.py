@@ -1,5 +1,66 @@
 from django.shortcuts import render
 
+def inicioU(request):
+    """USUARIO tarjetas de preferencia con datos base"""
+    secciones = [
+        {
+            'id': 'valores',
+            'titulo': 'Valores',
+            'titulo_card': 'Conexión por Valores',
+            'activo': True,
+            'nombre': 'Elena',
+            'edad': 26,
+            'foto': 'usuario/img/elena.jpg',
+            'items': ['Honestidad', 'Pasión por el arte', 'Amor por la familia'],
+            'bio': 'Busco a alguien con quien compartir.',
+            'porcentaje': '100%',
+            'metrica': 'Afinidad<br>en valores',
+        },
+        {
+            'id': 'hobie',
+            'titulo': 'Hobbies',
+            'titulo_card': 'Conexión por Hobbies',
+            'activo': False,
+            'nombre': 'Martina',
+            'edad': 27,
+            'foto': 'usuario/img/martina.jpg',
+            'items': ['Fotografía analógica', 'Escalada en boulder', 'Tocar la guitarra'],
+            'bio': 'Alguien para salir a sacar fotos los domingos.',
+            'porcentaje': '88%',
+            'metrica': 'Afinidad<br>en hobbies',
+        },
+        {
+            'id': 'gustos',
+            'titulo': 'Gustos',
+            'titulo_card': 'Conexión por Gustos',
+            'activo': False,
+            'nombre': 'Camila',
+            'edad': 25,
+            'foto': 'usuario/img/camila.jpg',
+            'items': ['Café filtrado de especialidad', 'Cine independiente', 'Música synth-pop'],
+            'bio': 'Fan del café y de compartir buenas charlas.',
+            'porcentaje': '94%',
+            'metrica': 'Afinidad<br>en gustos',
+        },
+        {
+            'id': 'experiencias',
+            'titulo': 'Experiencias',
+            'titulo_card': 'Conexión por Experiencias',
+            'activo': False,
+            'nombre': 'Daniela',
+            'edad': 29,
+            'foto': 'usuario/img/daniela.jpg',
+            'items': ['Acampar en la cordillera', 'Viajar solo como mochilero', 'Voluntariado ambiental'],
+            'bio': 'Buscando compañeros de ruta y nuevas historias.',
+            'porcentaje': '91%',
+            'metrica': 'Afinidad<br>en experiencias',
+        },
+    ]
+
+    return render(request, 'usuario/inicioU.html', {'secciones': secciones})
+
+
+
 def perfilU(request):
     # Datos simulados (mock) para diseñar el frontend sin base de datos
     perfil = {

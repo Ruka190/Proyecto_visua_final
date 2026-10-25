@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estadísticas - {{ perfil.nombre|default:"Usuario" }}</title>
+
+  <!-- Fuentes e íconos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="{% static 'inicio/css/perfilU.css' %}">
+  
+  <style>
+    /* Contenedor tipo píldora */
+    .btn-group.rounded-pill {
+    border: 1px solid #f3a69a;
+    padding: 2px;
+    background-color: transparent;
+    gap: 2px; /* Pequeño espacio para que no se monten los bordes */
+    }
+
+    /* Botones de opciones */
+    .btn-periodo, .btn-arquetipo {
+    border: none !important; /* Elimina bordes individuales que se cortan */
+    border-radius: 50rem !important; /* Cada botón es una píldora suave */
+    color: #4C2A36;
+    background-color: transparent;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    line-height: 1.2;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    }
+
+    /* Estado activo o al pasar el cursor */
+    .btn-periodo.active, .btn-periodo:hover,
+    .btn-arquetipo.active, .btn-arquetipo:hover {
+    background-color: #f3a69a !important;
+    color: #4C2A36 !important;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container py-4" style="max-width: 420px; padding-bottom: 95px !important;">
+    <div class="d-flex flex-column gap-4">
+
+      <!-- Cabecera de navegación -->
+      <header class="d-flex align-items-center gap-3">
+        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1">
+          <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <h1 class="h5 fw-bold mb-0">Estadísticas</h1>
+      </header>
+
+      <!-- ================= BLOQUE 1: MATCHES (DONA) ================= -->
+        <div class="d-flex flex-column gap-3">
+        <div class="text-center">
+            <button id="btnToggleGrafico" class="btn px-4 py-2 rounded-4 fw-medium border-0 shadow-sm w-100" style="background-color: #f3a69a; color: #4C2A36;">
+            <i class="bi bi-pie-chart-fill me-1"></i> Ver balance de Matches
+            </button>
+        </div>
+
+        <div id="seccionGrafico" class="d-none flex-column gap-3">
+            <!-- 1. Tarjeta de números primero -->
+            <section class="d-flex justify-content-around text-center p-3 rounded-4 shadow-sm" style="background-color: var(--card-bg, #fff);">
+            <div>
+                <span class="d-block text-muted small">Match</span>
+                <strong class="fs-5" style="color: #D62D5A;" id="total-match">14</strong>
+            </div>
+            <div class="border-end"></div>
+            <div>
+                <span class="d-block text-muted small">No Match</span>
+                <strong class="fs-5" style="color: #4C2A36;" id="total-nomatch">8</strong>
+            </div>
+            </section>
+
+            <!-- 2. Gráfico debajo -->
+            <section class="p-3 rounded-4 shadow-sm" style="background-color: var(--card-bg, #fff);">
+            <h2 class="h6 fw-bold text-center mb-3">Balance de Matches</h2>
+            <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto;">
+                <canvas id="miGrafico"></canvas>
+            </div>
+            </section>
+        </div>
+        </div>
+      <!-- ================= BLOQUE 2: TIEMPO EN LA APP (BARRAS) ================= -->
+      <div class="d-flex flex-column gap-3">
+        <div class="text-center">
+          <button id="btnToggleTiempo" class="btn px-4 py-2 rounded-4 fw-medium border-0 shadow-sm w-100" style="background-color: #f3a69a; color: #4C2A36;">
+            <i class="bi bi-bar-chart-fill me-1"></i> Ver tiempo en la app
+          </button>
+        </div>
+
+        <div id="seccionTiempo" class="d-none flex-column">
+          <section class="p-3 rounded-4 shadow-sm" style="background-color: var(--card-bg, #fff);">
+            
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+              <h2 class="h6 fw-bold mb-0">Uso de la App</h2>
+              <div class="btn-group rounded-pill" role="group">
+                <button type="button" class="btn btn-periodo active" data-periodo="diario">Día</button>
+                <button type="button" class="btn btn-periodo" data-periodo="semanal">Sem</button>
+                <button type="button" class="btn btn-periodo" data-periodo="mensual">Mes</button>
+              </div>
+            </div>
+
+            <div style="width: 100%; min-height: 220px;">
+              <canvas id="graficoTiempo" height="220"></canvas>
+            </div>
+
+          </section>
+        </div>
+      </div>
+
+      <!-- ================= BLOQUE 3: PERFIL DE MATCHES (BARRAS HORIZONTALES) ================= -->
+      <div class="d-flex flex-column gap-3">
+        <div class="text-center">
+          <button id="btnToggleArquetipo" class="btn px-4 py-2 rounded-4 fw-medium border-0 shadow-sm w-100" style="background-color: #f3a69a; color: #4C2A36;">
+            <i class="bi bi-people-fill me-1"></i> Caracteristicas de Matches
+          </button>
+        </div>
+
+        <div id="seccionArquetipo" class="d-none flex-column">
+          <section class="p-3 rounded-4 shadow-sm" style="background-color: var(--card-bg, #fff);">
+            
+            <h2 class="h6 fw-bold mb-2">Características de los Perfiles de Matches</h2>
+
+            <div class="mb-3">
+              <div class="btn-group rounded-pill w-100" role="group">
+                <button type="button" class="btn btn-arquetipo flex-fill active" data-categoria="orientacion">Orientación</button>
+                <button type="button" class="btn btn-arquetipo flex-fill" data-categoria="edad">Edad</button>
+                <button type="button" class="btn btn-arquetipo flex-fill" data-categoria="profesion">Oficio</button>
+                <button type="button" class="btn btn-arquetipo flex-fill" data-categoria="nacionalidad">País</button>
+                <button type="button" class="btn btn-arquetipo flex-fill" data-categoria="religion">Religión</button>
+              </div>
+            </div>
+
+            <div style="width: 100%; min-height: 240px;">
+              <canvas id="graficoArquetipo" height="240"></canvas>
+            </div>
+
+          </section>
+        </div>
+      </div>
+
+      <!-- ================= BLOQUE 4: RADAR DE AFINIDAD (GUSTOS / DISGUSTOS) ================= -->
+      <div class="d-flex flex-column gap-3">
+        <div class="text-center">
+          <button id="btnToggleRadar" class="btn px-4 py-2 rounded-4 fw-medium border-0 shadow-sm w-100" style="background-color: #f3a69a; color: #4C2A36;">
+            <i class="bi bi-shield-shaded me-1"></i> Gustos y Disgustos en común
+          </button>
+        </div>
+
+        <div id="seccionRadar" class="d-none flex-column">
+          <section class="p-3 rounded-4 shadow-sm" style="background-color: var(--card-bg, #fff);">
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h2 class="h6 fw-bold mb-0">Radar de Afinidad con Matches</h2>
+              <div class="btn-group rounded-pill" role="group">
+                <button type="button" class="btn btn-periodo active" data-tipo-radar="gustos">Gustos</button>
+                <button type="button" class="btn btn-periodo" data-tipo-radar="disgustos">Disgustos</button>
+              </div>
+            </div>
+
+            <div style="position: relative; height: 260px; width: 100%;">
+              <canvas id="graficoRadar" height="260"></canvas>
+            </div>
+
+          </section>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  {% comment %}
+  {% include 'usuario/barraU.html' %}
+  {% endcomment %}
+
+  <!-- Inyección segura de datos desde Django -->
+  {{ chart_payload|json_script:"datos-grafico" }}
+  {{ tiempo_payload|json_script:"datos-tiempo" }}
+  {{ arquetipo_payload|json_script:"datos-arquetipo" }}
+  {{ radar_afinidad_payload|json_script:"datos-radar" }}
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{% static 'usuario/js/graficosU.js' %}"></script>
+</body>
+</html>

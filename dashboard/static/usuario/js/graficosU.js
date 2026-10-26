@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       type: 'doughnut',
       data: {
         labels: dataMatches.labels,
-        datasets: [{ data: dataMatches.data, backgroundColor: ['#D62D5A', '#FFF0F0'], borderColor: '#4C2A36', borderWidth: 1 }]
+        datasets: [{ data: dataMatches.data, backgroundColor: ['#D62D5A', '#B944482E'], borderColor: '#4C2A36', borderWidth: 1 }]
       },
       options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
     });

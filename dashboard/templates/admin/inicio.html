@@ -1,0 +1,77 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Inicio del administrador{% endblock %}
+
+{% block header %}
+    <div class="admin-welcome">
+        <img class="avatar-img"
+             src="{% static 'admin/javier.jpg' %}"
+             alt="Foto de Javier">
+        <h1>Bienvenido, Javier</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <section class="admin-panel" aria-label="Resumen del sitio">
+        <div class="admin-stats">
+            <article class="admin-stat-card">
+                <h2>Clientes registrados</h2>
+                <p>{{ clientes_registrados }}</p>
+            </article>
+
+            <article class="admin-stat-card">
+                <h2>Matches totales</h2>
+                <p>{{ matches_totales }}</p>
+            </article>
+
+            <article class="admin-stat-card">
+                <h2>Reportes de usuarios</h2>
+                <p>{{ reportes_usuarios }}</p>
+            </article>
+
+            <article class="admin-stat-card">
+                <h2>Notificaciones pendientes</h2>
+                <p>{{ notificacion_pendiente }}</p>
+            </article>
+        </div>
+    </section>
+
+
+     <section class="admin-panel admin-panel--chart">
+        <h2>Conexiones recientes </h2>
+        <p>Usuarios conectados recientemente en la semana</p>
+        <div class="chart-container">
+            <canvas id="ventasChart" height="220"></canvas>
+        </div>
+    </section>
+{% endblock %}
+
+
+{% block body_extra %}
+  <script src="{% static 'chart.umd.min.js' %}"></script>
+  <script>
+    // Recupera JSON seguro desde la view
+    const labels   = JSON.parse('{{ labels_json|escapejs }}');
+    const datasets = JSON.parse('{{ datasets_json|escapejs }}');
+
+    new Chart(document.getElementById("ventasChart"), {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: false } },
+        scales: { 
+            y: { 
+                beginAtZero: true ,
+                title: { display: true, text: "Cantidad de usuarios" }
+            },
+            x: {
+                title: { display: true, text: "Día de semana" }
+            }, 
+        }
+      }
+    });
+  </script>
+{% endblock %}

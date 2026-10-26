@@ -1,0 +1,141 @@
+/* ==========================================================================
+   BEYOND DATE — TIPOGRAFÍA EN PX (inicio/static/inicio/css/typography.css)
+   Desktop por defecto. Móvil <=768px al final.
+   ========================================================================== */
+body {
+  font-family: var(--font-family-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.bd-display {
+  font-size: 56px;
+  line-height: 64px;
+  font-weight: 600;
+  color: var(--color-wine);
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.bd-h1 {
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.bd-h2 {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 600;
+  color: var(--color-wine);
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.bd-h3 {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.bd-body-lg {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+
+.bd-body {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: var(--color-text);
+  max-width: 65ch;
+  margin-bottom: 16px;
+}
+
+.bd-label {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.bd-caption {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 4px;
+}
+
+.bd-kpi {
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 600;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+}
+
+.btn {
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-primary {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  border: 1px solid var(--color-primary);
+  padding: 12px 24px;
+}
+
+.btn-primary:hover {
+  background-color: #A33A3E;
+  border-color: #A33A3E;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.btn-compact {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  background-color: transparent;
+  color: var(--color-wine);
+  border: 1px solid var(--color-border-control);
+  padding: 6px 14px;
+}
+
+.btn-compact:hover {
+  background-color: var(--color-blush);
+  color: var(--color-wine);
+}
+
+/* Responsive <=768px */
+@media (max-width: 768px) {
+  .bd-display { font-size: 36px; line-height: 44px; }
+  .bd-h1 { font-size: 28px; line-height: 36px; }
+  .bd-h2 { font-size: 24px; line-height: 32px; }
+  .bd-kpi { font-size: 28px; line-height: 36px; }
+}

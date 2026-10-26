@@ -313,3 +313,70 @@ body {
 
     .nav-item-circle { width: 42px; height: 42px; }
 }
+
+.admin-users-panel {
+    max-width: 1100px;
+    padding: 24px;
+    background: #fffaf7;
+    border-radius: 12px;
+}
+
+.admin-users-scroll {
+    overflow-x: auto;
+}
+
+.admin-users-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+    padding: 15px 18px;
+    vertical-align: middle;
+}
+
+.admin-users-table thead {
+    background: #f0e1db;
+}
+
+.admin-users-table th {
+    color: #3e3034;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.admin-users-table tbody tr {
+    border-bottom: 1px solid #e8dcd8;
+}
+
+.admin-users-table tbody tr:hover {
+    background: #fbf1ed;
+}
+
+.admin-users-table td:first-child,
+.admin-users-table td:nth-child(5) {
+    white-space: nowrap;
+}
+
+.admin-user-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #f4e1df;
+    color: #8d4040;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.admin-user-status.is-active {
+    background: #e4efe5;
+    color: #356944;
+}
+
+.admin-users-empty {
+    text-align: center;
+    color: #756b6d;
+}

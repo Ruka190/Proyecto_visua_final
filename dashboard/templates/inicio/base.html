@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Beyond Date{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #4a4a4a;
+            background-color: #ffffff;
+        }
+
+        /* ---------- Cabecera (Header) ---------- */
+        .site-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 48px;
+            background-color: #ffffff;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+        .brand__logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            object-fit: cover;
+        }
+        .brand__name {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 22px;
+            color: #4a4a4a;
+        }
+        .main-nav {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        /* Botones del menú: píldora color crema; al pasar el ratón -> rosa salmón pastel */
+        .main-nav a {
+            display: inline-block;
+            padding: 10px 22px;
+            border-radius: 999px;
+            background-color: #FBF7F2;
+            color: #4a4a4a;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.15;
+            white-space: nowrap;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+        .main-nav a:hover {
+            background-color: #F7D9D2;
+        }
+        /* Sección actualmente seleccionada: el botón se mantiene igual y solo
+           se resalta su texto con el rojo de acento de la paleta */
+        .main-nav a.is-active {
+            color: #A63A32;
+            font-weight: 700;
+        }
+
+        /* ---------- Pie de página (Footer) ---------- */
+        .site-footer {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            padding: 28px 48px;
+            background-color: #F4A98F;
+        }
+        .site-footer__logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            object-fit: cover;
+        }
+        .site-footer__nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .site-footer__nav a {
+            color: #3f3f3f;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .site-footer__nav a:hover { text-decoration: underline; }
+
+        /* ---------- Adaptación a pantallas pequeñas ---------- */
+        @media (max-width: 900px) {
+            .site-header { flex-direction: column; align-items: flex-start; padding: 18px 24px; }
+            .main-nav { flex: none; width: 100%; justify-content: flex-start; }
+            .site-footer { padding: 24px; }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- ================= Cabecera ================= -->
+    <header class="site-header">
+        <a class="brand" href="{% url 'index' %}">
+            <img class="brand__logo" src="{% static 'inicio/img/icono.png' %}" alt="Logo Beyond Date">
+            <span class="brand__name">Beyond Date</span>
+        </a>
+
+        <nav class="main-nav">
+            <a href="{% url 'index' %}" {% if request.resolver_match.url_name == 'index' %}class="is-active"{% endif %}>Inicio</a>
+            <a href="{% url 'contacto' %}" {% if request.resolver_match.url_name == 'contacto' %}class="is-active"{% endif %}>Contacto</a>
+            <a href="{% url 'mision' %}" {% if request.resolver_match.url_name == 'mision' %}class="is-active"{% endif %}>Nuestra Misión</a>
+            <a href="{% url 'faq' %}" {% if request.resolver_match.url_name == 'faq' %}class="is-active"{% endif %}>FAQ</a>
+        </nav>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <!-- ================= Pie de página ================= -->
+    <footer class="site-footer">
+        <img class="site-footer__logo" src="{% static 'inicio/img/icono.png' %}" alt="Logo Beyond Date">
+
+        <nav class="site-footer__nav">
+            <a href="{% url 'index' %}">Inicio</a>
+            <a href="{% url 'contacto' %}">Contacto</a>
+            <a href="{% url 'mision' %}">Nuestra Misión</a>
+            <a href="{% url 'faq' %}">FAQ</a>
+        </nav>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

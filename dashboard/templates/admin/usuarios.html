@@ -1,0 +1,51 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Registros Usuarios admin{% endblock %}
+
+
+{% block header %}
+    <div class="admin-welcome">
+        <h1>Panel de Usuarios</h1>
+    </div>
+{% endblock %}
+
+
+{% block content %}
+<section class="admin-panel admin-users-panel">
+    <div class="admin-users-scroll">
+        <table class="admin-users-table" id="lista-users">
+            <thead>
+                <tr>
+                    <th>RUT</th>
+                    <th>Nombre</th>
+                    <th>Apellido paterno</th>
+                    <th>Apellido materno</th>
+                    <th>Correo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.rut }}</td>
+                    <td>{{ u.nombre }}</td>
+                    <td>{{ u.apellidoPaterno }}</td>
+                    <td>{{ u.apellidoMaterno }}</td>
+                    <td>{{ u.correo }}</td>
+                    <td>
+                        <span class="admin-user-status {% if u.estado == 'Activo' %}is-active{% endif %}">
+                            {{ u.estado }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="admin-users-empty">No hay usuarios registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

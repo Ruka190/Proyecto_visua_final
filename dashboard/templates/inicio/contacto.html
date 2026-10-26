@@ -1,0 +1,171 @@
+{% extends 'inicio/base.html' %}
+{% load static %}
+
+{% block title %}Contacto · Beyond Date{% endblock %}
+
+{% block extra_css %}
+        /* ---------- Cuerpo principal (formulario de contacto) ---------- */
+        .contacto {
+            background-color: #FBF4EE;
+            padding: 56px 48px 72px;
+            text-align: center;
+        }
+        .contacto__title {
+            font-size: 40px;
+            font-weight: 700;
+            color: #4a4a4a;
+        }
+        .contacto__text {
+            margin: 16px auto 0;
+            max-width: 460px;
+            font-size: 19px;
+            line-height: 1.6;
+            color: #4a4a4a;
+        }
+
+        .contacto__form {
+            margin: 36px auto 0;
+            width: 100%;
+            max-width: 620px;
+        }
+        .contacto__tabla {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .contacto__tabla td { padding: 0; }
+
+        .contacto__tabla .etiqueta {
+            width: 120px;
+            padding-right: 14px;
+            text-align: right;
+            white-space: nowrap;
+            vertical-align: middle;
+            color: #4a4a4a;
+            font-size: 15px;
+        }
+        .contacto__tabla .fila--mensaje .etiqueta {
+            vertical-align: top;
+            padding-top: 11px;
+        }
+
+        .contacto__tabla .campo {
+            border: 1px solid #1a1a1a;
+            background-color: #ffffff;
+            vertical-align: middle;
+        }
+        .contacto__tabla input[type="text"],
+        .contacto__tabla input[type="email"],
+        .contacto__tabla input[type="tel"],
+        .contacto__tabla textarea {
+            display: block;
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 11px 12px;
+            font: inherit;
+            font-size: 15px;
+            color: #4a4a4a;
+            background-color: transparent;
+        }
+        .contacto__tabla textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Teléfono: desplegable de código de país + número */
+        .codigo-pais {
+            display: flex;
+            align-items: stretch;
+        }
+        .codigo-pais select {
+            border: none;
+            border-right: 1px solid #1a1a1a;
+            background-color: #ffffff;
+            padding: 8px 6px;
+            font: inherit;
+            font-size: 15px;
+            color: #4a4a4a;
+            cursor: pointer;
+        }
+        .codigo-pais input { flex: 1; }
+
+        /* "Enviar": solo texto, sin contenedor de botón */
+        .enviar {
+            display: block;
+            margin: 18px auto 0;
+            padding: 10px 16px;
+            border: none;
+            background: none;
+            font: inherit;
+            font-size: 16px;
+            color: #4a4a4a;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .enviar:hover { color: #A63A32; }
+
+        @media (max-width: 640px) {
+            .contacto { padding: 40px 20px 56px; }
+            .contacto__form { max-width: 100%; }
+            .contacto__tabla .etiqueta { width: auto; font-size: 14px; padding-right: 8px; }
+        }
+{% endblock %}
+
+{% block content %}
+    <main>
+        <section class="contacto">
+            <h1 class="contacto__title">Contacto</h1>
+
+            <p class="contacto__text">
+                Si tienes algún problema o te gustaría hacernos alguna pregunta no dude en contactarnos.
+            </p>
+
+            <form class="contacto__form" method="post" novalidate>
+                {% csrf_token %}
+                <table class="contacto__tabla">
+                    <tr>
+                        <td class="etiqueta"><label for="nombre">Nombre:</label></td>
+                        <td class="campo">
+                            <input id="nombre" name="nombre" type="text" placeholder="ejemplo" autocomplete="name">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="etiqueta"><label for="correo">Correo:</label></td>
+                        <td class="campo">
+                            <input id="correo" name="correo" type="email" placeholder="ejemplo@gmail.com" autocomplete="email">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="etiqueta"><label for="telefono">Teléfono:</label></td>
+                        <td class="campo">
+                            <div class="codigo-pais">
+                                <!-- Desplegable de código de país (placeholders: a la espera de las imagenes de banderas) -->
+                                <select id="codigo_pais" name="codigo_pais" aria-label="Código de país">
+                                    <option value="+56" selected>&#127464;&#127473; +56</option>
+                                    <option value="+54">&#127462;&#127479; +54</option>
+                                    <option value="+51">&#127477;&#127466; +51</option>
+                                    <option value="+55">&#127463;&#127479; +55</option>
+                                    <option value="+57">&#127464;&#127476; +57</option>
+                                    <option value="+52">&#127474;&#127485; +52</option>
+                                    <option value="+34">&#127466;&#127480; +34</option>
+                                    <option value="+1">&#127482;&#127480; +1</option>
+                                    <option value="+598">&#127482;&#127486; +598</option>
+                                    <option value="+595">&#127477;&#127486; +595</option>
+                                </select>
+                                <input id="telefono" name="telefono" type="tel" placeholder="000000000" autocomplete="tel">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="fila--mensaje">
+                        <td class="etiqueta"><label for="mensaje">Mensaje:</label></td>
+                        <td class="campo">
+                            <textarea id="mensaje" name="mensaje" placeholder="máximo 200 palabras"></textarea>
+                        </td>
+                    </tr>
+                </table>
+
+                <button type="submit" class="enviar">Enviar</button>
+            </form>
+        </section>
+    </main>
+{% endblock %}

@@ -1,0 +1,36 @@
+/* ==========================================================================
+   BEYOND DATE — VARIABLES CENTRALES (inicio/static/inicio/css/variables.css)
+   Paleta consolidada: 14 tokens UI + 4 semánticos. Fuente Poppins.
+   ========================================================================== */
+:root {
+  /* 1. PALETA BASE */
+  --color-bg: #F8F7F2;
+  --color-surface: #FFFFFF;
+  --color-blush: #F5DFDB;
+  --color-coral: #E86E67;
+  --color-primary: #B94448;
+  --color-wine: #652E38;
+  --color-text: #29252C;
+  --color-text-muted: #70656B;
+  --color-border-subtle: #E7D8D2;
+  --color-border-control: #988589;
+  /* 2. COMPONENTES / VISTAS */
+  --color-nav-icon-active: #F0AF9A;
+  --color-user-info-bg: #D9D9D9;
+  --color-admin-notify-bg: #F5DFD8;
+  --color-mission-bg: #FAEBEB;
+  /* 3. SEMÁNTICOS */
+  --color-success: #276749;
+  --color-success-bg: #E9F3EC;
+  --color-warning: #875400;
+  --color-warning-bg: #FFF0D5;
+  --color-danger: #A52A38;
+  --color-danger-bg: #FCE9EC;
+  --color-info: #4A506A;
+  --color-info-bg: #EEF0F5;
+  /* 4. TIPOGRAFÍA */
+  --font-family-base: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+}

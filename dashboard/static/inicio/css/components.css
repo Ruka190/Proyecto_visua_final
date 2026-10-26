@@ -1,0 +1,124 @@
+/* ==========================================================================
+   BEYOND DATE — COMPONENTES INICIO (inicio/static/inicio/css/components.css)
+   Header, hero, features, misión, footer. Usa tokens de variables.css.
+   ========================================================================== */
+
+/* Header superior */
+.bd-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.bd-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px;
+  gap: 16px;
+}
+.bd-brand {
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--color-wine);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.bd-brand-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-wine);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.bd-nav { display: flex; gap: 20px; align-items: center; }
+.bd-nav a {
+  color: var(--color-text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+.bd-nav a:hover, .bd-nav a.active { color: var(--color-wine); }
+
+/* Hero inicio */
+.bd-hero {
+  text-align: center;
+  padding: 48px 0 32px;
+}
+.bd-hero-heart {
+  width: 120px;
+  height: 120px;
+  margin: 8px auto 24px;
+  display: block;
+  color: var(--color-coral);
+}
+.bd-hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.bd-btn-secondary {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  background: var(--color-surface);
+  color: var(--color-wine);
+  border: 1px solid var(--color-border-control);
+  padding: 12px 24px;
+}
+.bd-btn-secondary:hover {
+  background: var(--color-blush);
+  color: var(--color-wine);
+  transform: translateY(-1px);
+}
+
+/* Features 3 columnas */
+.bd-features {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+}
+
+/* Misión — fondo #FAEBEB, contraste AAA 12.85:1 */
+.bd-mission-container { margin: 40px 0; }
+.bd-mission-card {
+  background-color: var(--color-mission-bg);
+  border-radius: 12px;
+  padding: 28px 32px;
+  border: 1px solid rgba(185, 68, 72, 0.15);
+}
+
+/* Footer vino, blanco sobre vino 10.46:1 AAA */
+.bd-footer {
+  background-color: var(--color-wine);
+  color: #FFFFFF;
+  padding: 32px 16px;
+  margin-top: 48px;
+}
+.bd-footer a { color: #FFFFFF; text-decoration: none; }
+.bd-footer a:hover { text-decoration: underline; }
+.bd-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .bd-nav { gap: 12px; }
+  .bd-hero { padding: 32px 0 24px; }
+  .bd-mission-card { padding: 20px; }
+}

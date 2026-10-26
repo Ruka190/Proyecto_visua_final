@@ -1,0 +1,13 @@
+<!-- Header global Bloque 4: logo + nav Inicio / Misión / FAQ -->
+<header class="bd-header">
+  <div class="bd-header-inner">
+    <a href="{% url 'index' %}" class="bd-brand">
+      <span class="bd-brand-dot">♡</span> Beyond Date
+    </a>
+    <nav class="bd-nav" aria-label="Navegación principal">
+      <a href="{% url 'index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">Inicio</a>
+      <a href="{% url 'index' %}#mision">Nuestra Misión</a>
+      <a href="{% url 'index' %}#faq">FAQ</a>
+    </nav>
+  </div>
+</header>

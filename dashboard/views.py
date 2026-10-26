@@ -305,3 +305,45 @@ def admin_notificaciones(request):
         "admin/notificacion.html",
         {"notificaciones": notificaciones}
     )
+
+
+def admin_usuarios(request):
+
+    users = [
+        {
+            "rut": "12.345.678-9",
+            "nombre": "María",
+            "apellidoPaterno": "González",
+            "apellidoMaterno": "Pérez",
+            "correo": "maria@ejemplo.cl",
+            "estado": "Activo",
+        },
+        {
+            "rut": "18.765.432-1",
+            "nombre": "Juan",
+            "apellidoPaterno": "Soto",
+            "apellidoMaterno": "Rojas",
+            "correo": "juan@ejemplo.cl",
+            "estado": "Suspendido",
+        },
+    ]
+
+    #users = Users.objects.all()
+    return render(
+            request,
+            "admin/usuarios.html",
+            {"users": users}
+            )
+
+
+def index(request):###
+    return render(request, 'inicio/index.html')
+
+def contacto(request):###
+    return render(request, 'inicio/contacto.html')
+
+def faq(request):###
+    return render(request, 'inicio/faq.html')
+
+def mision(request):##
+    return render(request, 'inicio/mision.html')

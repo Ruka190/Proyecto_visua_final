@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="{% static 'inicio/css/variables.css' %}">
     <link rel="stylesheet" href="{% static 'inicio/css/typography.css' %}">
-    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}?v=match-periods-1">
+    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}?v=usuarios-2">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -29,9 +29,10 @@
             <span class="nav-item-circle" aria-label="Mensajes, próximamente" title="Mensajes, próximamente">
                 <img src="{% static 'admin/img/botonMensajeAdmin.png' %}" alt="">
             </span>
-            <span class="nav-item-circle" aria-label="Seguridad, próximamente" title="Seguridad, próximamente">
-                <img src="{% static 'admin/img/botonModeracionAdmin.png' %}" alt="">
-            </span>
+            <a  href="{% url 'admin_usuarios' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_usuarios' %}active{% endif %}"
+             aria-label="Usuarios" {% if request.resolver_match.url_name == 'admin_usuarios' %}aria-current="page"{% endif %}>
+                <img src="{% static 'admin/img/botonUsers.png' %}" alt="">
+            </a>
             <a href="{% url 'admin_inicio' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_inicio' %}active{% endif %}"
                aria-label="Inicio" {% if request.resolver_match.url_name == 'admin_inicio' %}aria-current="page"{% endif %}>
                 <img src="{% static 'admin/img/botonHomeAdmin.png' %}" alt="">

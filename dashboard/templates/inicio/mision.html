@@ -1,0 +1,154 @@
+{% extends 'inicio/base.html' %}
+{% load static %}
+
+{% block title %}Nuestra Misión · Beyond Date{% endblock %}
+
+{% block extra_css %}
+        /* ---------- Cuerpo principal (Nuestra Misión) ---------- */
+        .mision {
+            background-color: #FBF4EE;
+            padding: 56px 48px 72px;
+            text-align: center;
+        }
+        .mision__title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 46px;
+            font-weight: 700;
+            color: #4a4a4a;
+        }
+        .mision__subtitle {
+            max-width: 640px;
+            margin: 8px auto 0;
+            font-style: italic;
+            font-size: 20px;
+            text-align: center;
+            color: #A63A32;
+        }
+
+        /* Tarjetas / contenedores (todos en cursiva) */
+        .mision__card {
+            border: 1px solid #F3CFC4;
+            border-radius: 20px;
+            background-color: #FDECE7;
+            font-style: italic;
+            color: #4a4a4a;
+        }
+        .mision__card--wide {
+            max-width: 820px;
+            margin: 26px auto 0;
+            padding: 26px 30px;
+            text-align: left;
+        }
+        .mision__head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mision__pill {
+            width: 8px;
+            height: 30px;
+            border-radius: 999px;
+            background-color: #A63A32;
+            flex: 0 0 auto;
+        }
+        .mision__card-title {
+            font-style: italic;
+            font-size: 24px;
+            font-weight: 700;
+            color: #4a4a4a;
+        }
+        .mision__text {
+            font-style: italic;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #4a4a4a;
+        }
+        .mision__card--wide .mision__text { margin-top: 4px; }
+        .mision__text--small {
+            margin-top: 8px;
+            font-size: 15px;
+            color: #5c5c5c;
+        }
+
+        .mision__section-title {
+            margin-top: 42px;
+            font-style: italic;
+            font-size: 34px;
+            font-weight: 700;
+            color: #4a4a4a;
+        }
+
+        /* Tres pilares en columnas */
+        .mision__pillars {
+            display: flex;
+            gap: 20px;
+            max-width: 960px;
+            margin: 34px auto 0;
+            text-align: center;
+        }
+        .mision__pillar {
+            flex: 1;
+            padding: 24px 26px;
+            text-align: center;
+        }
+        .mision__pillar-title {
+            font-style: italic;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #4a4a4a;
+            line-height: 1.35;
+        }
+        .mision__pillar .mision__text { margin-top: 10px; }
+
+        @media (max-width: 760px) {
+            .mision { padding: 40px 20px 56px; }
+            .mision__title { font-size: 34px; }
+            .mision__section-title { font-size: 27px; }
+            .mision__pillars { flex-direction: column; }
+        }
+{% endblock %}
+
+{% block content %}
+    <main>
+        <section class="mision">
+            <h1 class="mision__title">Beyond Date</h1>
+            <p class="mision__subtitle">"Conectar a personas auténticas basadas en la empatía, valores compartidos y relaciones significativas."</p>
+
+            <!-- Contenedor 1: Quienes Somos -->
+            <div class="mision__card mision__card--wide">
+                <div class="mision__head">
+                    <span class="mision__pill" aria-hidden="true"></span>
+                    <h2 class="mision__card-title">Quienes Somos?</h2>
+                </div>
+                <p class="mision__text mision__text--small">En Beyond Date, dejamos atrás los matches superficiales. Somos el espacio diseñado para quienes buscan conexiones reales, seguras y que duren hasta el infinito.</p>
+            </div>
+
+            <!-- Contenedor 2: Nuestra Misión -->
+            <h2 class="mision__section-title">Nuestra Misión</h2>
+            <div class="mision__card mision__card--wide">
+                <p class="mision__text">En Beyond Date creemos que las relaciones de calidad nacen de la sinceridad y la afinidad de visión. Priorizamos la compatibilidad real por encima de la superficialidad.</p>
+            </div>
+
+            <!-- Pilares -->
+            <div class="mision__pillars">
+                <div class="mision__card mision__pillar">
+                    <h3 class="mision__pillar-title">Valores</h3>
+                    <p class="mision__text">Match por principios, intereses y forma de ver la vida.</p>
+                </div>
+
+                <div class="mision__card mision__pillar">
+                    <h3 class="mision__pillar-title">Conexiones<br>Reales</h3>
+                    <p class="mision__text">Conversaciones auténticas, sin superficialidad.</p>
+                </div>
+
+                <div class="mision__card mision__pillar">
+                    <h3 class="mision__pillar-title">Seguridad</h3>
+                    <p class="mision__text">Perfiles verificados y tecnología ética.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock %}

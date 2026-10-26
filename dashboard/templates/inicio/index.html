@@ -1,0 +1,340 @@
+{% extends 'inicio/base.html' %}
+{% load static %}
+
+{% block title %}Beyond Date{% endblock %}
+
+{% block extra_css %}
+        /* ---------- Sección principal (Hero) ---------- */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+            padding: 56px 64px 72px;
+            background: linear-gradient(180deg, #FFF9F5 0%, #FBE7E0 100%);
+        }
+        .hero__content { max-width: 560px; }
+        .hero__title {
+            font-size: 44px;
+            font-weight: 700;
+            line-height: 1.15;
+            color: #4a4a4a;
+        }
+        .hero__title .accent { color: #A63A32; }
+        .hero__text {
+            margin-top: 22px;
+            max-width: 520px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #5c5c5c;
+        }
+        .hero__actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .pill-btn {
+            display: inline-block;
+            padding: 16px 34px;
+            border-radius: 999px;
+            background-color: #FFFDF9;
+            color: #4a4a4a;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-align: center;
+            text-decoration: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .pill-btn:hover {
+            background-color: #F7D9D2;
+            transform: translateY(-2px);
+        }
+        .hero__art {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+        .hero__art img {
+            width: 100%;
+            max-width: 420px;
+            height: auto;
+        }
+        .hero__placeholder {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 380px;
+            min-height: 320px;
+            border: 2px dashed #E3B9AE;
+            border-radius: 24px;
+            background-color: rgba(255, 255, 255, 0.55);
+            color: #A63A32;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* ---------- Sección de opiniones ---------- */
+        .opinions {
+            padding: 64px 48px 72px;
+            background-color: #FFFDFB;
+            text-align: center;
+        }
+        .opinions__title {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #4a4a4a;
+        }
+        .carousel {
+            position: relative;
+            margin-top: 36px;
+            padding: 0 40px;
+        }
+        .carousel__viewport { overflow: hidden; }
+        .carousel__track {
+            display: flex;
+            gap: 24px;
+            transition: transform 0.45s ease;
+            will-change: transform;
+        }
+        .card {
+            padding: 28px 26px;
+            border: 1px solid #F3CFC4;
+            border-radius: 24px;
+            background-color: #FDECE7;
+            text-align: left;
+        }
+        .carousel__btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #F3CFC4;
+            border-radius: 50%;
+            background-color: #FFFDF9;
+            color: #4a4a4a;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 2;
+            transition: background-color 0.2s ease;
+        }
+        .carousel__btn:hover { background-color: #F7D9D2; }
+        .carousel__btn--prev { left: 0; }
+        .carousel__btn--next { right: 0; }
+        .carousel__dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+        .carousel__dot {
+            width: 10px;
+            height: 10px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background-color: #E9CFC7;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .carousel__dot.is-active { background-color: #A63A32; }
+        .card p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #4a4a4a;
+        }
+        .card span {
+            display: block;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #6b6b6b;
+        }
+
+        @media (max-width: 900px) {
+            .hero { flex-direction: column; padding: 40px 24px 56px; }
+            .hero__title { font-size: 34px; }
+            .opinions { padding: 48px 24px 56px; }
+        }
+{% endblock %}
+
+{% block content %}
+    <main>
+        <!-- ================= Sección principal (Hero) ================= -->
+        <section class="hero">
+            <div class="hero__content">
+                <h1 class="hero__title">
+                    Conoce a alguien<br>
+                    <span class="accent">que realmente</span><br>
+                    encaje contigo
+                </h1>
+
+                <p class="hero__text">
+                    Con Benyond Date, busca a tu pareja ideal basandote en su personalidad,
+                    intereses y lo que realmente estas buscando para encontrar relaciones
+                    reales y significativas
+                </p>
+
+                <div class="hero__actions">
+                    <a href="#" class="pill-btn">Encontrar<br>mi match</a>
+                    <a href="#" class="pill-btn">Crear<br>mi perfil</a>
+                </div>
+            </div>
+
+            <div class="hero__art">
+                <!-- Cuando esté disponible, esta imagen se mostrará automáticamente -->
+                <img src="{% static 'inicio/img/corazon-3d.png' %}" alt="Corazón de cristal con símbolo de infinito"
+                     onerror="this.style.display='none'; document.getElementById('hero-placeholder').style.display='flex';">
+                <div id="hero-placeholder" class="hero__placeholder">
+                    Aquí va el render 3D del corazón de cristal<br>con el símbolo de infinito
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= Opiniones (carrusel) ================= -->
+        <section class="opinions">
+            <h2 class="opinions__title">OPINIONES</h2>
+
+            <div class="carousel" id="opiniones-carrusel">
+                <button type="button" class="carousel__btn carousel__btn--prev" aria-label="Opiniones anteriores">&#8249;</button>
+
+                <div class="carousel__viewport">
+                    <div class="carousel__track">
+                        <article class="card">
+                            <p>Por fin conversaciones reales que pasan del 'hola, ¿cómo estás?'. Romper el hielo se siente natural y sin incomodidad.</p>
+                            <span>Vale, 24</span>
+                        </article>
+
+                        <article class="card">
+                            <p>Te fijas en la personalidad y el día a día antes que en poses editadas. Dejé de deslizar en piloto automático.</p>
+                            <span>Tomás, 28</span>
+                        </article>
+
+                        <article class="card">
+                            <p>Pocos perfiles al día, pero con personas que de verdad buscan lo mismo. Menos matches acumulados, mejores citas.</p>
+                            <span>Cami, 26</span>
+                        </article>
+
+                        <article class="card">
+                            <p>Las dinámicas para romper el hielo te salvan la vida. La primera charla fluyó sola sin silencios incómodos.</p>
+                            <span>Nico, 27</span>
+                        </article>
+
+                        <article class="card">
+                            <p>Agradezco no perder horas deslizando pantallas. Miras con atención a pocas personas y conectas de verdad.</p>
+                            <span>Javi, 25</span>
+                        </article>
+
+                        <article class="card">
+                            <p>Primero conectas por humor, gustos y valores; la química surge sola antes de la primera cita.</p>
+                            <span>Matías, 29</span>
+                        </article>
+                    </div>
+                </div>
+
+                <button type="button" class="carousel__btn carousel__btn--next" aria-label="Siguientes opiniones">&#8250;</button>
+
+                <div class="carousel__dots" aria-label="Paginación de opiniones"></div>
+            </div>
+        </section>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- ================= Carrusel de opiniones ================= -->
+    <script>
+    (function () {
+        const carrusel = document.getElementById('opiniones-carrusel');
+        if (!carrusel) return;
+
+        const pista = carrusel.querySelector('.carousel__track');
+        const viewport = carrusel.querySelector('.carousel__viewport');
+        const tarjetas = Array.from(pista.children);
+        const btnPrev = carrusel.querySelector('.carousel__btn--prev');
+        const btnNext = carrusel.querySelector('.carousel__btn--next');
+        const puntos = carrusel.querySelector('.carousel__dots');
+        const GAP = 24;
+        const INTERVALO = 6000;
+
+        let porVista = 3;
+        let pagina = 0;
+        let totalPaginas = 1;
+        let temporizador = null;
+
+        function calcularPorVista() {
+            const ancho = window.innerWidth;
+            if (ancho <= 640) return 1;
+            if (ancho <= 1024) return 2;
+            return 3;
+        }
+
+        function construirPuntos() {
+            puntos.innerHTML = '';
+            for (let i = 0; i < totalPaginas; i++) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'carousel__dot' + (i === pagina ? ' is-active' : '');
+                b.setAttribute('aria-label', 'Ir a la página ' + (i + 1) + ' de opiniones');
+                b.addEventListener('click', function () { irA(i); });
+                puntos.appendChild(b);
+            }
+        }
+
+        function resaltarPuntos() {
+            Array.from(puntos.children).forEach(function (p, i) {
+                p.classList.toggle('is-active', i === pagina);
+            });
+        }
+
+        function aplicar() {
+            const paso = viewport.clientWidth + GAP;
+            pista.style.transform = 'translateX(' + (-pagina * paso) + 'px)';
+            resaltarPuntos();
+        }
+
+        function irA(indice) {
+            pagina = (indice + totalPaginas) % totalPaginas;
+            aplicar();
+        }
+
+        function distribuir() {
+            porVista = calcularPorVista();
+            const anchoViewport = viewport.clientWidth;
+            const anchoTarjeta = (anchoViewport - GAP * (porVista - 1)) / porVista;
+            tarjetas.forEach(function (t) {
+                t.style.flex = '0 0 ' + anchoTarjeta + 'px';
+            });
+            totalPaginas = Math.ceil(tarjetas.length / porVista);
+            if (pagina > totalPaginas - 1) pagina = totalPaginas - 1;
+            construirPuntos();
+            aplicar();
+        }
+
+        function iniciarAuto() {
+            detenerAuto();
+            temporizador = setInterval(function () { irA(pagina + 1); }, INTERVALO);
+        }
+        function detenerAuto() {
+            if (temporizador) { clearInterval(temporizador); temporizador = null; }
+        }
+
+        btnPrev.addEventListener('click', function () { irA(pagina - 1); iniciarAuto(); });
+        btnNext.addEventListener('click', function () { irA(pagina + 1); iniciarAuto(); });
+        carrusel.addEventListener('mouseenter', detenerAuto);
+        carrusel.addEventListener('mouseleave', iniciarAuto);
+        window.addEventListener('resize', distribuir);
+
+        distribuir();
+        iniciarAuto();
+    })();
+    </script>
+{% endblock %}

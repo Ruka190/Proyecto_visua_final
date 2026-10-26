@@ -1,0 +1,57 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Notificaciones admin{% endblock %}
+
+
+{% block header %}
+    <div class="admin-welcome">
+        <h1>Notificaciones</h1>
+    </div>
+{% endblock %}
+
+
+{% block content %}
+<div class="list-group notificaciones">
+
+    {% for notificacion in notificaciones %}
+
+    <a href="#" class="notificacion">
+
+        <img class="notificacion-icono"
+             src="{% static 'admin/img/botonNotificacionAdmin.png' %}"
+             alt="">
+
+        <span class="notificacion-texto">
+
+            <span class="notificacion-titulo">
+                {% if notificacion.tema == "Reporte" %}
+                    Usuario Reportado
+                {% elif notificacion.tema == "Mensaje" %}
+                    Nuevo Mensaje
+                {% else %}
+                    {{ notificacion.tema }}
+                {% endif %}
+            </span>
+
+            <span class="notificacion-descripcion">
+                {{ notificacion.mensaje }}
+            </span>
+
+        </span>
+
+        <img class="notificacion-flecha"
+             src="{% static 'admin/img/BotonFlechaD.png' %}"
+             alt="">
+
+    </a>
+
+    {% empty %}
+
+        <p>No tienes notificaciones disponibles.</p>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

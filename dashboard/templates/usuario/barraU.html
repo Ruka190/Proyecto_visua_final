@@ -1,0 +1,94 @@
+{% load static %}
+
+<!-- Iconos de Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+  /* Contenedor flotante centrado al ancho de tu tarjeta */
+  .custom-navbar.fixed-bottom {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 480px;             /* Ajustado al ancho de la tarjeta */
+    background-color: #f7e1d7;    /* Fondo beige/rosado */
+    border-radius: 40px;          /* Bordes redondos estilo píldora */
+    border: 1.5px solid #e0c8be;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+  }
+
+  /* Círculos de los botones */
+  .nav-item-circle {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    border: 2px solid #222222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #222222 !important;    /* Evita el color azul de enlace */
+    font-size: 1.2rem;
+    background-color: transparent;
+    transition: all 0.2s ease;
+  }
+
+  .nav-item-circle:hover {
+    opacity: 0.8;
+  }
+
+  /* Botón activo (casa) */
+  .nav-item-circle.active {
+    background-color: #f3a69a;
+    border-color: #d85b53;
+    color: #d85b53 !important;
+  }
+
+  /* Avatar circular */
+  .avatar-circle {
+    padding: 0;
+    overflow: hidden;
+    border-color: #7b2c3a;
+  }
+
+  .avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+</style>
+
+<nav class="custom-navbar fixed-bottom py-2 px-3 shadow-sm">
+  <div class="d-flex justify-content-around align-items-center w-100">
+    
+    <!-- Avatar (corregidas las etiquetas y agregada la clase avatar-circle) -->
+    <a href="{% url 'perfilU' %}" class="nav-item-circle avatar-circle {% if request.resolver_match.url_name == 'perfilU' %}active{% endif %}">
+      <img src="{% static 'usuario/img/javier.jpg' %}" alt="Perfil">
+    </a>
+
+    <!-- Notificaciones -->
+    <a href="#" class="nav-item-circle">
+      <i class="bi bi-bell"></i>
+    </a>
+
+    <!-- Inicio / Activo -->
+    <a href="{% url 'inicioU' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'inicioU' %}active{% endif %}">
+      <i class="bi bi-house"></i>
+    </a>
+
+    <!-- Buscador -->
+    <a href="#" class="nav-item-circle {% if request.resolver_match.url_name == 'buscador' %}active{% endif %}">
+      <i class="bi bi-suit-heart"></i>
+    </a>
+
+    <!-- Mensajes -->
+    <a href="#" class="nav-item-circle">
+      <i class="bi bi-chat"></i>
+    </a>
+
+  </div>
+</nav>

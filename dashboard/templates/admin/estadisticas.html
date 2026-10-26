@@ -1,0 +1,191 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Ingreos y egresos admin{% endblock %}
+
+
+{% block header %}
+    <div class="admin-welcome">
+        <h1>Estadísticas Beyond Date</h1>
+    </div>
+{% endblock %}
+
+
+{% block content %}
+    <section class="admin-panel">
+        <h2 id="resumen-financiero" class="admin-panel__title">
+            Resumen
+        </h2>
+        
+        <div class="admin-stats">
+            <article class="admin-stat-card">
+                <h3>Clientes con match</h3>
+                <p>{{ kpi_matchs }}%</p>
+            </article>
+
+            <article class="admin-stat-card">
+                <h3>Clientes sin Match</h3>
+                <p>{{ kpi_estancados }}%</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="admin-panel admin-panel--chart" aria-labelledby="titulo-historico-matchs">
+        <div class="admin-chart-header">
+            <div>
+                <h2 id="titulo-historico-matchs">Histórico Matchs</h2>
+                <p id="detalle-historico-matchs">Matches por día de la semana</p>
+            </div>
+            <div class="admin-period-selector" role="group" aria-label="Periodo del histórico de matches">
+                <button type="button" class="admin-period-button active" data-periodo="semana" aria-pressed="true">Semana</button>
+                <button type="button" class="admin-period-button" data-periodo="mes" aria-pressed="false">Mes</button>
+                <button type="button" class="admin-period-button" data-periodo="anio" aria-pressed="false">Año</button>
+            </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="ChartHistoricoMatchs" height="260"></canvas>
+        </div>
+    </section>
+
+    <section class="admin-panel admin-panel--chart">
+        <h2>Distribución de edades</h2>
+        <p>Proporción de edades segun genero</p>
+        <div class="chart-container">
+            <canvas id="ChartDistribucionEdades" height="260"></canvas>
+        </div>
+    </section>
+
+     <section class="admin-panel admin-panel--chart">
+        <h2>Top 5 gustos más populares</h2>
+        <p>Cantidad de usuarios por gusto</p>
+        <div class="chart-container">
+            <canvas id="ChartTopGustos" height="260"></canvas>
+        </div>
+    </section>
+
+{% endblock %}
+
+
+
+{% block body_extra %}
+  <script src="{% static 'chart.umd.min.js' %}"></script>
+  <script>
+    const periodosMatchs = JSON.parse('{{ periodos_matchs_json|escapejs }}');
+    const botonesPeriodo = document.querySelectorAll('.admin-period-button[data-periodo]');
+    const periodoInicial = periodosMatchs.semana;
+
+    const chartMatchs = new Chart(document.getElementById("ChartHistoricoMatchs"), {
+      type: "line",
+      data: {
+        labels: periodoInicial.labels,
+        datasets: [{
+          data: periodoInicial.data,
+          borderColor: "#B94448",
+          backgroundColor: "#B944482E",
+          tension: 0.2,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } },
+          x: { title: { display: true, text: periodoInicial.eje_x } }
+        }
+      }
+    });
+
+    botonesPeriodo.forEach(boton => boton.addEventListener('click', () => {
+      const periodo = periodosMatchs[boton.dataset.periodo];
+      if (!periodo) return;
+
+      chartMatchs.data.labels = periodo.labels;
+      chartMatchs.data.datasets[0].data = periodo.data;
+      chartMatchs.options.scales.x.title.text = periodo.eje_x;
+      document.getElementById('detalle-historico-matchs').textContent = periodo.detalle;
+
+      botonesPeriodo.forEach(opcion => {
+        const activo = opcion === boton;
+        opcion.classList.toggle('active', activo);
+        opcion.setAttribute('aria-pressed', String(activo));
+      });
+      chartMatchs.update();
+    }));
+  </script>
+
+
+  <script>
+    const edadesLabels = JSON.parse('{{ edades_labels_json|escapejs }}');
+    const datasets2 = JSON.parse('{{ datasets2_json|escapejs }}');
+    const maxEdad = Math.ceil(
+      Math.max(...datasets2.flatMap(serie => serie.data.map(Math.abs))) / 20
+    ) * 20;
+
+    new Chart(document.getElementById("ChartDistribucionEdades"), {
+      type: "bar",
+      data: { labels: edadesLabels, datasets: datasets2 },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: "y",
+        plugins: {
+          legend: { position: "top" },
+          tooltip: {
+            callbacks: {
+              label: contexto => `${contexto.dataset.label}: ${Math.abs(contexto.parsed.x)} usuarios`
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            min: -maxEdad,
+            max: maxEdad,
+            ticks: { callback: valor => Math.abs(valor) },
+            title: { display: true, text: "Cantidad de usuarios" }
+          },
+          y: {
+            stacked: true,
+            reverse: true,
+            ticks: { autoSkip: false },
+            title: { display: true, text: "Edad" }
+          }
+        }
+      }
+    });
+  </script>
+
+  <script>
+    const gustosLabels = JSON.parse('{{ gustos_labels_json|escapejs }}');
+    const gustosValores = JSON.parse('{{ gustos_valores_json|escapejs }}');
+
+    new Chart(document.getElementById("ChartTopGustos"), {
+      type: "bar",
+      data: {
+        labels: gustosLabels,
+        datasets: [{
+          data: gustosValores,
+          backgroundColor: "#B94448",
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: "y",
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { precision: 0 },
+            title: { display: true, text: "Cantidad de usuarios" }
+          },
+          y: { ticks: { autoSkip: false } }
+        }
+      }
+    });
+  </script>
+{% endblock %}

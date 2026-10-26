@@ -1,0 +1,308 @@
+:root {
+  --bg-page: #faf6f0;
+  --text-primary: #111111;
+  --card-bg: #eee1d8;
+  --badge-bg: #e5d7cf;
+  --btn-edit: #E87265;
+  --btn-accent: #E87265;
+  --avatar-border: #6b2d35;
+  --slot-bg: #e3d5cd;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+/* ==========================================================================
+   1. Cabecera, Avatar y Botones de Perfil
+   ========================================================================== */
+.avatar-wrapper {
+  position: relative;
+  width: 110px;
+  height: 110px;
+}
+
+.avatar-profile {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border: 3px solid var(--avatar-border);
+}
+
+.btn-change-avatar {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: var(--btn-accent);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-change-avatar:hover {
+  transform: scale(1.08);
+  opacity: 0.95;
+}
+
+.badge-custom {
+  background-color: var(--badge-bg);
+  color: var(--text-primary);
+  border-radius: 14px;
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Botón base tipo píldora (Guardar / Editar) */
+.btn-edit-profile {
+  background-color: var(--btn-edit);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 4px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-edit-profile:hover {
+  opacity: 0.9;
+  color: #ffffff;
+}
+
+/* Variante opaca para el botón "Volver" */
+.btn-edit-profile.btn-muted {
+  background-color: #d8c7be;
+  color: #555555;
+}
+
+.btn-edit-profile.btn-muted:hover {
+  background-color: #cebbb1;
+  color: #222222;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   2. Formularios de Edición (Inputs y Textarea)
+   ========================================================================== */
+.custom-input {
+  background-color: var(--badge-bg);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+}
+
+.custom-input:focus {
+  border-color: var(--btn-accent);
+  background-color: #ffffff;
+}
+
+.custom-textarea {
+  background-color: var(--card-bg);
+  border: 1.5px solid transparent;
+  border-radius: 20px;
+  padding: 16px 20px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  resize: vertical;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.custom-textarea:focus {
+  border-color: var(--btn-accent);
+  background-color: #fcf9f5;
+}
+
+/* ==========================================================================
+   3. Intereses Dinámicos
+   ========================================================================== */
+.badge-editable {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 10px;
+}
+
+.btn-remove-interes {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #666666;
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.btn-remove-interes:hover {
+  color: var(--btn-accent);
+}
+
+.btn-add-interes {
+  background-color: transparent;
+  color: var(--btn-accent);
+  border: 1.5px dashed var(--btn-accent);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-add-interes:hover {
+  background-color: var(--btn-accent);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   4. Cuadrícula de Fotos (Visualización y Subida)
+   ========================================================================== */
+.photo-slot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background-color: var(--slot-bg);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.photo-slot img {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Ranura vacía con botón '+' */
+.photo-slot-empty {
+  border: 2px dashed #bda79c;
+  cursor: pointer;
+  color: #776a63;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.photo-slot-empty:hover {
+  background-color: #d8c7be;
+  border-color: var(--btn-accent);
+  color: var(--btn-accent);
+}
+
+/* Botón flotante 'x' para eliminar foto */
+.btn-remove-photo {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background-color: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background-color 0.15s ease;
+}
+
+.btn-remove-photo:hover {
+  background-color: var(--btn-accent);
+}
+
+/* ==========================================================================
+   5. Barra de Navegación Inferior Flotante
+   ========================================================================== */
+.custom-navbar.fixed-bottom {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 480px;
+  background-color: #f7e1d7;
+  border-radius: 40px;
+  border: 1.5px solid #e0c8be;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 1050;
+}
+
+.nav-item-circle {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  border: 2px solid #222222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #222222 !important;
+  font-size: 1.2rem;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.nav-item-circle:hover {
+  opacity: 0.8;
+}
+
+.nav-item-circle.active {
+  background-color: #f3a69a;
+  border-color: #d85b53;
+  color: #d85b53 !important;
+}
+
+.avatar-circle {
+  padding: 0;
+  overflow: hidden;
+  border-color: #7b2c3a;
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

@@ -1,0 +1,53 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Panel administrador{% endblock %} · Beyond Date</title>
+
+    <link rel="stylesheet" href="{% static 'inicio/css/variables.css' %}">
+    <link rel="stylesheet" href="{% static 'inicio/css/typography.css' %}">
+    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}?v=match-periods-1">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="admin-dashboard">
+
+    <header class="admin-header">
+        {% block header %}
+            <h1>{% block page_title %}Panel administrador{% endblock %}</h1>
+        {% endblock %}
+    </header>
+
+    <main class="admin-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <nav class="custom-navbar" aria-label="Navegación del administrador">
+        <div class="custom-navbar__items">
+            <span class="nav-item-circle" aria-label="Mensajes, próximamente" title="Mensajes, próximamente">
+                <img src="{% static 'admin/img/botonMensajeAdmin.png' %}" alt="">
+            </span>
+            <span class="nav-item-circle" aria-label="Seguridad, próximamente" title="Seguridad, próximamente">
+                <img src="{% static 'admin/img/botonModeracionAdmin.png' %}" alt="">
+            </span>
+            <a href="{% url 'admin_inicio' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_inicio' %}active{% endif %}"
+               aria-label="Inicio" {% if request.resolver_match.url_name == 'admin_inicio' %}aria-current="page"{% endif %}>
+                <img src="{% static 'admin/img/botonHomeAdmin.png' %}" alt="">
+            </a>
+            <a href="#" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_notificaciones' %}active{% endif %}"
+               aria-label="Notificaciones" {% if request.resolver_match.url_name == 'admin_notificaciones' %}aria-current="page"{% endif %}>
+                <img src="{% static 'admin/img/botonNotificacionAdmin.png' %}" alt="">
+            </a>
+            <a href="{% url 'admin_estadisticas' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_estadisticas' %}active{% endif %}"
+               aria-label="Estadísticas" {% if request.resolver_match.url_name == 'admin_dinero' %}aria-current="page"{% endif %}>
+                <img src="{% static 'admin/img/botonEstadisticas.png' %}" alt="">
+            </a>
+        </div>
+    </nav>
+
+</div>
+{% block body_extra %}{% endblock %}
+</body>
+</html>

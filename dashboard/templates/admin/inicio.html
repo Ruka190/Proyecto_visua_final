@@ -6,7 +6,7 @@
 {% block header %}
     <div class="admin-welcome">
         <img class="avatar-img"
-             src="{% static 'admin/javier.jpg' %}"
+             src="{% static 'admin/img/javier.jpg' %}"
              alt="Foto de Javier">
         <h1>Bienvenido, Javier</h1>
     </div>
@@ -49,7 +49,7 @@
 
 
 {% block body_extra %}
-  <script src="{% static 'chart.umd.min.js' %}"></script>
+  <script src="{% static 'admin/chart.umd.min.js' %}"></script>
   <script>
     // Recupera JSON seguro desde la view
     const labels   = JSON.parse('{{ labels_json|escapejs }}');

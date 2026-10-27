@@ -68,7 +68,7 @@
 
 
 {% block body_extra %}
-  <script src="{% static 'chart.umd.min.js' %}"></script>
+  <script src="{% static 'admin/chart.umd.min.js' %}"></script>
   <script>
     const periodosMatchs = JSON.parse('{{ periodos_matchs_json|escapejs }}');
     const botonesPeriodo = document.querySelectorAll('.admin-period-button[data-periodo]');

@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Iniciar Sesión - BeyondDate</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #faf6f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card-login { background: white; border-radius: 20px; padding: 2rem; width: 100%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .btn-primary-custom { background-color: #f3a69a; border: none; color: #4C2A36; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="card-login text-center">
+  <h2 class="h4 fw-bold mb-3" style="color: #4C2A36;">BeyondDate</h2>
+  <p class="text-muted small mb-4">Ingresa tu RUT y contraseña</p>
+  {% if error %}<div class="alert alert-danger py-2 small mb-3">{{ error }}</div>{% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    <div class="mb-3 text-start">
+      <input type="text" name="rut" class="form-control" placeholder="RUT (ej: admin o user)" required>
+    </div>
+    <div class="mb-4 text-start">
+      <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+    </div>
+    <button type="submit" class="btn btn-primary-custom w-100 py-2 rounded-pill">Entrar</button>
+  </form>
+</div>
+</body>
+</html>

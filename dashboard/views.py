@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import json
+from .models import Match, Cliente, Gusto, Notificacion, Usuario, Administrador
 
 def inicioU(request):
     """USUARIO tarjetas de preferencia con datos base"""
@@ -97,13 +98,16 @@ def graficosU(request):
         'edad': 24,
     }
 
-    # 1. Matches (Dona)
+    # 1. Matches (Dona) -> REAL DESDE AWS
+    matches_reales = Match.objects.filter(estado=1).count()
+    no_matches_reales = Match.objects.filter(estado=0).count()
+    
     chart_payload = {
         'labels': ['Match', 'No Match'],
-        'data': [14, 8]
+        'data': [matches_reales, no_matches_reales]
     }
 
-    # 2. Tiempo en la app (Barras / Línea)
+    # 2. Tiempo en la app (Falso / Mock)
     tiempo_payload = {
         'diario': {
             'labels': ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
@@ -125,7 +129,7 @@ def graficosU(request):
         }
     }
 
-    # 3. Arquetipo de matches (Barras horizontales)
+    # 3. Arquetipo de matches (Falso / Mock)
     arquetipo_payload = {
         'orientacion': {
             'labels': ['Heterosexual', 'Bisexual', 'Homosexual', 'Otro'],
@@ -154,7 +158,7 @@ def graficosU(request):
         }
     }
 
-    # 4. Radar de Afinidad: Gustos vs Disgustos compartidos con matches
+    # 4. Radar de Afinidad (Falso / Mock)
     radar_afinidad_payload = {
         'categorias': [
             'Vida en Casa',
@@ -163,10 +167,8 @@ def graficosU(request):
             'Entorno & Movilidad',
             'Metas & Estilo de Vida'
         ],
-        # Nivel de coincidencia del 0 al 100 en cada dimensión
         'gustos_data': [85, 65, 90, 45, 75],
         'disgustos_data': [30, 70, 20, 60, 40],
-        # Detalle específico de las subcategorías que coinciden
         'detalles_gustos': {
             'Vida en Casa': ['Series & Películas', 'Videojuegos', 'Cocinar juntos'],
             'Vida Social': ['Juntadas tranquilas', 'Ir por café', 'Paseos urbanos'],
@@ -183,6 +185,7 @@ def graficosU(request):
         }
     }
 
+    # Unificamos todo en un solo diccionario context
     context = {
         'perfil': perfil_mock,
         'chart_payload': chart_payload,
@@ -190,7 +193,10 @@ def graficosU(request):
         'arquetipo_payload': arquetipo_payload,
         'radar_afinidad_payload': radar_afinidad_payload,
     }
+    
     return render(request, 'usuario/graficosU.html', context)
+
+
 
 
 
@@ -217,30 +223,55 @@ def admin_inicio(request):
         "datasets_json": json.dumps(datasets, ensure_ascii=False),
     })
 
+from datetime import date
+import json
+
 def admin_estadisticas(request):
+    # 1. Histórico de Matches: ¡Este SÍ es real porque la tabla MATCH está llena!
+    matches_exitosos = Match.objects.filter(estado=1, fechamatch__isnull=False)
+    
+    conteo_dias = {"Lun": 0, "Mar": 0, "Mié": 0, "Jue": 0, "Vie": 0, "Sáb": 0, "Dom": 0}
+    dias_map = {0: "Lun", 1: "Mar", 2: "Mié", 3: "Jue", 4: "Vie", 5: "Sáb", 6: "Dom"}
+    
+    conteo_meses = {"Ene": 0, "Feb": 0, "Mar": 0, "Abr": 0, "May": 0, "Jun": 0, "Jul": 0, "Ago": 0, "Sep": 0, "Oct": 0, "Nov": 0, "Dic": 0}
+    meses_map = {1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun", 7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"}
+
+    for m in matches_exitosos:
+        if m.fechamatch:
+            dia_str = dias_map.get(m.fechamatch.weekday())
+            if dia_str:
+                conteo_dias[dia_str] += 1
+            mes_str = meses_map.get(m.fechamatch.month)
+            if mes_str:
+                conteo_meses[mes_str] += 1
 
     periodos_matchs = {
         "semana": {
             "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-            "data": [18, 26, 20, 34, 29, 41, 23],
+            "data": [conteo_dias[d] for d in ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]],
             "detalle": "Matches por día de la semana",
             "eje_x": "Día",
         },
         "mes": {
             "labels": ["Semana 1", "Semana 2", "Semana 3", "Semana 4"],
-            "data": [120, 180, 145, 220],
+            "data": [
+                matches_exitosos.filter(fechamatch__day__lte=7).count(),
+                matches_exitosos.filter(fechamatch__day__gt=7, fechamatch__day__lte=14).count(),
+                matches_exitosos.filter(fechamatch__day__gt=14, fechamatch__day__lte=21).count(),
+                matches_exitosos.filter(fechamatch__day__gt=21).count(),
+            ],
             "detalle": "Matches por semana del mes",
             "eje_x": "Semana",
         },
         "anio": {
             "labels": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-            "data": [120, 180, 90, 220, 150, 175, 205, 190, 230, 215, 245, 260],
+            "data": [conteo_meses[mes] for mes in ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]],
             "detalle": "Matches por mes del año",
             "eje_x": "Mes",
         },
     }
 
-    
+    # 2. Distribución de edades (Datos simulados para lucir bien el panel)
     edades_labels = ["18-19", "20-29", "30-39", "40-49", "50-59", "60+"]
     hombres_por_edad = {"18-19": 38, "20-29": 55, "30-39": 64, "40-49": 52, "60+": 22}
     mujeres_por_edad = {"18-19": 42, "20-29": 61, "30-39": 70, "40-49": 58, "60+": 35}
@@ -257,17 +288,18 @@ def admin_estadisticas(request):
         },
     ]
 
-    top_gustos = {"Música": 60, "Viajes": 55, "Cine": 49, "Deporte": 32, "Libros": 2}
-    gustos_ordenados = sorted(top_gustos.items(), key=lambda gusto: gusto[1], reverse=True)[:5]
+    # 3. Top gustos (Datos simulados)
+    gustos_labels = ["Música", "Viajes", "Cine", "Deporte", "Libros"]
+    gustos_valores = [60, 55, 49, 32, 2]
 
     context = {
         "periodos_matchs_json": json.dumps(periodos_matchs, ensure_ascii=False),
         "edades_labels_json": json.dumps(edades_labels, ensure_ascii=False),
         "datasets2_json": json.dumps(datasets2, ensure_ascii=False),
-        "gustos_labels_json": json.dumps([gusto for gusto, _ in gustos_ordenados], ensure_ascii=False),
-        "gustos_valores_json": json.dumps([total for _, total in gustos_ordenados]),
-        "kpi_matchs": 60.3, ###Clientes con al menos un match/ total * 100
-        "kpi_estancados": 3.25, ### Clientes sin match / total* 100 
+        "gustos_labels_json": json.dumps(gustos_labels, ensure_ascii=False),
+        "gustos_valores_json": json.dumps(gustos_valores),
+        "kpi_matchs": 60.3,
+        "kpi_estancados": 3.25,
     }
 
     return render(request, "admin/estadisticas.html", context)
@@ -334,6 +366,9 @@ def admin_usuarios(request):
             "admin/usuarios.html",
             {"users": users}
             )
+    
+    
+    
 
 
 def index(request):###
@@ -347,3 +382,29 @@ def faq(request):###
 
 def mision(request):##
     return render(request, 'inicio/mision.html')
+
+def login_view(request):
+    error_msg = None
+    if request.method == 'POST':
+        rut_input = request.POST.get('rut', '').strip()
+        pass_input = request.POST.get('password', '').strip()
+
+        # Atajos rápidos para desarrollo
+        if rut_input == 'admin' and pass_input == 'admin123':
+            return redirect('admin_inicio')
+        if rut_input == 'user' and pass_input == 'user123':
+            return redirect('inicioU')
+
+        # Lógica real validando en AWS
+        try:
+            # Nota: Asegúrate de que el campo en tu modelo se llame 'contrasena' o 'contraseña' según el inspectdb
+            usuario = Usuario.objects.get(rut=rut_input, contrasena=pass_input)
+            es_admin = Administrador.objects.filter(usuario_rut=usuario).exists()
+            if es_admin:
+                return redirect('admin_inicio')
+            else:
+                return redirect('inicioU')
+        except Usuario.DoesNotExist:
+            error_msg = "RUT o contraseña incorrectos."
+
+    return render(request, 'login.html', {'error': error_msg})

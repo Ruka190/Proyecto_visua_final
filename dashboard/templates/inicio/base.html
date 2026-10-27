@@ -120,7 +120,7 @@
         </a>
 
         <nav class="main-nav">
-            <a href="{% url 'index' %}" {% if request.resolver_match.url_name == 'index' %}class="is-active"{% endif %}>Inicio</a>
+            <a href="{% url 'login' %}" {% if request.resolver_match.url_name == 'login' %}class="is-active"{% endif %}>Iniciar Sesión</a>
             <a href="{% url 'contacto' %}" {% if request.resolver_match.url_name == 'contacto' %}class="is-active"{% endif %}>Contacto</a>
             <a href="{% url 'mision' %}" {% if request.resolver_match.url_name == 'mision' %}class="is-active"{% endif %}>Nuestra Misión</a>
             <a href="{% url 'faq' %}" {% if request.resolver_match.url_name == 'faq' %}class="is-active"{% endif %}>FAQ</a>

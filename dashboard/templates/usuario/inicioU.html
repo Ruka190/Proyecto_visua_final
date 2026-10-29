@@ -18,7 +18,7 @@
 
     <main class="container text-center mb-5 pb-5" style="max-width: 680px;">
         
-        <!-- Encabezado de Usuario -->
+        <!-- Encabezado de Usuario: foto y saludo -->
         <header class="d-flex justify-content-center align-items-center gap-3 p-3 mb-3">
             <img src="{% static 'usuario/img/javier.jpg' %}" alt="Foto de perfil de {{ request.user.first_name|default:request.user.username }}" 
                  class="rounded-circle border" 
@@ -29,7 +29,7 @@
             </div>
         </header>
 
-        <!-- Navegación de Filtros / Pestañas -->
+        <!-- Botones de Navegación entre las categorías de match -->
         <nav class="nav nav-pills justify-content-center align-items-center gap-2 mb-4" id="pills-tab" role="tablist">
             {% for item in secciones %}
                 <button class="nav-link px-3 py-2 rounded shadow-sm border-0 {% if item.activo %}active{% endif %}" 
@@ -45,10 +45,9 @@
             {% endfor %}
         </nav>
 
-        <!-- Contenedor Dinámico de Tarjetas -->
+        <!-- Contenedor Dinámico de Tarjetas uno por categoría, conectado con view los datos actualmente usa un ciclo for para recorrer las opciones -->
         <section class="tab-content" id="pills-tabContent">
             {% for sec in secciones %}
-                <!-- DESPUÉS (sin el '-sec-') -->
             <article class="tab-pane fade {% if sec.activo %}show active{% endif %}" 
                 id="contenido-{{ sec.id }}" 
                 role="tabpanel" 

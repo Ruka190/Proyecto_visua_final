@@ -1,9 +1,10 @@
+// Iniciar primero el html con los datos
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Configuración global de fuentes y colores
+  // Fuente y color por defecto para todos los gráficos
   Chart.defaults.font.family = "'Poppins', sans-serif";
   Chart.defaults.color = '#4C2A36';
 
-  // Helper para leer los json_script de Django
+  // Leer los datos desde el django
   const leerJSON = (id, fallback) => {
     try {
       const el = document.getElementById(id);
@@ -13,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Helper para controlar los botones acordeón (Mostrar / Ocultar)
-  const setupAccordion = (btnId, panelId, txtVer, txtOcultar, onShow) => {
+  // Manejar los botones para mostrar y ocultar los gráficos
+  const mostrarOcultar = (btnId, panelId, txtVer, txtOcultar, onShow) => {
     const btn = document.getElementById(btnId);
     const panel = document.getElementById(panelId);
     if (!btn || !panel) return;
@@ -34,13 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   const dataMatches = leerJSON('datos-grafico', { labels: ['Match', 'No Match'], data: [14, 8] });
   let chartMatches = null;
-  setupAccordion('btnToggleGrafico', 'seccionGrafico', 'Ver balance de Matches', 'Ocultar balance de Matches', () => {
+  
+  mostrarOcultar('btnToggleGrafico', 'seccionGrafico', 'Ver balance de Matches', 'Ocultar balance de Matches', () => {
     if (chartMatches) {
       chartMatches.resize();
       return;
     }
     const canvas = document.getElementById('miGrafico');
     if (!canvas) return;
+    
     chartMatches = new Chart(canvas, {
       type: 'doughnut',
       data: {
@@ -52,13 +55,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // GRÁFICO 2: TIEMPO (BARRAS)
+  // GRÁFICO 2: TIEMPO EN LA APP (BARRAS)
   // ==========================================
   const dataTiempo = leerJSON('datos-tiempo', {});
   let chartTiempo = null, periodoActual = 'diario';
+  
   const renderTiempo = (periodo) => {
     periodoActual = periodo;
     const conf = dataTiempo[periodo] || { labels: [], data: [], unit: '', label: '' };
+
+    // Calcular la suma total de los datos del periodo seleccionado para el KPI
+    const total = (conf.data || []).reduce((acumulado, valor) => acumulado + Number(valor), 0);
+
+    // Actualizar el número y la unidad en la tarjeta KPI de tiempo total
+    const totalEl = document.getElementById('total-tiempo');
+    if (totalEl) {
+      totalEl.textContent = `${total} ${conf.unit}`;
+    }
+
     const canvas = document.getElementById('graficoTiempo');
     if (!canvas) return;
 
@@ -80,7 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
       chartTiempo.resize();
     }
   };
-  setupAccordion('btnToggleTiempo', 'seccionTiempo', 'Ver tiempo en la app', 'Ocultar tiempo en la app', () => renderTiempo(periodoActual));
+
+  mostrarOcultar('btnToggleTiempo', 'seccionTiempo', 'Ver tiempo en la app', 'Ocultar tiempo en la app', () => renderTiempo(periodoActual));
+  
   document.querySelectorAll('.btn-periodo[data-periodo]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.btn-periodo[data-periodo]').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
@@ -88,18 +104,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
 
   // ==========================================
-  // GRÁFICO 3: ARQUETIPO (BARRAS HORIZONTALES)
+  // GRÁFICO 3: CARACTERÍSTICAS DE MATCH (BARRAS HORIZONTALES)
   // ==========================================
-  const dataArquetipo = leerJSON('datos-arquetipo', {});
-  let chartArquetipo = null, catActual = 'orientacion';
-  const renderArquetipo = (cat) => {
-    catActual = cat;
-    const conf = dataArquetipo[cat] || { labels: [], data: [] };
-    const canvas = document.getElementById('graficoArquetipo');
+  const dataCaracteristicas = leerJSON('datos-caracteristicas', {});
+  let chartCaracteristicas = null, catActual = 'orientacion';
+  
+  const renderCaracteristicas = (car) => {
+    catActual = car;
+    const conf = dataCaracteristicas[car] || { labels: [], data: [] };
+    const canvas = document.getElementById('graficoCaracteristicas');
     if (!canvas) return;
 
-    if (!chartArquetipo) {
-      chartArquetipo = new Chart(canvas, {
+    if (!chartCaracteristicas) {
+      chartCaracteristicas = new Chart(canvas, {
         type: 'bar',
         data: { labels: conf.labels, datasets: [{ data: conf.data, backgroundColor: '#D62D5A', borderColor: '#4C2A36', borderWidth: 1, borderRadius: 6 }] },
         options: {
@@ -109,24 +126,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     } else {
-      chartArquetipo.data.labels = conf.labels;
-      chartArquetipo.data.datasets[0].data = conf.data;
-      chartArquetipo.update();
-      chartArquetipo.resize();
+      chartCaracteristicas.data.labels = conf.labels;
+      chartCaracteristicas.data.datasets[0].data = conf.data;
+      chartCaracteristicas.update();
+      chartCaracteristicas.resize();
     }
   };
-  setupAccordion('btnToggleArquetipo', 'seccionArquetipo', 'Tu tipo de Match en números', 'Ocultar grafico Caracteristicas', () => renderArquetipo(catActual));
-  document.querySelectorAll('.btn-arquetipo[data-categoria]').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.btn-arquetipo[data-categoria]').forEach(x => x.classList.remove('active'));
+
+  mostrarOcultar('btnToggleCaracteristicas', 'seccionCaracteristicas', 'Ver tipo de Match en números', 'Ocultar grafico Caracteristicas', () => renderCaracteristicas(catActual));
+  
+  document.querySelectorAll('.btn-caracteristicas[data-categoria]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.btn-caracteristicas[data-categoria]').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
-    renderArquetipo(b.dataset.categoria);
+    renderCaracteristicas(b.dataset.categoria);
   }));
 
   // ==========================================
-  // GRÁFICO 4: RADAR (GUSTOS / DISGUSTOS)
+  // GRÁFICO 4: RADAR DE AFINIDAD (GUSTOS / DISGUSTOS)
   // ==========================================
   const dataRadar = leerJSON('datos-radar', { categorias: [], gustos_data: [], disgustos_data: [] });
   let chartRadar = null, tipoRadar = 'gustos';
+  
   const renderRadar = (tipo) => {
     tipoRadar = tipo;
     const canvas = document.getElementById('graficoRadar');
@@ -159,7 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
       chartRadar.resize();
     }
   };
-  setupAccordion('btnToggleRadar', 'seccionRadar', 'Gustos y Disgustos en común', 'Ocultar gráfico Coincidencias', () => renderRadar(tipoRadar));
+
+  mostrarOcultar('btnToggleRadar', 'seccionRadar', 'Ver Gustos y Disgustos en común', 'Ocultar gráfico Coincidencias', () => renderRadar(tipoRadar));
+  
   document.querySelectorAll('[data-tipo-radar]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('[data-tipo-radar]').forEach(x => x.classList.remove('active'));
     b.classList.add('active');

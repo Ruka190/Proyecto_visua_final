@@ -93,18 +93,34 @@ def perfilU(request):
     return render(request, 'usuario/perfilU.html', context)
 
 def graficosU(request):
+    
+    """
+    [CONEXIÓN A BASE DE DATOS - AWS RDS]
+    Función de la vista de usuario que calcula el total de registros de matches 
+    y el porcentaje de éxito (matches reales vs no matches) consultando 
+    directamente las tablas en la nube.
+    """
+    
     perfil_mock = {
         'nombre': 'Javier',
         'edad': 24,
     }
 
-    # 1. Matches (Dona) -> REAL DESDE AWS
+    # Consulta al total de registros y filtrado por estado (1: Match, 0: No Match)
+    total_matches = Match.objects.count()
     matches_reales = Match.objects.filter(estado=1).count()
     no_matches_reales = Match.objects.filter(estado=0).count()
     
+    # Cálculo dinámico del porcentaje de éxito
+    if total_matches > 0:
+        porcentaje_matches = round((matches_reales / total_matches) * 100, 1)
+    else:
+        porcentaje_matches = 0.0
+    
     chart_payload = {
         'labels': ['Match', 'No Match'],
-        'data': [matches_reales, no_matches_reales]
+        'data': [matches_reales, no_matches_reales],
+        'porcentaje': porcentaje_matches,
     }
 
     # 2. Tiempo en la app (Falso / Mock)
@@ -226,8 +242,16 @@ def admin_inicio(request):
 from datetime import date
 import json
 
+
+
 def admin_estadisticas(request):
-    # 1. Histórico de Matches: ¡Este SÍ es real porque la tabla MATCH está llena!
+    """
+    [CONEXIÓN A BASE DE DATOS - AWS RDS]
+    Función que consulta la tabla 'Match' en la base de datos de AWS para 
+    generar dinámicamente el histórico de matches según la fecha real (fechamatch) 
+    agrupada por días de la semana y periodos.
+    """
+    # Consulta a la BD filtrando los matches exitosos (estado=1)
     matches_exitosos = Match.objects.filter(estado=1, fechamatch__isnull=False)
     
     conteo_dias = {"Lun": 0, "Mar": 0, "Mié": 0, "Jue": 0, "Vie": 0, "Sáb": 0, "Dom": 0}

@@ -70,6 +70,10 @@ class Gusto(models.Model):
         managed = False
         db_table = 'GUSTO'
 
+# MODELO MATCH: Representa la tabla de emparejamientos en AWS RDS.
+# Se utiliza 'managed = False' para indicar que Django no modificará 
+# ni recreará la estructura de esta tabla mediante migraciones locales,
+# delegando el control absoluto de la base de datos a la infraestructura de AWS.
 
 class Match(models.Model):
     idmatch = models.CharField(db_column='idMatch', primary_key=True, max_length=100)  # Field name made lowercase.

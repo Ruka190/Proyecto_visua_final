@@ -18,11 +18,11 @@
 </head>
 <body>
 
-  <!-- Contenedor central -->
+  <!-- contenedor del perfil del usuario -->
   <main class="container py-4" style="max-width: 420px; padding-bottom: 95px !important;">
     <div class="d-flex flex-column gap-4">
 
-      <!-- 1. Cabecera -->
+      <!-- 1. nombre y botones para modificar perfil y entrar estadisticas -->
       <header class="d-flex flex-column align-items-center gap-3">
         <img 
           src="{% static 'usuario/img/javier.jpg' %}" 
@@ -30,22 +30,22 @@
           class="rounded-circle avatar-profile shadow-sm"
         >
 
-        
         <div class="badge-custom text-center px-4 py-2 d-flex flex-column align-items-center gap-2 rounded-4">
           <span class="fs-6 fw-bold">{{ perfil.nombre }}, {{ perfil.edad }}</span>
+          <!-- Añadido en futura verciones -->
           {% comment %}
           <a href="{% url 'editarPerfilU' %}" class="btn btn-edit-profile border-0 text-decoration-none">
             Editar perfil
           </a> 
           {% endcomment %}
+          <!-- boton para ir a las estadísticas del usuario -->
           <a href="{% url 'graficosU' %}" class="btn btn-edit-profile border-0 text-decoration-none">
             Estadisticas
           </a>
         </div>
-        
       </header>
 
-      <!-- 2. Sobre mí -->
+      <!-- una biografia del usuario-->
       <section>
         <h2 class="h5 fw-bold mb-3">Sobre mí</h2>
         <div class="p-3 rounded-4" style="background-color: var(--card-bg); font-size: 0.9rem; line-height: 1.5;">
@@ -53,7 +53,7 @@
         </div>
       </section>
 
-      <!-- 3. Información básica -->
+      <!-- Información básica del perfil -->
       <section>
         <h2 class="h5 fw-bold mb-3">Información básica</h2>
         <div class="d-flex flex-wrap gap-2">
@@ -75,7 +75,7 @@
         </div>
       </section>
 
-      <!-- 4. Mis intereses -->
+      <!-- gustos y disgustos -->
       <section>
         <h2 class="h5 fw-bold mb-3">Mis intereses</h2>
         <div class="d-flex flex-wrap gap-2">
@@ -87,7 +87,7 @@
         </div>
       </section>
 
-<!-- 5. Mis fotos -->
+      <!-- seccion de maximo 6 fotos-->
       <section>
         <h2 class="h5 fw-bold mb-3">
           Mis fotos ({{ perfil.fotos|length }}/6)
@@ -114,7 +114,10 @@
 
     </div>
   </main>
+
+  <!-- Barra de navegación inferior -->
   {% include 'usuario/barraU.html' %}
+
   <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

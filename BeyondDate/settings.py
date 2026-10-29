@@ -74,6 +74,10 @@ WSGI_APPLICATION = 'BeyondDate.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+# CAPA DE DATOS: Configuración del motor y conexión con AWS RDS (MySQL)
+# Establece la comunicación remota entre el servidor Django y la base 
+# de datos alojada en la nube para la gestión de usuarios, perfiles y matches.
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',

@@ -220,6 +220,7 @@ def administrador(request):
     return render(request, 'admin/administrador.html')
 
 def admin_inicio(request):
+    # 1. Datos de Conexiones recientes
     labels = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"]
     datasets = [{
             "data": [120, 180, 90, 220, 150],
@@ -228,16 +229,80 @@ def admin_inicio(request):
             "tension": 0.2,
             "fill": True,
         }]
-
     matches_totales = 20012
-    return render(request, "admin/inicio.html", {
-        "clientes_registrados": 20, ##
-        "matches_totales": f"{matches_totales:,}".replace(",", "."), ##
-        "reportes_usuarios": 33, ##s
-        "notificacion_pendiente": 67, ##
+
+    # 2. Datos del Histórico de Matches (Conexión a BD AWS)
+    matches_exitosos = Match.objects.filter(estado=1, fechamatch__isnull=False)
+    
+    conteo_dias = {"Lun": 0, "Mar": 0, "Mié": 0, "Jue": 0, "Vie": 0, "Sáb": 0, "Dom": 0}
+    dias_map = {0: "Lun", 1: "Mar", 2: "Mié", 3: "Jue", 4: "Vie", 5: "Sáb", 6: "Dom"}
+    conteo_meses = {"Ene": 0, "Feb": 0, "Mar": 0, "Abr": 0, "May": 0, "Jun": 0, "Jul": 0, "Ago": 0, "Sep": 0, "Oct": 0, "Nov": 0, "Dic": 0}
+    meses_map = {1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun", 7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"}
+
+    for m in matches_exitosos:
+        if m.fechamatch:
+            dia_str = dias_map.get(m.fechamatch.weekday())
+            if dia_str:
+                conteo_dias[dia_str] += 1
+            mes_str = meses_map.get(m.fechamatch.month)
+            if mes_str:
+                conteo_meses[mes_str] += 1
+
+    periodos_matchs = {
+        "semana": {
+            "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+            "data": [conteo_dias[d] for d in ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]],
+            "detalle": "Matches por día de la semana",
+            "eje_x": "Día",
+        },
+        "mes": {
+            "labels": ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
+            "data": [
+                matches_exitosos.filter(fechamatch__day__lte=7).count(),
+                matches_exitosos.filter(fechamatch__day__gt=7, fechamatch__day__lte=14).count(),
+                matches_exitosos.filter(fechamatch__day__gt=14, fechamatch__day__lte=21).count(),
+                matches_exitosos.filter(fechamatch__day__gt=21).count(),
+            ],
+            "detalle": "Matches por semana del mes",
+            "eje_x": "Semana",
+        },
+        "anio": {
+            "labels": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "data": [conteo_meses[mes] for mes in ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]],
+            "detalle": "Matches por mes del año",
+            "eje_x": "Mes",
+        },
+    }
+
+    # 3. Distribución de edades y Gustos
+    edades_labels = ["18-19", "20-29", "30-39", "40-49", "50-59", "60+"]
+    hombres_por_edad = {"18-19": 38, "20-29": 55, "30-39": 64, "40-49": 52, "60+": 22}
+    mujeres_por_edad = {"18-19": 42, "20-29": 61, "30-39": 70, "40-49": 58, "60+": 35}
+    datasets2 = [
+        { "label": "Hombres", "data": [-hombres_por_edad.get(rango, 0) for rango in edades_labels], "backgroundColor": "#652E38" },
+        { "label": "Mujeres", "data": [mujeres_por_edad.get(rango, 0) for rango in edades_labels], "backgroundColor": "#E86E67" },
+    ]
+
+    gustos_labels = ["Música", "Viajes", "Cine", "Deporte", "Libros"]
+    gustos_valores = [60, 55, 49, 32, 2]
+
+    context = {
+        "clientes_registrados": 20, 
+        "matches_totales": f"{matches_totales:,}".replace(",", "."), 
+        "reportes_usuarios": 33, 
+        "notificacion_pendiente": 67, 
         "labels_json": json.dumps(labels, ensure_ascii=False),
         "datasets_json": json.dumps(datasets, ensure_ascii=False),
-    })
+        "periodos_matchs_json": json.dumps(periodos_matchs, ensure_ascii=False),
+        "edades_labels_json": json.dumps(edades_labels, ensure_ascii=False),
+        "datasets2_json": json.dumps(datasets2, ensure_ascii=False),
+        "gustos_labels_json": json.dumps(gustos_labels, ensure_ascii=False),
+        "gustos_valores_json": json.dumps(gustos_valores),
+        "kpi_matchs": 60.3,
+        "kpi_estancados": 3.25,
+    }
+
+    return render(request, "admin/inicio.html", context)
 
 from datetime import date
 import json

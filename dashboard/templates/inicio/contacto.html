@@ -4,6 +4,7 @@
 {% block title %}Contacto · Beyond Date{% endblock %}
 
 {% block extra_css %}
+    <style>
         /* ---------- Cuerpo principal (formulario de contacto) ---------- */
         .contacto {
             background-color: #FBF4EE;
@@ -109,6 +110,7 @@
             .contacto__form { max-width: 100%; }
             .contacto__tabla .etiqueta { width: auto; font-size: 14px; padding-right: 8px; }
         }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -139,7 +141,6 @@
                         <td class="etiqueta"><label for="telefono">Teléfono:</label></td>
                         <td class="campo">
                             <div class="codigo-pais">
-                                <!-- Desplegable de código de país (placeholders: a la espera de las imagenes de banderas) -->
                                 <select id="codigo_pais" name="codigo_pais" aria-label="Código de país">
                                     <option value="+56" selected>&#127464;&#127473; +56</option>
                                     <option value="+54">&#127462;&#127479; +54</option>

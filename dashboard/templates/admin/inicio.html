@@ -4,74 +4,208 @@
 {% block title %}Inicio del administrador{% endblock %}
 
 {% block header %}
-    <div class="admin-welcome">
-        <img class="avatar-img"
-             src="{% static 'admin/img/javier.jpg' %}"
-             alt="Foto de Javier">
-        <h1>Bienvenido, Javier</h1>
+    <div class="d-flex align-items-center justify-content-center gap-3">
+        <img class="rounded-circle shadow-sm" src="{% static 'admin/img/javier.jpg' %}" alt="Foto de Javier" style="width: 50px; height: 50px; object-fit: cover;">
+        <h1 class="h4 fw-bold mb-0" style="color: #4C2A36;">Bienvenido, Javier</h1>
     </div>
 {% endblock %}
 
 {% block content %}
-    <section class="admin-panel" aria-label="Resumen del sitio">
-        <div class="admin-stats">
-            <article class="admin-stat-card">
-                <h2>Clientes registrados</h2>
-                <p>{{ clientes_registrados }}</p>
-            </article>
-
-            <article class="admin-stat-card">
-                <h2>Matches totales</h2>
-                <p>{{ matches_totales }}</p>
-            </article>
-
-            <article class="admin-stat-card">
-                <h2>Reportes de usuarios</h2>
-                <p>{{ reportes_usuarios }}</p>
-            </article>
-
-            <article class="admin-stat-card">
-                <h2>Notificaciones pendientes</h2>
-                <p>{{ notificacion_pendiente }}</p>
-            </article>
+    
+    <!-- 1. FILA DE INDICADORES PRINCIPALES (KPIs) -->
+    <section aria-label="Resumen del sitio" class="mb-4">
+        <div class="row g-3">
+            <div class="col-6 col-lg-3">
+                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
+                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Registrados</h2>
+                    <p class="fs-3 fw-bold mb-0" style="color: #D62D5A;">{{ clientes_registrados }}</p>
+                </article>
+            </div>
+            <div class="col-6 col-lg-3">
+                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
+                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Matches Totales</h2>
+                    <p class="fs-3 fw-bold mb-0" style="color: #D62D5A;">{{ matches_totales }}</p>
+                </article>
+            </div>
+            <div class="col-6 col-lg-3">
+                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
+                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Con Match</h2>
+                    <p class="fs-3 fw-bold mb-0" style="color: #4C2A36;">{{ kpi_matchs }}%</p>
+                </article>
+            </div>
+            <div class="col-6 col-lg-3">
+                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
+                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Sin Match</h2>
+                    <p class="fs-3 fw-bold mb-0" style="color: #4C2A36;">{{ kpi_estancados }}%</p>
+                </article>
+            </div>
         </div>
     </section>
 
-
-     <section class="admin-panel admin-panel--chart">
-        <h2>Conexiones recientes </h2>
-        <p>Usuarios conectados recientemente en la semana</p>
-        <div class="chart-container">
-            <canvas id="ventasChart" height="220"></canvas>
+    <!-- 2. CUADRÍCULA DE GRÁFICOS (2x2 en PC, 1 columna en Móvil) -->
+    <div class="row g-4">
+        
+        <!-- Gráfico: Conexiones Recientes -->
+        <div class="col-12 col-xl-6">
+            <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
+                <div class="mb-3">
+                    <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Conexiones recientes</h2>
+                    <p class="text-muted small mb-0">Usuarios conectados en la semana</p>
+                </div>
+                <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
+                    <canvas id="ventasChart"></canvas>
+                </div>
+            </section>
         </div>
-    </section>
+
+        <!-- Gráfico: Histórico de Matches -->
+        <div class="col-12 col-xl-6">
+            <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                    <div>
+                        <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Histórico Matchs</h2>
+                        <p id="detalle-historico-matchs" class="text-muted small mb-0">Matches por día de la semana</p>
+                    </div>
+                    <div class="btn-group rounded-pill border" style="border-color: #f3a69a !important; padding: 2px;" role="group">
+                        <button type="button" class="btn btn-sm admin-period-button active rounded-pill border-0" data-periodo="semana">Semana</button>
+                        <button type="button" class="btn btn-sm admin-period-button rounded-pill border-0" data-periodo="mes">Mes</button>
+                        <button type="button" class="btn btn-sm admin-period-button rounded-pill border-0" data-periodo="anio">Año</button>
+                    </div>
+                </div>
+                <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
+                    <canvas id="ChartHistoricoMatchs"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Gráfico: Distribución de Edades -->
+        <div class="col-12 col-xl-6">
+            <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
+                <div class="mb-3">
+                    <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Distribución de edades</h2>
+                    <p class="text-muted small mb-0">Proporción por género</p>
+                </div>
+                <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
+                    <canvas id="ChartDistribucionEdades"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Gráfico: Top Gustos -->
+        <div class="col-12 col-xl-6">
+            <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
+                <div class="mb-3">
+                    <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Top 5 gustos populares</h2>
+                    <p class="text-muted small mb-0">Cantidad de usuarios por gusto</p>
+                </div>
+                <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
+                    <canvas id="ChartTopGustos"></canvas>
+                </div>
+            </section>
+        </div>
+
+    </div>
 {% endblock %}
 
-
 {% block body_extra %}
-  <script src="{% static 'admin/chart.umd.min.js' %}"></script>
-  <script>
-    // Recupera JSON seguro desde la view
-    const labels   = JSON.parse('{{ labels_json|escapejs }}');
-    const datasets = JSON.parse('{{ datasets_json|escapejs }}');
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+      .admin-period-button { color: #4C2A36; background-color: transparent; font-weight: 500; }
+      .admin-period-button.active, .admin-period-button:hover { background-color: #f3a69a !important; font-weight: 600; color: #4C2A36; }
+  </style>
 
-    new Chart(document.getElementById("ventasChart"), {
-      type: "line",
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        interaction: { mode: "index", intersect: false },
-        plugins: { legend: { display: false } },
-        scales: { 
-            y: { 
-                beginAtZero: true ,
-                title: { display: true, text: "Cantidad de usuarios" }
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Configuraciones globales de Chart.js
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        Chart.defaults.color = '#4C2A36';
+
+        // 1. Gráfico Conexiones Recientes
+        const labels_conexiones = JSON.parse('{{ labels_json|escapejs }}');
+        const datasets_conexiones = JSON.parse('{{ datasets_json|escapejs }}');
+        new Chart(document.getElementById("ventasChart"), {
+            type: "line",
+            data: { labels: labels_conexiones, datasets: datasets_conexiones },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: { legend: { display: false } },
+                elements: { line: { tension: 0.4, borderWidth: 3 }, point: { radius: 4 } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+            }
+        });
+
+        // 2. Gráfico Histórico de Matches
+        const periodosMatchs = JSON.parse('{{ periodos_matchs_json|escapejs }}');
+        const botonesPeriodo = document.querySelectorAll('.admin-period-button[data-periodo]');
+        let periodoActual = periodosMatchs.semana;
+
+        const chartMatchs = new Chart(document.getElementById("ChartHistoricoMatchs"), {
+            type: "line",
+            data: {
+                labels: periodoActual.labels,
+                datasets: [{ data: periodoActual.data, borderColor: "#B94448", backgroundColor: "#B944482E", tension: 0.3, fill: true, borderWidth: 3 }]
             },
-            x: {
-                title: { display: true, text: "Día de semana" }
-            }, 
-        }
-      }
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false }, title: { display: true, text: periodoActual.eje_x } } }
+            }
+        });
+
+        botonesPeriodo.forEach(boton => boton.addEventListener('click', () => {
+            const periodo = periodosMatchs[boton.dataset.periodo];
+            if (!periodo) return;
+            chartMatchs.data.labels = periodo.labels;
+            chartMatchs.data.datasets[0].data = periodo.data;
+            chartMatchs.options.scales.x.title.text = periodo.eje_x;
+            document.getElementById('detalle-historico-matchs').textContent = periodo.detalle;
+            botonesPeriodo.forEach(op => op.classList.remove('active'));
+            boton.classList.add('active');
+            chartMatchs.update();
+        }));
+
+        // 3. Gráfico Distribución de Edades
+        const edadesLabels = JSON.parse('{{ edades_labels_json|escapejs }}');
+        const datasets2 = JSON.parse('{{ datasets2_json|escapejs }}');
+        const maxEdad = Math.ceil(Math.max(...datasets2.flatMap(s => s.data.map(Math.abs))) / 20) * 20;
+
+        new Chart(document.getElementById("ChartDistribucionEdades"), {
+            type: "bar",
+            data: { labels: edadesLabels, datasets: datasets2 },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: "y",
+                plugins: {
+                    legend: { position: "top" },
+                    tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Math.abs(ctx.parsed.x)} usuarios` } }
+                },
+                scales: {
+                    x: { stacked: true, min: -maxEdad, max: maxEdad, ticks: { callback: v => Math.abs(v) }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { stacked: true, grid: { display: false } }
+                }
+            }
+        });
+
+        // 4. Gráfico Top Gustos
+        const gustosLabels = JSON.parse('{{ gustos_labels_json|escapejs }}');
+        const gustosValores = JSON.parse('{{ gustos_valores_json|escapejs }}');
+        new Chart(document.getElementById("ChartTopGustos"), {
+            type: "bar",
+            data: {
+                labels: gustosLabels,
+                datasets: [{ data: gustosValores, backgroundColor: "#B94448", borderRadius: 4 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: "y",
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
     });
   </script>
 {% endblock %}

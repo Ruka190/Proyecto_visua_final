@@ -14,45 +14,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Manejar los botones para mostrar y ocultar los gráficos
-  const mostrarOcultar = (btnId, panelId, txtVer, txtOcultar, onShow) => {
-    const btn = document.getElementById(btnId);
-    const panel = document.getElementById(panelId);
-    if (!btn || !panel) return;
-
-    btn.addEventListener('click', () => {
-      const oculto = panel.classList.toggle('d-none');
-      panel.classList.toggle('d-flex', !oculto);
-      btn.innerHTML = `<i class="bi bi-${oculto ? 'eye-fill' : 'eye-slash-fill'} me-1"></i> ${oculto ? txtVer : txtOcultar}`;
-      btn.style.backgroundColor = oculto ? '#f3a69a' : '#e58f82';
-      btn.style.color = oculto ? '#4C2A36' : '#ffffff';
-      if (!oculto && onShow) setTimeout(onShow, 50);
-    });
-  };
-
   // ==========================================
   // GRÁFICO 1: MATCHES (DONA)
   // ==========================================
   const dataMatches = leerJSON('datos-grafico', { labels: ['Match', 'No Match'], data: [14, 8] });
-  let chartMatches = null;
+  const canvasMatches = document.getElementById('miGrafico');
   
-  mostrarOcultar('btnToggleGrafico', 'seccionGrafico', 'Ver balance de Matches', 'Ocultar balance de Matches', () => {
-    if (chartMatches) {
-      chartMatches.resize();
-      return;
-    }
-    const canvas = document.getElementById('miGrafico');
-    if (!canvas) return;
-    
-    chartMatches = new Chart(canvas, {
+  if (canvasMatches) {
+    new Chart(canvasMatches, {
       type: 'doughnut',
       data: {
         labels: dataMatches.labels,
         datasets: [{ data: dataMatches.data, backgroundColor: ['#D62D5A', '#B944482E'], borderColor: '#4C2A36', borderWidth: 1 }]
       },
-      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, // Importante para que se adapte a la tarjeta de la grilla
+        plugins: { legend: { position: 'bottom' } } 
+      }
     });
-  });
+  }
 
   // ==========================================
   // GRÁFICO 2: TIEMPO EN LA APP (BARRAS)
@@ -91,11 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
       chartTiempo.data.datasets[0].data = conf.data;
       chartTiempo.options.scales.y.ticks.callback = v => `${v} ${conf.unit}`;
       chartTiempo.update();
-      chartTiempo.resize();
     }
   };
 
-  mostrarOcultar('btnToggleTiempo', 'seccionTiempo', 'Ver tiempo en la app', 'Ocultar tiempo en la app', () => renderTiempo(periodoActual));
+  renderTiempo(periodoActual); // Renderizar inmediatamente
   
   document.querySelectorAll('.btn-periodo[data-periodo]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.btn-periodo[data-periodo]').forEach(x => x.classList.remove('active'));
@@ -129,11 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
       chartCaracteristicas.data.labels = conf.labels;
       chartCaracteristicas.data.datasets[0].data = conf.data;
       chartCaracteristicas.update();
-      chartCaracteristicas.resize();
     }
   };
 
-  mostrarOcultar('btnToggleCaracteristicas', 'seccionCaracteristicas', 'Ver tipo de Match en números', 'Ocultar grafico Caracteristicas', () => renderCaracteristicas(catActual));
+  renderCaracteristicas(catActual); // Renderizar inmediatamente
   
   document.querySelectorAll('.btn-caracteristicas[data-categoria]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.btn-caracteristicas[data-categoria]').forEach(x => x.classList.remove('active'));
@@ -176,12 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
       chartRadar.data.datasets[0].backgroundColor = bg;
       chartRadar.data.datasets[0].pointBackgroundColor = color;
       chartRadar.update();
-      chartRadar.resize();
     }
   };
 
-  mostrarOcultar('btnToggleRadar', 'seccionRadar', 'Ver Gustos y Disgustos en común', 'Ocultar gráfico Coincidencias', () => renderRadar(tipoRadar));
+  renderRadar(tipoRadar); // Renderizar inmediatamente
   
+  // Ojo: Aseguramos que solo seleccione los botones de tipo radar y no los de tiempo
   document.querySelectorAll('[data-tipo-radar]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('[data-tipo-radar]').forEach(x => x.classList.remove('active'));
     b.classList.add('active');

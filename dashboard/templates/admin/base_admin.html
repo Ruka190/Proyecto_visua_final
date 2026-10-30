@@ -6,21 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Panel administrador{% endblock %} · Beyond Date</title>
 
+    <!-- Agregamos Bootstrap 5 para el sistema de grillas -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="{% static 'inicio/css/variables.css' %}">
     <link rel="stylesheet" href="{% static 'inicio/css/typography.css' %}">
-    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}?v=usuarios-2">
+    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}?v=usuarios-4">
     {% block extra_css %}{% endblock %}
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-page, #faf6f0); }
+        .admin-dashboard { max-width: 100% !important; margin: 0; padding: 0; }
+        .admin-main { padding: 2rem 1rem 100px 1rem !important; }
+    </style>
 </head>
 <body>
 <div class="admin-dashboard">
 
-    <header class="admin-header">
+    <header class="admin-header text-center py-4 border-bottom shadow-sm bg-white">
         {% block header %}
-            <h1>{% block page_title %}Panel administrador{% endblock %}</h1>
+            <h1 class="h4 fw-bold mb-0">{% block page_title %}Panel administrador{% endblock %}</h1>
         {% endblock %}
     </header>
 
-    <main class="admin-main">
+    <main class="admin-main container-fluid" style="max-width: 1400px; margin: 0 auto;">
         {% block content %}{% endblock %}
     </main>
 
@@ -29,7 +39,7 @@
             <span class="nav-item-circle" aria-label="Mensajes, próximamente" title="Mensajes, próximamente">
                 <img src="{% static 'admin/img/botonMensajeAdmin.png' %}" alt="">
             </span>
-            <a  href="{% url 'admin_usuarios' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_usuarios' %}active{% endif %}"
+            <a href="{% url 'admin_usuarios' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_usuarios' %}active{% endif %}"
              aria-label="Usuarios" {% if request.resolver_match.url_name == 'admin_usuarios' %}aria-current="page"{% endif %}>
                 <img src="{% static 'admin/img/botonUsers.png' %}" alt="">
             </a>
@@ -41,14 +51,12 @@
                aria-label="Notificaciones" {% if request.resolver_match.url_name == 'admin_notificaciones' %}aria-current="page"{% endif %}>
                 <img src="{% static 'admin/img/botonNotificacionAdmin.png' %}" alt="">
             </a>
-            <a href="{% url 'admin_estadisticas' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'admin_estadisticas' %}active{% endif %}"
-               aria-label="Estadísticas" {% if request.resolver_match.url_name == 'admin_dinero' %}aria-current="page"{% endif %}>
-                <img src="{% static 'admin/img/botonEstadisticas.png' %}" alt="">
-            </a>
+            <!-- El botón de estadísticas fue eliminado de aquí -->
         </div>
     </nav>
 
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% block body_extra %}{% endblock %}
 </body>
 </html>

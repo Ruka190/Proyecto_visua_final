@@ -1,9 +1,10 @@
 {% extends 'inicio/base.html' %}
 {% load static %}
 
-{% block title %}Beyond Date{% endblock %}
+{% block title %}Beyond Date - Encuentra conexiones reales{% endblock %}
 
 {% block extra_css %}
+    <style>
         /* ---------- Sección principal (Hero) ---------- */
         .hero {
             display: flex;
@@ -76,6 +77,96 @@
             font-size: 14px;
             text-align: center;
             padding: 20px;
+        }
+
+        /* ---------- Nueva Sección: ¿Cómo Funciona? ---------- */
+        .how-it-works {
+            padding: 80px 48px;
+            background-color: #FFFDFB;
+            text-align: center;
+        }
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4a4a4a;
+            margin-bottom: 12px;
+        }
+        .section-subtitle {
+            font-size: 16px;
+            color: #6b6b6b;
+            max-width: 600px;
+            margin: 0 auto 50px;
+            line-height: 1.5;
+        }
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .step-card {
+            background-color: #FDECE7;
+            border: 1px solid #F3CFC4;
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: left;
+            position: relative;
+        }
+        .step-number {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            background-color: #A63A32;
+            color: #FFF;
+            font-weight: 700;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 36px;
+            margin-bottom: 20px;
+        }
+        .step-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #4a4a4a;
+            margin-bottom: 12px;
+        }
+        .step-card p {
+            font-size: 14px;
+            color: #5c5c5c;
+            line-height: 1.6;
+        }
+
+        /* ---------- Nueva Sección: Pilares de Conexión ---------- */
+        .pillars {
+            padding: 80px 48px;
+            background: linear-gradient(180deg, #FBE7E0 0%, #FFF9F5 100%);
+            text-align: center;
+        }
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .pillar-box {
+            background-color: #FFFDF9;
+            border: 1px solid #F3CFC4;
+            border-radius: 20px;
+            padding: 32px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .pillar-box h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #A63A32;
+            margin-bottom: 10px;
+        }
+        .pillar-box p {
+            font-size: 14px;
+            color: #5c5c5c;
+            line-height: 1.5;
         }
 
         /* ---------- Sección de opiniones ---------- */
@@ -163,8 +254,9 @@
         @media (max-width: 900px) {
             .hero { flex-direction: column; padding: 40px 24px 56px; }
             .hero__title { font-size: 34px; }
-            .opinions { padding: 48px 24px 56px; }
+            .opinions, .how-it-works, .pillars { padding: 48px 24px 56px; }
         }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -179,23 +271,71 @@
                 </h1>
 
                 <p class="hero__text">
-                    Con Benyond Date, busca a tu pareja ideal basandote en su personalidad,
-                    intereses y lo que realmente estas buscando para encontrar relaciones
-                    reales y significativas
+                    Con Beyond Date, busca a tu pareja ideal basándote en su personalidad,
+                    intereses y lo que realmente estás buscando para encontrar relaciones
+                    reales y significativas.
                 </p>
 
                 <div class="hero__actions">
-                    <a href="#" class="pill-btn">Encontrar<br>mi match</a>
-                    <a href="#" class="pill-btn">Crear<br>mi perfil</a>
+                    <a href="{% url 'login_view' %}" class="pill-btn">Encontrar<br>mi match</a>
+                    <a href="{% url 'login_view' %}" class="pill-btn">Crear<br>mi perfil</a>
                 </div>
             </div>
 
             <div class="hero__art">
-                <!-- Cuando esté disponible, esta imagen se mostrará automáticamente -->
                 <img src="{% static 'inicio/img/corazon-3d.png' %}" alt="Corazón de cristal con símbolo de infinito"
                      onerror="this.style.display='none'; document.getElementById('hero-placeholder').style.display='flex';">
                 <div id="hero-placeholder" class="hero__placeholder">
                     Aquí va el render 3D del corazón de cristal<br>con el símbolo de infinito
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= Nueva Sección: ¿Cómo Funciona? ================= -->
+        <section class="how-it-works">
+            <h2 class="section-title">¿Cómo Funciona Beyond Date?</h2>
+            <p class="section-subtitle">Diseñado para priorizar la compatibilidad real por sobre las apariencias superficiales.</p>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <span class="step-number">1</span>
+                    <h3>Crea tu Perfil Auténtico</h3>
+                    <p>Registra tus valores principales, aficiones, gustos y estilo de vida para que nuestra plataforma entienda quién eres realmente.</p>
+                </div>
+                <div class="step-card">
+                    <span class="step-number">2</span>
+                    <h3>Análisis de Compatibilidad</h3>
+                    <p>Nuestro sistema procesa los datos y arquetipos de afinidad para conectarte únicamente con personas que comparten tus sintonías clave.</p>
+                </div>
+                <div class="step-card">
+                    <span class="step-number">3</span>
+                    <h3>Conexiones con Intención</h3>
+                    <p>Inicia charlas significativas impulsadas por dinámicas naturales que eliminan los silencios incómodos desde el primer saludo.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= Nueva Sección: Pilares de Conexión ================= -->
+        <section class="pillars">
+            <h2 class="section-title">Nuestros Pilares de Conexión</h2>
+            <p class="section-subtitle">Enfocados en los aspectos que de verdad sostienen una relación a largo plazo.</p>
+            
+            <div class="pillars-grid">
+                <div class="pillar-box">
+                    <h4>Valores</h4>
+                    <p>Alineación en principios de vida, honestidad y metas de futuro fundamentales.</p>
+                </div>
+                <div class="pillar-box">
+                    <h4>Hobbies</h4>
+                    <p>Pasatiempos y actividades recreativas compartidas para disfrutar el día a día.</p>
+                </div>
+                <div class="pillar-box">
+                    <h4>Gustos</h4>
+                    <p>Cultura, entretenimiento y preferencias cotidianas que generan química instantánea.</p>
+                </div>
+                <div class="pillar-box">
+                    <h4>Experiencias</h4>
+                    <p>Visión de mundo, viajes y vivencias que potencian el compañerismo.</p>
                 </div>
             </div>
         </section>

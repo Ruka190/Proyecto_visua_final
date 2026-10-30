@@ -9,7 +9,7 @@ urlpatterns = [
     path('nuestra-mision/', views.mision, name='mision'),
 
     ## Autenticación
-    path('login/', views.login_view, name='login'),
+    path('login/', views.login_view, name='login_view'),
 
     ## Usuario
     path('usuario/', views.inicioU, name='inicioU'),

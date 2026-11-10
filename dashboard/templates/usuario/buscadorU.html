@@ -1,0 +1,270 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador · Beyond Date</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F4E6E9;
+            font-family: 'Poppins', sans-serif;
+            color: #4a4a4a;
+        }
+
+        .search-main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+        }
+
+        /* Tarjeta de filtros de búsqueda */
+        .search-card {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            border-radius: 28px;
+            padding: 35px;
+            box-shadow: 0 10px 30px rgba(232, 114, 101, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .search-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4a4a4a;
+            margin-bottom: 6px;
+        }
+
+        /* Campos de entrada personalizados */
+        .form-control-custom, .form-select-custom {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #FAF6F2;
+            border: 1px solid #E3B9AE;
+            border-radius: 16px;
+            font-size: 14.5px;
+            color: #4a4a4a;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-custom:focus, .form-select-custom:focus {
+            background-color: #FFFDFB;
+            border-color: #E87265;
+            box-shadow: 0 0 0 4px rgba(232, 114, 101, 0.15);
+        }
+
+        /* Etiquetas de filtro rápido (Pills) */
+        .filter-pill {
+            background-color: #FAF6F2;
+            border: 1px solid #E3B9AE;
+            color: #6b6b6b;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .filter-pill:hover, .filter-pill.active {
+            background-color: #E87265;
+            color: #ffffff;
+            border-color: #E87265;
+        }
+
+        /* Botón de búsqueda */
+        .btn-search {
+            background-color: #E87265;
+            color: #ffffff;
+            border-radius: 999px;
+            padding: 12px 24px;
+            font-weight: 600;
+            border: none;
+            width: 100%;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(232, 114, 101, 0.3);
+        }
+
+        .btn-search:hover {
+            background-color: #d85b53;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232, 114, 101, 0.4);
+        }
+
+        /* Tarjeta de resultado individual */
+        .result-card {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(232, 114, 101, 0.12);
+        }
+
+        .result-avatar {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #E87265;
+            flex-shrink: 0;
+        }
+
+        .affinity-tag {
+            background-color: #FDECE7;
+            color: #A63A32;
+            border: 1px solid #F3CFC4;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-profile-view {
+            background-color: #FAF6F2;
+            color: #E87265;
+            border: 1px solid #E3B9AE;
+            border-radius: 999px;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-profile-view:hover {
+            background-color: #E87265;
+            color: #ffffff;
+            border-color: #E87265;
+        }
+    </style>
+</head>
+<body class="p-0">
+
+    <!-- Incluimos la barra lateral -->
+    {% include 'usuario/barraU.html' %}
+
+    <main class="search-main-container">
+        
+        <!-- Tarjeta de Filtros Avanzados -->
+        <div class="search-card">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-light text-danger rounded-circle mb-2" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h1 class="search-title">Explorar Conexiones</h1>
+                <p class="text-secondary small mb-0">Filtra por intereses, valores o ubicación para encontrar tu sintonía ideal</p>
+            </div>
+
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Palabra clave o Interés</label>
+                    <input type="text" name="q" class="form-control-custom" placeholder="Ej. Escalar, Arte, Café de especialidad...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Filtrar por Ubicación</label>
+                    <select name="ubicacion" class="form-select-custom">
+                        <option value="">Cualquier ubicación</option>
+                        <option value="santiago">Santiago, Chile</option>
+                        <option value="valparaiso">Valparaíso</option>
+                        <option value="concepcion">Concepción</option>
+                    </select>
+                </div>
+
+                <!-- Filtros rápidos interactivos (Pills) -->
+                <div class="col-12 mt-3">
+                    <label class="form-label small fw-semibold text-muted d-block mb-2">Sintonías populares:</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="filter-pill active">✨ Alta Compatibilidad</span>
+                        <span class="filter-pill">🧗‍♂️ Deportes & Aventura</span>
+                        <span class="filter-pill">🎨 Arte & Cultura</span>
+                        <span class="filter-pill">☕ Amantes del Café</span>
+                        <span class="filter-pill">🌙 Noctámbulos</span>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-search">
+                        <i class="bi bi-sliders me-2"></i> Buscar con Filtros Activos
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sección de Resultados -->
+        <div class="results-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 fw-bold mb-0 text-dark">Perfiles Encontrados (3)</h2>
+                <span class="text-muted small">Ordenados por nivel de afinidad</span>
+            </div>
+            
+            <!-- Resultado 1 -->
+            <div class="result-card">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{% static 'usuario/img/javier.jpg' %}" alt="Perfil" class="result-avatar">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="h6 fw-bold mb-0">Sofía, 22</h3>
+                            <span class="affinity-tag"><i class="bi bi-heart-fill"></i> 92% Afinidad</span>
+                        </div>
+                        <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-danger"></i> Santiago, Chile</p>
+                        <div class="d-flex flex-wrap gap-1">
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.7rem;"><i class="bi bi-check2 text-danger"></i> Honestidad</span>
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.7rem;"><i class="bi bi-check2 text-danger"></i> Arte</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="#" class="btn-profile-view">
+                    Ver perfil <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+
+            <!-- Resultado 2 -->
+            <div class="result-card">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{% static 'usuario/img/javier.jpg' %}" alt="Perfil" class="result-avatar">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="h6 fw-bold mb-0">Valentina, 20</h3>
+                            <span class="affinity-tag"><i class="bi bi-heart-fill"></i> 88% Afinidad</span>
+                        </div>
+                        <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-danger"></i> Providencia</p>
+                        <div class="d-flex flex-wrap gap-1">
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.7rem;"><i class="bi bi-check2 text-danger"></i> Fotografía</span>
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 0.7rem;"><i class="bi bi-check2 text-danger"></i> Escalada</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="#" class="btn-profile-view">
+                    Ver perfil <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

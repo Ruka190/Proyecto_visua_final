@@ -5,13 +5,148 @@
 
 {% block extra_css %}
     <style>
-        /* ---------- Sección principal (Hero) ---------- */
+        /* ---------- Desplazamiento Suave Global ---------- */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        section[id] {
+            scroll-margin-top: 90px;
+        }
+
+        /* ---------- Barra Superior Fija (Cápsula Central) ---------- */
+        /* ---------- Barra Superior Fija con Píldora Deslizante ---------- */
+        .quick-section-nav {
+            position: fixed;
+            top: 14px;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .quick-section-nav__inner {
+            pointer-events: auto;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px;
+            background-color: rgba(255, 253, 251, 0.9);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid #F3CFC4;
+            border-radius: 999px;
+            box-shadow: 0 10px 28px rgba(166, 58, 50, 0.12);
+        }
+
+        /* Indicador coral que se desliza suavemente entre botones */
+        .quick-nav-indicator {
+            position: absolute;
+            top: 6px;
+            left: 0;
+            height: calc(100% - 12px);
+            border-radius: 999px;
+            background: linear-gradient(135deg, #E87265 0%, #d85b53 100%);
+            box-shadow: 0 4px 14px rgba(232, 114, 101, 0.38);
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                        width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .quick-nav-link {
+            position: relative;
+            z-index: 1;
+            padding: 8px 20px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #5c5c5c;
+            text-decoration: none;
+            transition: color 0.3s ease, transform 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .quick-nav-link:hover {
+            color: #A63A32;
+        }
+
+        .quick-nav-link:active {
+            transform: scale(0.95);
+        }
+
+        .quick-nav-link.is-active {
+            color: #ffffff !important;
+        }
+
+        /* Efecto de enfoque suave cuando aterrizas en una sección con clic */
+        @keyframes sectionHighlight {
+            0% { transform: scale(0.985); opacity: 0.75; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .section-focus-pulse {
+            animation: sectionHighlight 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* ---------- Animaciones de Entrada (Scroll Reveal) ---------- */
+        .reveal-item {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal-item.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+
+        /* ---------- Títulos Generales de Sección ---------- */
+        .section-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background-color: #FDECE7;
+            border: 1px solid #F3CFC4;
+            color: #A63A32;
+            font-size: 12.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4a4a4a;
+            margin-bottom: 14px;
+        }
+
+        .section-subtitle {
+            font-size: 16px;
+            color: #6b6b6b;
+            max-width: 640px;
+            margin: 0 auto 50px;
+            line-height: 1.6;
+        }
+
+        /* ---------- 1. Sección Principal (Hero / Inicio) ---------- */
         .hero {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 40px;
-            padding: 56px 64px 72px;
+            padding: 84px 64px 76px;
             background: linear-gradient(180deg, #FFF9F5 0%, #FBE7E0 100%);
         }
         .hero__content { max-width: 560px; }
@@ -32,26 +167,40 @@
         .hero__actions {
             margin-top: 30px;
             display: flex;
-            gap: 20px;
+            gap: 16px;
             flex-wrap: wrap;
+            align-items: center;
         }
         .pill-btn {
             display: inline-block;
-            padding: 16px 34px;
+            padding: 15px 30px;
             border-radius: 999px;
             background-color: #FFFDF9;
+            border: 1px solid #F3CFC4;
             color: #4a4a4a;
             font-size: 15px;
             font-weight: 600;
             line-height: 1.2;
             text-align: center;
             text-decoration: none;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            transition: background-color 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            transition: all 0.25s ease;
         }
         .pill-btn:hover {
             background-color: #F7D9D2;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(166, 58, 50, 0.12);
+        }
+        .pill-btn--primary {
+            background-color: #E87265;
+            border-color: #E87265;
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(232, 114, 101, 0.3);
+        }
+        .pill-btn--primary:hover {
+            background-color: #d85b53;
+            color: #ffffff;
+            box-shadow: 0 8px 24px rgba(232, 114, 101, 0.4);
         }
         .hero__art {
             flex: 1;
@@ -62,6 +211,11 @@
             width: 100%;
             max-width: 420px;
             height: auto;
+            animation: floatSlow 5s ease-in-out infinite;
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
         }
         .hero__placeholder {
             display: none;
@@ -79,104 +233,251 @@
             padding: 20px;
         }
 
-        /* ---------- Nueva Sección: ¿Cómo Funciona? ---------- */
-        .how-it-works {
-            padding: 80px 48px;
+        /* ---------- 2. Sección: Nuestra Misión ---------- */
+        .mission-section {
+            padding: 96px 48px;
             background-color: #FFFDFB;
             text-align: center;
         }
-        .section-title {
-            font-size: 36px;
-            font-weight: 700;
-            color: #4a4a4a;
-            margin-bottom: 12px;
-        }
-        .section-subtitle {
-            font-size: 16px;
-            color: #6b6b6b;
-            max-width: 600px;
-            margin: 0 auto 50px;
-            line-height: 1.5;
-        }
-        .steps-grid {
+        .mission-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 28px;
             max-width: 1100px;
             margin: 0 auto;
         }
-        .step-card {
+        .mission-card {
             background-color: #FDECE7;
             border: 1px solid #F3CFC4;
             border-radius: 24px;
-            padding: 40px 30px;
+            padding: 38px 30px;
             text-align: left;
-            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .step-number {
-            display: inline-block;
-            width: 36px;
-            height: 36px;
-            background-color: #A63A32;
-            color: #FFF;
-            font-weight: 700;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 36px;
-            margin-bottom: 20px;
+        .mission-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 28px rgba(232, 114, 101, 0.14);
         }
-        .step-card h3 {
+        .mission-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background-color: #E87265;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 20px;
-            font-weight: 600;
+            font-weight: 700;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(232, 114, 101, 0.25);
+        }
+        .mission-card h3 {
+            font-size: 20px;
+            font-weight: 700;
             color: #4a4a4a;
             margin-bottom: 12px;
         }
-        .step-card p {
-            font-size: 14px;
+        .mission-card p {
+            font-size: 14.5px;
             color: #5c5c5c;
-            line-height: 1.6;
+            line-height: 1.65;
+            margin: 0;
         }
 
-        /* ---------- Nueva Sección: Pilares de Conexión ---------- */
-        .pillars {
-            padding: 80px 48px;
+        /* ---------- 3. Sección: FAQ (Preguntas Frecuentes) ---------- */
+        .faq-section {
+            padding: 96px 48px;
             background: linear-gradient(180deg, #FBE7E0 0%, #FFF9F5 100%);
             text-align: center;
         }
-        .pillars-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            max-width: 1100px;
+        .faq-list {
+            max-width: 820px;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: left;
         }
-        .pillar-box {
-            background-color: #FFFDF9;
+        .faq-item {
+            background-color: #FFFDFB;
             border: 1px solid #F3CFC4;
             border-radius: 20px;
-            padding: 32px 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
-        .pillar-box h4 {
-            font-size: 18px;
+        .faq-item.is-open {
+            border-color: #E87265;
+            box-shadow: 0 8px 24px rgba(232, 114, 101, 0.12);
+        }
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 22px 26px;
+            font-size: 16px;
             font-weight: 600;
-            color: #A63A32;
-            margin-bottom: 10px;
+            color: #4a4a4a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
         }
-        .pillar-box p {
-            font-size: 14px;
+        .faq-question:hover {
+            color: #A63A32;
+        }
+        .faq-toggle-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #FDECE7;
+            color: #A63A32;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        .faq-item.is-open .faq-toggle-icon {
+            transform: rotate(45deg);
+            background-color: #E87265;
+            color: #ffffff;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+            padding: 0 26px;
+        }
+        .faq-item.is-open .faq-answer {
+            max-height: 260px;
+            padding: 0 26px 22px;
+        }
+        .faq-answer p {
+            margin: 0;
+            font-size: 14.5px;
+            line-height: 1.65;
             color: #5c5c5c;
-            line-height: 1.5;
         }
 
-        /* ---------- Sección de opiniones ---------- */
-        .opinions {
-            padding: 64px 48px 72px;
+        /* ---------- 4. Sección: Contacto ---------- */
+        .contact-section {
+            padding: 96px 48px;
             background-color: #FFFDFB;
             text-align: center;
         }
+        .contact-wrapper {
+            max-width: 980px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 36px;
+            background-color: #FDECE7;
+            border: 1px solid #F3CFC4;
+            border-radius: 28px;
+            padding: 44px;
+            text-align: left;
+            box-shadow: 0 12px 32px rgba(232, 114, 101, 0.08);
+        }
+        .contact-info h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4a4a4a;
+            margin-bottom: 14px;
+        }
+        .contact-info p {
+            font-size: 14.5px;
+            color: #5c5c5c;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .contact-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 14.5px;
+            color: #4a4a4a;
+            font-weight: 500;
+        }
+        .contact-detail-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            color: #E87265;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .contact-form {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            border-radius: 22px;
+            padding: 30px;
+        }
+        .form-group-landing {
+            margin-bottom: 16px;
+        }
+        .form-group-landing label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5c5c5c;
+            margin-bottom: 6px;
+        }
+        .input-landing {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid #E3B9AE;
+            background-color: #FAF6F2;
+            font-size: 14px;
+            color: #4a4a4a;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+        .input-landing:focus {
+            background-color: #FFFDFB;
+            border-color: #E87265;
+            box-shadow: 0 0 0 4px rgba(232, 114, 101, 0.14);
+        }
+        .btn-submit-contact {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 999px;
+            background-color: #E87265;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 6px 18px rgba(232, 114, 101, 0.3);
+        }
+        .btn-submit-contact:hover {
+            background-color: #d85b53;
+            transform: translateY(-2px);
+        }
+
+        /* ---------- Sección de Opiniones (Carrusel al cierre) ---------- */
+        .opinions {
+            padding: 72px 48px 90px;
+            background: linear-gradient(180deg, #FFFDFB 0%, #FFF9F5 100%);
+            text-align: center;
+        }
         .opinions__title {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 700;
             letter-spacing: 2px;
             color: #4a4a4a;
@@ -185,6 +486,9 @@
             position: relative;
             margin-top: 36px;
             padding: 0 40px;
+            max-width: 1150px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .carousel__viewport { overflow: hidden; }
         .carousel__track {
@@ -249,21 +553,38 @@
             margin-top: 18px;
             font-size: 14px;
             color: #6b6b6b;
+            font-weight: 600;
         }
 
         @media (max-width: 900px) {
-            .hero { flex-direction: column; padding: 40px 24px 56px; }
+            .hero { flex-direction: column; padding: 76px 24px 56px; }
             .hero__title { font-size: 34px; }
-            .opinions, .how-it-works, .pillars { padding: 48px 24px 56px; }
+            .mission-section, .faq-section, .contact-section, .opinions { padding: 64px 24px; }
+            .contact-wrapper { grid-template-columns: 1fr; padding: 28px 22px; }
+            .quick-section-nav__inner {
+                overflow-x: auto;
+                max-width: 92vw;
+            }
         }
     </style>
 {% endblock %}
 
 {% block content %}
     <main>
-        <!-- ================= Sección principal (Hero) ================= -->
-        <section class="hero">
-            <div class="hero__content">
+        <!-- ================= Barra Superior Fija con Indicador Deslizante ================= -->
+        <nav class="quick-section-nav" aria-label="Navegación de secciones">
+            <div class="quick-section-nav__inner" id="quickNavInner">
+                <span class="quick-nav-indicator" id="navIndicator"></span>
+                <a href="#inicio" class="quick-nav-link is-active">Inicio</a>
+                <a href="#mision" class="quick-nav-link">Nuestra Misión</a>
+                <a href="#faq" class="quick-nav-link">FAQ</a>
+                <a href="#contacto" class="quick-nav-link">Contacto</a>
+            </div>
+        </nav>
+
+        <!-- ================= 1. Sección Principal (Inicio / Hero) ================= -->
+        <section class="hero" id="inicio">
+            <div class="hero__content reveal-item">
                 <h1 class="hero__title">
                     Conoce a alguien<br>
                     <span class="accent">que realmente</span><br>
@@ -277,12 +598,12 @@
                 </p>
 
                 <div class="hero__actions">
-                    <a href="{% url 'login_view' %}" class="pill-btn">Encontrar<br>mi match</a>
-                    <a href="{% url 'login_view' %}" class="pill-btn">Crear<br>mi perfil</a>
+                    <a href="{% url 'login_view' %}" class="pill-btn pill-btn--primary">Encontrar mi match</a>
+                    <a href="#mision" class="pill-btn">Conocer nuestra misión ↓</a>
                 </div>
             </div>
 
-            <div class="hero__art">
+            <div class="hero__art reveal-item delay-2">
                 <img src="{% static 'inicio/img/corazon-3d.png' %}" alt="Corazón de cristal con símbolo de infinito"
                      onerror="this.style.display='none'; document.getElementById('hero-placeholder').style.display='flex';">
                 <div id="hero-placeholder" class="hero__placeholder">
@@ -291,108 +612,335 @@
             </div>
         </section>
 
-        <!-- ================= Nueva Sección: ¿Cómo Funciona? ================= -->
-        <section class="how-it-works">
-            <h2 class="section-title">¿Cómo Funciona Beyond Date?</h2>
-            <p class="section-subtitle">Diseñado para priorizar la compatibilidad real por sobre las apariencias superficiales.</p>
-            
-            <div class="steps-grid">
-                <div class="step-card">
-                    <span class="step-number">1</span>
-                    <h3>Crea tu Perfil Auténtico</h3>
-                    <p>Registra tus valores principales, aficiones, gustos y estilo de vida para que nuestra plataforma entienda quién eres realmente.</p>
-                </div>
-                <div class="step-card">
-                    <span class="step-number">2</span>
-                    <h3>Análisis de Compatibilidad</h3>
-                    <p>Nuestro sistema procesa los datos y arquetipos de afinidad para conectarte únicamente con personas que comparten tus sintonías clave.</p>
-                </div>
-                <div class="step-card">
-                    <span class="step-number">3</span>
-                    <h3>Conexiones con Intención</h3>
-                    <p>Inicia charlas significativas impulsadas por dinámicas naturales que eliminan los silencios incómodos desde el primer saludo.</p>
-                </div>
+        <!-- ================= 2. Sección: Nuestra Misión ================= -->
+        <section class="mission-section" id="mision">
+            <div class="reveal-item">
+                <span class="section-badge">Nuestro Propósito</span>
+                <h2 class="section-title">Nuestra Misión</h2>
+                <p class="section-subtitle">
+                    Transformar la manera en que las personas se conocen en el mundo digital,
+                    poniendo la esencia, los valores y la compatibilidad emocional antes que la apariencia superficial.
+                </p>
+            </div>
+
+            <div class="mission-grid">
+                <article class="mission-card reveal-item delay-1">
+                    <div class="mission-icon">♥</div>
+                    <h3>Conexiones más allá de la foto</h3>
+                    <p>
+                        En Beyond Date condicionamos la revelación visual a la afinidad real. Primero descubres
+                        cómo piensa, qué valora y qué sueña la otra persona, logrando vínculos genuinos desde el primer minuto.
+                    </p>
+                </article>
+
+                <article class="mission-card reveal-item delay-2">
+                    <div class="mission-icon">✦</div>
+                    <h3>Sintonía en 4 Pilares</h3>
+                    <p>
+                        Nuestro algoritmo evalúa Valores, Hobbies, Gustos y Experiencias para sugerirte perfiles con los que
+                        realmente tienes historia que construir, evitando el desgaste de deslizar sin rumbo.
+                    </p>
+                </article>
+
+                <article class="mission-card reveal-item delay-3">
+                    <div class="mission-icon">∞</div>
+                    <h3>Comunidad Segura y Consciente</h3>
+                    <p>
+                        Fomentamos la comunicación asertiva, el respeto mutuo y la transparencia mediante perfiles verificados
+                        y dinámicas de conversación diseñadas para fluir con naturalidad.
+                    </p>
+                </article>
             </div>
         </section>
 
-        <!-- ================= Nueva Sección: Pilares de Conexión ================= -->
-        <section class="pillars">
-            <h2 class="section-title">Nuestros Pilares de Conexión</h2>
-            <p class="section-subtitle">Enfocados en los aspectos que de verdad sostienen una relación a largo plazo.</p>
-            
-            <div class="pillars-grid">
-                <div class="pillar-box">
-                    <h4>Valores</h4>
-                    <p>Alineación en principios de vida, honestidad y metas de futuro fundamentales.</p>
-                </div>
-                <div class="pillar-box">
-                    <h4>Hobbies</h4>
-                    <p>Pasatiempos y actividades recreativas compartidas para disfrutar el día a día.</p>
-                </div>
-                <div class="pillar-box">
-                    <h4>Gustos</h4>
-                    <p>Cultura, entretenimiento y preferencias cotidianas que generan química instantánea.</p>
-                </div>
-                <div class="pillar-box">
-                    <h4>Experiencias</h4>
-                    <p>Visión de mundo, viajes y vivencias que potencian el compañerismo.</p>
-                </div>
+        <!-- ================= 3. Sección: FAQ (Preguntas Frecuentes) ================= -->
+        <section class="faq-section" id="faq">
+            <div class="reveal-item">
+                <span class="section-badge">Resolvemos tus dudas</span>
+                <h2 class="section-title">Preguntas Frecuentes (FAQ)</h2>
+                <p class="section-subtitle">
+                    Todo lo que necesitas saber sobre cómo funciona la experiencia Beyond Date.
+                </p>
             </div>
-        </section>
 
-        <!-- ================= Opiniones (carrusel) ================= -->
-        <section class="opinions">
-            <h2 class="opinions__title">OPINIONES</h2>
-
-            <div class="carousel" id="opiniones-carrusel">
-                <button type="button" class="carousel__btn carousel__btn--prev" aria-label="Opiniones anteriores">&#8249;</button>
-
-                <div class="carousel__viewport">
-                    <div class="carousel__track">
-                        <article class="card">
-                            <p>Por fin conversaciones reales que pasan del 'hola, ¿cómo estás?'. Romper el hielo se siente natural y sin incomodidad.</p>
-                            <span>Vale, 24</span>
-                        </article>
-
-                        <article class="card">
-                            <p>Te fijas en la personalidad y el día a día antes que en poses editadas. Dejé de deslizar en piloto automático.</p>
-                            <span>Tomás, 28</span>
-                        </article>
-
-                        <article class="card">
-                            <p>Pocos perfiles al día, pero con personas que de verdad buscan lo mismo. Menos matches acumulados, mejores citas.</p>
-                            <span>Cami, 26</span>
-                        </article>
-
-                        <article class="card">
-                            <p>Las dinámicas para romper el hielo te salvan la vida. La primera charla fluyó sola sin silencios incómodos.</p>
-                            <span>Nico, 27</span>
-                        </article>
-
-                        <article class="card">
-                            <p>Agradezco no perder horas deslizando pantallas. Miras con atención a pocas personas y conectas de verdad.</p>
-                            <span>Javi, 25</span>
-                        </article>
-
-                        <article class="card">
-                            <p>Primero conectas por humor, gustos y valores; la química surge sola antes de la primera cita.</p>
-                            <span>Matías, 29</span>
-                        </article>
+            <div class="faq-list">
+                <div class="faq-item is-open reveal-item delay-1">
+                    <button type="button" class="faq-question">
+                        <span>¿En qué se diferencia Beyond Date de otras apps de citas?</span>
+                        <span class="faq-toggle-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>
+                            A diferencia de las aplicaciones tradicionales basadas únicamente en deslizar fotos rápidamente,
+                            Beyond Date prioriza la compatibilidad en valores, intereses, gustos y experiencias de vida,
+                            permitiendo que la conexión nazca de la personalidad real.
+                        </p>
                     </div>
                 </div>
 
-                <button type="button" class="carousel__btn carousel__btn--next" aria-label="Siguientes opiniones">&#8250;</button>
+                <div class="faq-item reveal-item delay-1">
+                    <button type="button" class="faq-question">
+                        <span>¿Cómo se calcula el porcentaje de afinidad entre perfiles?</span>
+                        <span class="faq-toggle-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>
+                            Al crear tu cuenta, configuras tus prioridades en nuestros 4 pilares fundamentales (Valores, Hobbies, Gustos y Experiencias).
+                            El sistema cruza estos vectores de afinidad y te muestra el desglose exacto de por qué encajas con cada persona.
+                        </p>
+                    </div>
+                </div>
 
-                <div class="carousel__dots" aria-label="Paginación de opiniones"></div>
+                <div class="faq-item reveal-item delay-2">
+                    <button type="button" class="faq-question">
+                        <span>¿Cómo funcionan las fotografías y la privacidad de mi perfil?</span>
+                        <span class="faq-toggle-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>
+                            Tus fotos están protegidas y cobran protagonismo a medida que existe una sintonía mutua y verificada.
+                            Así garantizamos un entorno libre de prejuicios superficiales y enfocado en conversaciones con intención.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="faq-item reveal-item delay-3">
+                    <button type="button" class="faq-question">
+                        <span>¿Tiene algún costo registrarse y explorar conexiones?</span>
+                        <span class="faq-toggle-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>
+                            Crear tu perfil, descubrir tu radar de afinidad y conectar con personas compatibles es completamente gratuito.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 4. Sección: Contacto ================= -->
+        <section class="contact-section" id="contacto">
+            <div class="reveal-item">
+                <span class="section-badge">Hablemos</span>
+                <h2 class="section-title">Contacto</h2>
+                <p class="section-subtitle">
+                    ¿Tienes sugerencias, dudas sobre tu cuenta o quieres colaborar con nosotros? Escríbenos directamente.
+                </p>
+            </div>
+
+            <div class="contact-wrapper reveal-item delay-1">
+                <div class="contact-info">
+                    <h3>Estamos aquí para escucharte</h3>
+                    <p>
+                        Nuestro equipo revisa cada mensaje para seguir mejorando la experiencia de conexión en Beyond Date.
+                    </p>
+
+                    <div class="contact-detail-item">
+                        <span class="contact-detail-badge">✉</span>
+                        <span>contacto@beyonddate.cl</span>
+                    </div>
+                    <div class="contact-detail-item">
+                        <span class="contact-detail-badge">📍</span>
+                        <span>Santiago, Chile</span>
+                    </div>
+                    <div class="contact-detail-item">
+                        <span class="contact-detail-badge">⏰</span>
+                        <span>Soporte Lunes a Viernes · 09:00 a 18:00 hrs</span>
+                    </div>
+                </div>
+
+                <form class="contact-form" onsubmit="event.preventDefault(); this.reset(); alert('¡Gracias por escribirnos! Te responderemos muy pronto.');">
+                    <div class="form-group-landing">
+                        <label for="contact-name">Nombre completo</label>
+                        <input type="text" id="contact-name" class="input-landing" placeholder="Ej. Javier Morales" required>
+                    </div>
+                    <div class="form-group-landing">
+                        <label for="contact-email">Correo electrónico</label>
+                        <input type="email" id="contact-email" class="input-landing" placeholder="tu@correo.cl" required>
+                    </div>
+                    <div class="form-group-landing">
+                        <label for="contact-msg">Mensaje</label>
+                        <textarea id="contact-msg" rows="4" class="input-landing" placeholder="Cuéntanos en qué podemos ayudarte..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit-contact">Enviar Mensaje →</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= Sección de cierre: Opiniones (Carrusel) ================= -->
+        <section class="opinions">
+            <div class="reveal-item">
+                <h2 class="opinions__title">OPINIONES DE LA COMUNIDAD</h2>
+
+                <div class="carousel" id="opiniones-carrusel">
+                    <button type="button" class="carousel__btn carousel__btn--prev" aria-label="Opiniones anteriores">&#8249;</button>
+
+                    <div class="carousel__viewport">
+                        <div class="carousel__track">
+                            <article class="card">
+                                <p>Por fin conversaciones reales que pasan del 'hola, ¿cómo estás?'. Romper el hielo se siente natural y sin incomodidad.</p>
+                                <span>Vale, 24</span>
+                            </article>
+
+                            <article class="card">
+                                <p>Te fijas en la personalidad y el día a día antes que en poses editadas. Dejé de deslizar en piloto automático.</p>
+                                <span>Tomás, 28</span>
+                            </article>
+
+                            <article class="card">
+                                <p>Pocos perfiles al día, pero con personas que de verdad buscan lo mismo. Menos matches acumulados, mejores citas.</p>
+                                <span>Cami, 26</span>
+                            </article>
+
+                            <article class="card">
+                                <p>Las dinámicas para romper el hielo te salvan la vida. La primera charla fluyó sola sin silencios incómodos.</p>
+                                <span>Nico, 27</span>
+                            </article>
+
+                            <article class="card">
+                                <p>Agradezco no perder horas deslizando pantallas. Miras con atención a pocas personas y conectas de verdad.</p>
+                                <span>Javi, 25</span>
+                            </article>
+
+                            <article class="card">
+                                <p>Primero conectas por humor, gustos y valores; la química surge sola antes de la primera cita.</p>
+                                <span>Matías, 29</span>
+                            </article>
+                        </div>
+                    </div>
+
+                    <button type="button" class="carousel__btn carousel__btn--next" aria-label="Siguientes opiniones">&#8250;</button>
+
+                    <div class="carousel__dots" aria-label="Paginación de opiniones"></div>
+                </div>
             </div>
         </section>
     </main>
 {% endblock %}
 
 {% block extra_js %}
-    <!-- ================= Carrusel de opiniones ================= -->
     <script>
     (function () {
+        /* 1. Animación Scroll Reveal */
+        const revealItems = document.querySelectorAll('.reveal-item');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                }
+            });
+        }, { threshold: 0.12 });
+
+        revealItems.forEach(item => revealObserver.observe(item));
+
+        /* 2. Píldora Deslizante + Scroll Suave con Curva de Inercia (EaseInOutCubic) */
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.quick-nav-link');
+        const indicator = document.getElementById('navIndicator');
+        let isAutoScrolling = false;
+
+        function moverIndicador(enlaceActivo) {
+            if (!enlaceActivo || !indicator) return;
+            navLinks.forEach(l => l.classList.remove('is-active'));
+            enlaceActivo.classList.add('is-active');
+
+            const ancho = enlaceActivo.offsetWidth;
+            const posX = enlaceActivo.offsetLeft;
+            indicator.style.width = ancho + 'px';
+            indicator.style.transform = 'translateX(' + posX + 'px)';
+        }
+
+        // Inicializar posición de la píldora al cargar y al redimensionar
+        window.addEventListener('load', () => {
+            moverIndicador(document.querySelector('.quick-nav-link.is-active'));
+        });
+        window.addEventListener('resize', () => {
+            moverIndicador(document.querySelector('.quick-nav-link.is-active'));
+        });
+        moverIndicador(document.querySelector('.quick-nav-link.is-active'));
+
+        // Función de desplazamiento con aceleración y frenado suave (750ms)
+        function scrollSuaveConInercia(destinoY, duracion, callback) {
+            const inicioY = window.scrollY;
+            const distancia = destinoY - inicioY;
+            let tiempoInicio = null;
+
+            function easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            function pasoAnimacion(tiempoActual) {
+                if (!tiempoInicio) tiempoInicio = tiempoActual;
+                const tiempoTranscurrido = tiempoActual - tiempoInicio;
+                const progreso = Math.min(tiempoTranscurrido / duracion, 1);
+                const curva = easeInOutCubic(progreso);
+
+                window.scrollTo(0, inicioY + distancia * curva);
+
+                if (progreso < 1) {
+                    requestAnimationFrame(pasoAnimacion);
+                } else if (callback) {
+                    callback();
+                }
+            }
+
+            requestAnimationFrame(pasoAnimacion);
+        }
+
+        // Evento de clic en los botones de la barra y botones internos con ancla
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                if (!targetSection) return;
+
+                e.preventDefault();
+                isAutoScrolling = true;
+
+                // Si el clic fue en la barra o lleva a una sección de la barra, desliza la píldora de inmediato
+                const matchingNavLink = document.querySelector('.quick-nav-link[href="' + targetId + '"]');
+                if (matchingNavLink) {
+                    moverIndicador(matchingNavLink);
+                }
+
+                const offsetHeader = 78;
+                const destinoY = targetSection.getBoundingClientRect().top + window.scrollY - offsetHeader;
+
+                scrollSuaveConInercia(destinoY, 750, () => {
+                    targetSection.classList.remove('section-focus-pulse');
+                    void targetSection.offsetWidth; // Reiniciar animación
+                    targetSection.classList.add('section-focus-pulse');
+                    setTimeout(() => { isAutoScrolling = false; }, 100);
+                });
+            });
+        });
+
+        // Scroll-Spy cuando el usuario baja manualmente con la rueda del mouse
+        const spyObserver = new IntersectionObserver((entries) => {
+            if (isAutoScrolling) return;
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    const activeLink = document.querySelector('.quick-nav-link[href="#' + id + '"]');
+                    if (activeLink) moverIndicador(activeLink);
+                }
+            });
+        }, { rootMargin: '-30% 0px -55% 0px' });
+
+        sections.forEach(sec => spyObserver.observe(sec));
+
+        /* 3. Acordeón interactivo para FAQ */
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            const btn = item.querySelector('.faq-question');
+            btn.addEventListener('click', () => {
+                const isOpen = item.classList.contains('is-open');
+                faqItems.forEach(other => other.classList.remove('is-open'));
+                if (!isOpen) item.classList.add('is-open');
+            });
+        });
+
+        /* 4. Carrusel de opiniones */
         const carrusel = document.getElementById('opiniones-carrusel');
         if (!carrusel) return;
 

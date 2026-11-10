@@ -2,30 +2,190 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Iniciar Sesión - BeyondDate</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #faf6f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .card-login { background: white; border-radius: 20px; padding: 2rem; width: 100%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .btn-primary-custom { background-color: #f3a69a; border: none; color: #4C2A36; font-weight: 600; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión · Beyond Date</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #FFF9F5 0%, #FBE7E0 50%, #F5D5CC 100%);
+            font-family: 'Poppins', sans-serif;
+            color: #4a4a4a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .login-card {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            border-radius: 32px;
+            padding: 45px 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 15px 35px rgba(232, 114, 101, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #E87265, #F5A699);
+        }
+
+        .login-brand-icon {
+            width: 55px;
+            height: 55px;
+            background-color: #FDECE7;
+            border: 1px solid #F3CFC4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            color: #E87265;
+            font-size: 1.6rem;
+            box-shadow: 0 4px 12px rgba(232, 114, 101, 0.1);
+        }
+
+        .login-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #4a4a4a;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #6b6b6b;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group-custom i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a88279;
+            font-size: 1.1rem;
+            z-index: 10;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            background-color: #FAF6F2;
+            border: 1px solid #E3B9AE;
+            border-radius: 16px;
+            font-size: 15px;
+            color: #4a4a4a;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-custom:focus {
+            background-color: #FFFDFB;
+            border-color: #E87265;
+            box-shadow: 0 0 0 4px rgba(232, 114, 101, 0.15);
+        }
+
+        .btn-login {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #E87265;
+            color: #ffffff;
+            border: none;
+            border-radius: 999px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(232, 114, 101, 0.35);
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background-color: #d85b53;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232, 114, 101, 0.45);
+        }
+
+        .login-footer-links {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 13.5px;
+        }
+
+        .login-footer-links a {
+            color: #E87265;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .login-footer-links a:hover {
+            text-decoration: underline;
+            color: #c05245;
+        }
+    </style>
 </head>
 <body>
-<div class="card-login text-center">
-  <h2 class="h4 fw-bold mb-3" style="color: #4C2A36;">BeyondDate</h2>
-  <p class="text-muted small mb-4">Ingresa tu RUT y contraseña</p>
-  {% if error %}<div class="alert alert-danger py-2 small mb-3">{{ error }}</div>{% endif %}
-  <form method="POST">
-    {% csrf_token %}
-    <div class="mb-3 text-start">
-      <input type="text" name="rut" class="form-control" placeholder="RUT (ej: admin o user)" required>
+
+    <div class="login-card">
+        
+        <div class="login-brand-icon">
+            <i class="bi bi-heart-fill"></i>
+        </div>
+
+        <h1 class="login-title">Beyond Date</h1>
+        <p class="login-subtitle">Ingresa tus credenciales para conectar</p>
+
+        <!-- Formulario con name="rut" y name="password" requeridos por la vista -->
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Campo Rut / Usuario -->
+            <div class="input-group-custom">
+                <i class="bi bi-person"></i>
+                <input type="text" name="rut" class="form-control-custom" placeholder="Usuario o RUT" required autocomplete="username">
+            </div>
+
+            <!-- Campo Contraseña -->
+            <div class="input-group-custom">
+                <i class="bi bi-lock"></i>
+                <input type="password" name="password" class="form-control-custom" placeholder="Contraseña" required autocomplete="current-password">
+            </div>
+
+            <!-- Botón de Enviar -->
+            <button type="submit" class="btn-login">
+                Entrar a la plataforma <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+        </form>
+
+        <div class="login-footer-links">
+            <span class="text-muted">¿Volver al inicio?</span> <a href="{% url 'index' %}">Ir a la landing page</a>
+        </div>
     </div>
-    <div class="mb-4 text-start">
-      <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
-    </div>
-    <button type="submit" class="btn btn-primary-custom w-100 py-2 rounded-pill">Entrar</button>
-  </form>
-</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -17,11 +17,11 @@
   
   <style>
   :root {
-    --bg-page: #faf6f0;
+    --bg-page: #F4E6E9; /* Crema durazno suave: contraste cálido y armónico con la app */
   }
 
   body {
-    background-color: var(--bg-page);
+    background-color: var(--bg-page) !important;
     min-height: 100vh;
     margin: 0;
   }
@@ -54,9 +54,11 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
   
-  /* Aseguramos que las tarjetas tengan la misma altura en la cuadrícula */
+  /* Tarjetas blancas con borde y sombra cálida para alto contraste */
   .card-grafico {
-      background-color: var(--card-bg, #fff);
+      background-color: #F4EAE6 !important;
+      border: 1px solid #EBD8D0 !important;
+      box-shadow: 0 8px 24px rgba(166, 58, 50, 0.05) !important;
       height: 100%;
   }
   </style>
@@ -69,7 +71,7 @@
 
       <!-- Cabecera de navegación -->
       <header class="d-flex align-items-center gap-3">
-        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1">
+        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1 bg-white">
           <i class="bi bi-arrow-left"></i> Volver
         </a>
         <h1 class="h4 fw-bold mb-0">Estadísticas</h1>
@@ -80,7 +82,7 @@
 
         <!-- ================= 1. Balance de Matches ================= -->
         <div class="col-12 col-lg-6">
-          <section class="card-grafico p-4 rounded-4 shadow-sm d-flex flex-column align-items-center justify-content-center">
+          <section class="card-grafico p-4 rounded-4 d-flex flex-column align-items-center justify-content-center">
             <h2 class="h5 fw-bold text-center mb-1">Balance de Matches</h2>
             <div class="text-center mb-3">
               <span class="text-muted small">% de Match Exitosos</span>
@@ -92,29 +94,25 @@
           </section>
         </div>
 
-        <!-- ================= 2. Tiempo en la APP ================= -->
+        <!-- ================= 2. Radar de Afinidad ================= -->
         <div class="col-12 col-lg-6">
-          <section class="card-grafico p-4 rounded-4 shadow-sm d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
-              <div>
-                <h2 class="h5 fw-bold mb-0">Tiempo en la aplicación</h2>
-                <span class="text-muted small">Tiempo Total: <strong style="color: #D62D5A;" id="total-tiempo">0 min</strong></span>
-              </div>
+          <section class="card-grafico p-4 rounded-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+              <h2 class="h5 fw-bold mb-0">Radar de Afinidad</h2>
               <div class="btn-group rounded-pill" role="group">
-                <button type="button" class="btn btn-periodo active" data-periodo="diario">Semanal</button>
-                <button type="button" class="btn btn-periodo" data-periodo="semanal">Mensual</button>
-                <button type="button" class="btn btn-periodo" data-periodo="mensual">Anual</button>
+                <button type="button" class="btn btn-periodo active" data-tipo-radar="gustos">Gustos</button>
+                <button type="button" class="btn btn-periodo" data-tipo-radar="disgustos">Disgustos</button>
               </div>
             </div>
-            <div style="position: relative; height: 240px; width: 100%; flex-grow: 1;">
-              <canvas id="graficoTiempo"></canvas>
+            <div style="position: relative; height: 260px; width: 100%; flex-grow: 1;">
+              <canvas id="graficoRadar"></canvas>
             </div>
           </section>
         </div>
 
         <!-- ================= 3. Características de Match ================= -->
         <div class="col-12 col-lg-6">
-          <section class="card-grafico p-4 rounded-4 shadow-sm d-flex flex-column">
+          <section class="card-grafico p-4 rounded-4 d-flex flex-column">
             <h2 class="h5 fw-bold mb-3">Características de Matches</h2>
             <div class="mb-3 overflow-auto">
               <div class="btn-group rounded-pill w-100" role="group" style="min-width: 320px;">
@@ -131,18 +129,22 @@
           </section>
         </div>
 
-        <!-- ================= 4. Radar de Afinidad ================= -->
+        <!-- ================= 4. Tiempo en la APP ================= -->
         <div class="col-12 col-lg-6">
-          <section class="card-grafico p-4 rounded-4 shadow-sm d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-              <h2 class="h5 fw-bold mb-0">Radar de Afinidad</h2>
+          <section class="card-grafico p-4 rounded-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+              <div>
+                <h2 class="h5 fw-bold mb-0">Tiempo en la aplicación</h2>
+                <span class="text-muted small">Tiempo Total: <strong style="color: #D62D5A;" id="total-tiempo">0 min</strong></span>
+              </div>
               <div class="btn-group rounded-pill" role="group">
-                <button type="button" class="btn btn-periodo active" data-tipo-radar="gustos">Gustos</button>
-                <button type="button" class="btn btn-periodo" data-tipo-radar="disgustos">Disgustos</button>
+                <button type="button" class="btn btn-periodo active" data-periodo="diario">Semanal</button>
+                <button type="button" class="btn btn-periodo" data-periodo="semanal">Mensual</button>
+                <button type="button" class="btn btn-periodo" data-periodo="mensual">Anual</button>
               </div>
             </div>
-            <div style="position: relative; height: 260px; width: 100%; flex-grow: 1;">
-              <canvas id="graficoRadar"></canvas>
+            <div style="position: relative; height: 240px; width: 100%; flex-grow: 1;">
+              <canvas id="graficoTiempo"></canvas>
             </div>
           </section>
         </div>

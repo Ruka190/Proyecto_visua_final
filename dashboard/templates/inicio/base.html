@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="{% static 'inicio/css/typography.css' %}">
 
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
         /* Estilos base de cabecera y pie */
         body {
             margin: 0;
@@ -18,45 +22,65 @@
             background-color: #FFFDFB;
             color: #4a4a4a;
         }
+
         .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 20px 48px;
-            background-color: #FFFDF9;
+            padding: 16px 48px;
+            background-color: rgba(255, 253, 249, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid #F3CFC4;
         }
+
         .brand {
             display: flex;
             align-items: center;
             gap: 12px;
             text-decoration: none;
         }
+
         .brand__logo {
             width: 36px;
             height: 36px;
             object-fit: contain;
         }
+
         .brand__name {
             font-size: 20px;
             font-weight: 700;
             color: #4a4a4a;
         }
+
         .main-nav {
             display: flex;
-            gap: 24px;
+            gap: 16px;
             align-items: center;
         }
-        .main-nav a {
+
+        /* Botón estilizado de Iniciar Sesión a la derecha */
+        .btn-header-login {
             text-decoration: none;
-            color: #5c5c5c;
-            font-weight: 500;
-            font-size: 15px;
-            transition: color 0.2s ease;
+            background-color: #E87265;
+            color: #ffffff !important;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 24px;
+            border-radius: 999px;
+            box-shadow: 0 4px 12px rgba(232, 114, 101, 0.25);
+            transition: all 0.2s ease;
         }
-        .main-nav a:hover, .main-nav a.is-active {
-            color: #A63A32;
+
+        .btn-header-login:hover {
+            background-color: #d85b53;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(232, 114, 101, 0.35);
         }
+
         .site-footer {
             padding: 40px 48px;
             background-color: #FBE7E0;
@@ -67,21 +91,38 @@
             flex-wrap: wrap;
             gap: 20px;
         }
+
         .site-footer__nav {
             display: flex;
-            gap: 20px;
+            gap: 24px;
+            flex-wrap: wrap;
         }
+
         .site-footer__nav a {
             text-decoration: none;
             color: #5c5c5c;
             font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s ease;
         }
-        .site-footer__nav a:hover { text-decoration: underline; }
+
+        .site-footer__nav a:hover {
+            color: #A63A32;
+            text-decoration: underline;
+        }
 
         @media (max-width: 900px) {
-            .site-header { flex-direction: column; align-items: flex-start; padding: 18px 24px; }
-            .main-nav { flex: none; width: 100%; justify-content: flex-start; margin-top: 10px; }
-            .site-footer { padding: 24px; flex-direction: column; text-align: center; }
+            .site-header {
+                padding: 14px 20px;
+            }
+            .site-footer {
+                padding: 24px;
+                flex-direction: column;
+                text-align: center;
+            }
+            .site-footer__nav {
+                justify-content: center;
+            }
         }
     </style>
 
@@ -92,16 +133,13 @@
 
     <!-- ================= Cabecera ================= -->
     <header class="site-header">
-        <a class="brand" href="{% url 'index' %}">
+        <a class="brand" href="{% url 'index' %}#inicio">
             <img class="brand__logo" src="{% static 'inicio/img/icono.png' %}" alt="Logo Beyond Date">
             <span class="brand__name">Beyond Date</span>
         </a>
 
         <nav class="main-nav">
-            <a href="{% url 'login_view' %}" {% if request.resolver_match.url_name == 'login_view' %}class="is-active"{% endif %}>Iniciar Sesión</a>
-            <a href="{% url 'contacto' %}" {% if request.resolver_match.url_name == 'contacto' %}class="is-active"{% endif %}>Contacto</a>
-            <a href="{% url 'mision' %}" {% if request.resolver_match.url_name == 'mision' %}class="is-active"{% endif %}>Nuestra Misión</a>
-            <a href="{% url 'faq' %}" {% if request.resolver_match.url_name == 'faq' %}class="is-active"{% endif %}>FAQ</a>
+            <a href="{% url 'login_view' %}" class="btn-header-login">Iniciar Sesión</a>
         </nav>
     </header>
 
@@ -110,15 +148,15 @@
 
     <!-- ================= Pie de página ================= -->
     <footer class="site-footer">
-        <a class="brand" href="{% url 'index' %}">
+        <a class="brand" href="{% url 'index' %}#inicio">
             <img class="brand__logo" src="{% static 'inicio/img/icono.png' %}" alt="Logo Beyond Date">
             <span class="brand__name">Beyond Date</span>
         </a>
         <nav class="site-footer__nav">
-            <a href="{% url 'index' %}">Inicio</a>
-            <a href="{% url 'contacto' %}">Contacto</a>
-            <a href="{% url 'mision' %}">Nuestra Misión</a>
-            <a href="{% url 'faq' %}">FAQ</a>
+            <a href="{% url 'index' %}#inicio">Inicio</a>
+            <a href="{% url 'index' %}#mision">Nuestra Misión</a>
+            <a href="{% url 'index' %}#faq">FAQ</a>
+            <a href="{% url 'index' %}#contacto">Contacto</a>
         </nav>
     </footer>
 

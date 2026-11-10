@@ -456,6 +456,14 @@ def admin_usuarios(request):
             {"users": users}
             )
     
+def buscador_view(request):
+    return render(request, 'usuario/buscadorU.html')
+
+def mensajes_view(request):
+    return render(request, 'usuario/mensajesU.html')
+
+def notificaciones_view(request):
+    return render(request, 'usuario/notificacionesU.html')
     
     
 

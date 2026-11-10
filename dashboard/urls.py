@@ -16,6 +16,10 @@ urlpatterns = [
     path('usuario/perfilU/', views.perfilU, name='perfilU'),
     path('usuario/graficos/', views.graficosU, name='graficosU'),
     
+    path('usuario/buscador/', views.buscador_view, name='buscadorU'),
+    path('usuario/mensajes/', views.mensajes_view, name='mensajesU'),
+    path('usuario/notificaciones/', views.notificaciones_view, name='notificacionesU'),
+    
     ## Administrador
     path('administrador/', views.administrador, name='administrador'),
     path('administrador/inicio/', views.admin_inicio, name='admin_inicio'),

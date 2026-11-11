@@ -1,9 +1,24 @@
+from datetime import date
+from django.core.cache import cache
 from django.shortcuts import render, redirect
-import json
-from .models import Match, Cliente, Gusto, Notificacion, Usuario, Administrador
+from django.db.models import Count, Sum, Avg, Q
+from .models import (
+    Administrador,
+    Cliente,
+    Disgusto,
+    Foto,
+    Gusto,
+    Match,
+    Mensaje,
+    Notificacion,
+    Usuario,
+)
 
+# =========================================================================
+# 1. INICIO USUARIO: Sincronizado con los 5 Pilares del Radar de Afinidad
+# =========================================================================
 def inicioU(request):
-    """USUARIO tarjetas de preferencia con datos base"""
+    """USUARIO: Tarjetas de preferencia sincronizadas con los 5 pilares"""
     secciones = [
         {
             'id': 'valores',
@@ -13,55 +28,323 @@ def inicioU(request):
             'nombre': 'Elena',
             'edad': 26,
             'foto': 'usuario/img/elena.jpg',
-            'items': ['Honestidad', 'Pasión por el arte', 'Amor por la familia'],
-            'bio': 'Busco a alguien con quien compartir.',
-            'porcentaje': '100%',
+            'items': ['Honestidad y transparencia', 'Empatía activa', 'Comunicación asertiva'],
+            'bio': 'Busco a alguien con quien construir confianza real y conversar sin filtros.',
+            'porcentaje': '95%',
             'metrica': 'Afinidad<br>en valores',
         },
         {
-            'id': 'hobie',
+            'id': 'hobbies',
             'titulo': 'Hobbies',
             'titulo_card': 'Conexión por Hobbies',
-            'activo': False,
-            'nombre': 'Martina',
-            'edad': 27,
-            'foto': 'usuario/img/martina.jpg',
-            'items': ['Fotografía analógica', 'Escalada en boulder', 'Tocar la guitarra'],
-            'bio': 'Alguien para salir a sacar fotos los domingos.',
-            'porcentaje': '88%',
-            'metrica': 'Afinidad<br>en hobbies',
-        },
-        {
-            'id': 'gustos',
-            'titulo': 'Gustos',
-            'titulo_card': 'Conexión por Gustos',
             'activo': False,
             'nombre': 'Camila',
             'edad': 25,
             'foto': 'usuario/img/camila.jpg',
-            'items': ['Café filtrado de especialidad', 'Cine independiente', 'Música synth-pop'],
-            'bio': 'Fan del café y de compartir buenas charlas.',
-            'porcentaje': '94%',
-            'metrica': 'Afinidad<br>en gustos',
+            'items': ['Escalar en boulder', 'Fotografía analógica', 'Dibujar e ilustrar'],
+            'bio': 'Los fines de semana me encuentras en el muro o buscando rincones para sacar fotos.',
+            'porcentaje': '88%',
+            'metrica': 'Afinidad<br>en hobbies',
         },
         {
-            'id': 'experiencias',
-            'titulo': 'Experiencias',
-            'titulo_card': 'Conexión por Experiencias',
+            'id': 'dinamica',
+            'titulo': 'Dinámica Social',
+            'titulo_card': 'Conexión por Dinámica Social',
             'activo': False,
-            'nombre': 'Daniela',
-            'edad': 29,
-            'foto': 'usuario/img/daniela.jpg',
-            'items': ['Acampar en la cordillera', 'Viajar solo como mochilero', 'Voluntariado ambiental'],
-            'bio': 'Buscando compañeros de ruta y nuevas historias.',
-            'porcentaje': '91%',
-            'metrica': 'Afinidad<br>en experiencias',
+            'nombre': 'Sofía',
+            'edad': 24,
+            'foto': 'usuario/img/elena.jpg',
+            'items': ['Café de especialidad de sobremesa', 'Planes al aire libre', 'Juntadas íntimas en casa'],
+            'bio': 'Prefiero una buena charla en una cafetería tranquila antes que el ruido de una disco.',
+            'porcentaje': '82%',
+            'metrica': 'Afinidad<br>social',
+        },
+        {
+            'id': 'amor',
+            'titulo': 'Lenguaje del Amor',
+            'titulo_card': 'Conexión por Lenguaje del Amor',
+            'activo': False,
+            'nombre': 'Valentina',
+            'edad': 23,
+            'foto': 'usuario/img/camila.jpg',
+            'items': ['Tiempo de calidad juntos', 'Palabras de afirmación', 'Detalles significativos'],
+            'bio': 'Valoro muchísimo la presencia real, dejar el celular de lado y disfrutar el momento.',
+            'porcentaje': '90%',
+            'metrica': 'Afinidad<br>afectiva',
+        },
+        {
+            'id': 'metas',
+            'titulo': 'Metas & Futuro',
+            'titulo_card': 'Conexión por Metas & Futuro',
+            'activo': False,
+            'nombre': 'Martina',
+            'edad': 27,
+            'foto': 'usuario/img/elena.jpg',
+            'items': ['Crecimiento profesional constante', 'Relación estable', 'Viajar y conocer el mundo'],
+            'bio': 'Enfocada en mis proyectos, pero con ganas de compartir el camino con alguien afín.',
+            'porcentaje': '86%',
+            'metrica': 'Afinidad<br>a futuro',
         },
     ]
-
     return render(request, 'usuario/inicioU.html', {'secciones': secciones})
 
 
+# =========================================================================
+# 2. BUSCADOR USUARIO: Filtrado en tiempo real desde AWS RDS
+# =========================================================================
+def buscadorU(request):
+    query = request.GET.get('q', '').strip()
+    categoria_filtro = request.GET.get('cat', '').strip()
+    hoy = date.today()
+
+    # Traemos los clientes desde AWS RDS (excluyendo al usuario principal CLI-001)
+    clientes_qs = Cliente.objects.select_related('usuario_rut').exclude(idcliente='CLI-001')
+
+    if query:
+        # Buscamos coincidencias en nombre, profesión, nacionalidad, biografía o en la tabla GUSTO
+        ruts_con_gusto = Gusto.objects.filter(
+            Q(descripcion__icontains=query) | Q(categoria__icontains=query)
+        ).values_list('rut', flat=True)
+
+        clientes_qs = clientes_qs.filter(
+            Q(usuario_rut__nombre__icontains=query) |
+            Q(ocupacionlaboral__icontains=query) |
+            Q(nacionalidad__icontains=query) |
+            Q(biografia__icontains=query) |
+            Q(usuario_rut__rut__in=ruts_con_gusto)
+        )
+
+    if categoria_filtro:
+        ruts_cat = Gusto.objects.filter(categoria__icontains=categoria_filtro).values_list('rut', flat=True)
+        clientes_qs = clientes_qs.filter(usuario_rut__rut__in=ruts_cat)
+
+    resultados = []
+    fotos_demo = ['usuario/img/camila.jpg', 'usuario/img/elena.jpg']
+
+    for idx, cli in enumerate(clientes_qs[:15]):
+        u = cli.usuario_rut
+        edad = hoy.year - cli.fechanacimiento.year - ((hoy.month, hoy.day) < (cli.fechanacimiento.month, cli.fechanacimiento.day)) if cli.fechanacimiento else 24
+
+        # Obtenemos los gustos reales de este usuario en AWS RDS
+        gustos_usr = Gusto.objects.filter(rut=u.rut)
+        tags = list(gustos_usr.values_list('descripcion', flat=True)[:4])
+        valores_num = [int(g.valor) for g in gustos_usr if str(g.valor).isdigit()]
+        afinidad = round(sum(valores_num) / len(valores_num)) if valores_num else 88
+
+        resultados.append({
+            'rut': u.rut,
+            'nombre': u.nombre,
+            'apellido': u.apellidopaterno,
+            'edad': edad,
+            'profesion': cli.ocupacionlaboral or 'Profesional',
+            'nacionalidad': cli.nacionalidad or 'Chilena',
+            'biografia': cli.biografia,
+            'afinidad': afinidad,
+            'tags': tags if tags else ['Honestidad', 'Planes al aire libre', 'Viajes'],
+            'foto': fotos_demo[idx % len(fotos_demo)],
+        })
+
+    # Ordenamos de mayor a menor afinidad
+    resultados.sort(key=lambda x: x['afinidad'], reverse=True)
+
+    context = {
+        'resultados': resultados,
+        'query': query,
+        'categoria_filtro': categoria_filtro,
+        'total_resultados': len(resultados),
+    }
+    return render(request, 'usuario/buscadorU.html', context)
+
+
+# =========================================================================
+# 3. MENSAJES USUARIO: Conversaciones y envío en vivo con AWS RDS
+# =========================================================================
+def mensajesU(request):
+    hoy = date.today()
+    usuario_principal = Usuario.objects.filter(nombre='Javier').first() or Usuario.objects.first()
+    rut_actual = usuario_principal.rut if usuario_principal else ''
+
+    if request.method == 'POST':
+        receptor_rut = request.POST.get('receptor_rut', '').strip()
+        texto_msg = request.POST.get('contenido', '').strip()
+        if receptor_rut and texto_msg and rut_actual:
+            nuevo_id = f"MSG-{Mensaje.objects.count() + 101:04d}"
+            Mensaje.objects.create(
+                idmensaje=nuevo_id,
+                rut1=rut_actual,
+                rut2=receptor_rut,
+                contenido=texto_msg[:200],
+                fechaenvio=hoy,
+                leido=0
+            )
+            # Limpiamos la caché de este chat al enviar uno nuevo para que se actualice al instante
+            cache.delete(f'chat_historial_{rut_actual}_{receptor_rut}')
+            return redirect(f"/usuario/mensajes/?chat={receptor_rut}")
+
+    # Intentamos leer la lista de contactos desde la caché RAM (durará 1 hora guardada)
+    cache_key_contactos = f'contactos_usuario_{rut_actual}'
+    contactos = cache.get(cache_key_contactos)
+
+    if not contactos:
+        # Si no está en caché, lo consultamos a AWS RDS una sola vez
+        msgs_involucrados = Mensaje.objects.filter(Q(rut1=rut_actual) | Q(rut2=rut_actual)).values_list('rut1', 'rut2')
+        ruts_conversacion = []
+        for r1, r2 in msgs_involucrados:
+            otro = r2 if r1 == rut_actual else r1
+            if otro and otro != rut_actual and otro not in ruts_conversacion:
+                ruts_conversacion.append(otro)
+
+        if not ruts_conversacion:
+            matches_usr = Match.objects.filter(Q(cliente1rut=rut_actual) | Q(cliente2rut=rut_actual), estado=1)[:5]
+            for mt in matches_usr:
+                otro = mt.cliente2rut if mt.cliente1rut == rut_actual else mt.cliente1rut
+                if otro and otro != rut_actual and otro not in ruts_conversacion:
+                    ruts_conversacion.append(otro)
+
+        fotos_demo = ['usuario/img/elena.jpg', 'usuario/img/camila.jpg']
+        contactos = []
+        for idx, r_otro in enumerate(ruts_conversacion[:6]):
+            u_otro = Usuario.objects.filter(rut=r_otro).first()
+            if not u_otro:
+                continue
+            cli_otro = Cliente.objects.filter(usuario_rut=u_otro).first()
+            edad = hoy.year - cli_otro.fechanacimiento.year if (cli_otro and cli_otro.fechanacimiento) else 25
+
+            contactos.append({
+                'rut': r_otro,
+                'nombre': u_otro.nombre,
+                'edad': edad,
+                'profesion': cli_otro.ocupacionlaboral if cli_otro else 'Profesional',
+                'ultimo_mensaje': 'Conversación activa',
+                'fecha': 'Hoy',
+                'activo': False,
+                'afinidad': 91,
+                'foto': fotos_demo[idx % len(fotos_demo)],
+            })
+        # Guardamos en la caché por 3600 segundos (1 hora)
+        cache.set(cache_key_contactos, contactos, 3600)
+
+    chat_seleccionado_rut = request.GET.get('chat', contactos[0]['rut'] if contactos else '')
+
+    # Marcamos cuál está activo sin alterar la caché global
+    contacto_activo = None
+    for c in contactos:
+        c['activo'] = (c['rut'] == chat_seleccionado_rut)
+        if c['activo']:
+            contacto_activo = c
+
+    # Historial de mensajes optimizado con caché por chat
+    cache_key_historial = f'chat_historial_{rut_actual}_{chat_seleccionado_rut}'
+    historial = cache.get(cache_key_historial)
+
+    if not historial and chat_seleccionado_rut:
+        mensajes_chat = Mensaje.objects.filter(
+            Q(rut1=rut_actual, rut2=chat_seleccionado_rut) |
+            Q(rut1=chat_seleccionado_rut, rut2=rut_actual)
+        ).order_by('fechaenvio', 'idmensaje')[:30]
+
+        historial = []
+        for m in mensajes_chat:
+            historial.append({
+                'contenido': m.contenido,
+                'fecha': m.fechaenvio.strftime('%d %b') if m.fechaenvio else 'Hoy',
+                'es_mio': (m.rut1 == rut_actual),
+            })
+        cache.set(cache_key_historial, historial, 3600)
+
+    context = {
+        'contactos': contactos,
+        'contacto_activo': contacto_activo,
+        'historial': historial or [],
+        'total_chats': len(contactos),
+    }
+    return render(request, 'usuario/mensajesU.html', context)
+
+
+# =========================================================================
+# 4. NOTIFICACIONES USUARIO: Conectado a tabla NOTIFICACION en AWS RDS
+# =========================================================================
+def notificacionesU(request):
+    notificaciones_db = Notificacion.objects.all().order_by('-fecha', '-idnotificacion')[:20]
+
+    lista_notificaciones = []
+    no_leidas = 0
+
+    for n in notificaciones_db:
+        es_no_leida = (n.estado == 0)
+        if es_no_leida:
+            no_leidas += 1
+
+        info_lower = n.informacion.lower()
+        if 'match' in info_lower or 'afinidad' in info_lower or 'conexión' in info_lower:
+            tipo = 'match'
+            icono = 'bi-heart-fill'
+            titulo = '¡Nueva Sintonía Alcanzada!'
+        elif 'mensaje' in info_lower or 'chat' in info_lower:
+            tipo = 'chat'
+            icono = 'bi-chat-quote-fill'
+            titulo = 'Nuevo Mensaje Recibido'
+        else:
+            tipo = 'system'
+            icono = 'bi-shield-check'
+            titulo = 'Actualización de Beyond Date'
+
+        lista_notificaciones.append({
+            'id': n.idnotificacion,
+            'titulo': titulo,
+            'informacion': n.informacion,
+            'fecha': n.fecha.strftime('%d/%m/%Y') if n.fecha else 'Reciente',
+            'unread': es_no_leida,
+            'tipo': tipo,
+            'icono': icono,
+        })
+
+    context = {
+        'notificaciones': lista_notificaciones,
+        'total_notificaciones': len(lista_notificaciones),
+        'no_leidas': no_leidas,
+    }
+    return render(request, 'usuario/notificacionesU.html', context)
+
+# =========================================================================
+# 5. EDITAR PERFIL USUARIO: Actualización en AWS RDS (Tablas USUARIO y CLIENTE)
+# =========================================================================
+def editar_perfilU(request):
+    usuario_principal = Usuario.objects.filter(nombre='Javier').first() or Usuario.objects.first()
+    cliente_principal = Cliente.objects.filter(usuario_rut=usuario_principal).first() if usuario_principal else None
+
+    if request.method == 'POST':
+        # Capturamos los datos enviados por el formulario
+        nuevo_nombre = request.POST.get('nombre', '').strip()
+        nueva_bio = request.POST.get('biografia', '').strip()
+        nueva_ocupacion = request.POST.get('ocupacionlaboral', '').strip()
+        nueva_nacionalidad = request.POST.get('nacionalidad', '').strip()
+        nueva_orientacion = request.POST.get('orientacionsexual', '').strip()
+
+        # Actualizamos la tabla USUARIO si hay cambios
+        if usuario_principal and nuevo_nombre:
+            usuario_principal.nombre = nuevo_nombre
+            usuario_principal.save()
+
+        # Actualizamos la tabla CLIENTE en AWS RDS
+        if cliente_principal:
+            cliente_principal.biografia = nueva_bio
+            cliente_principal.ocupacionlaboral = nueva_ocupacion
+            cliente_principal.nacionalidad = nueva_nacionalidad
+            cliente_principal.orientacionsexual = nueva_orientacion
+            cliente_principal.save()
+
+        # Limpiamos la caché de contactos para que refleje el cambio de nombre de inmediato
+        cache.delete(f'contactos_usuario_{usuario_principal.rut if usuario_principal else ""}')
+
+        # Redirigimos de vuelta al perfil con un mensaje de éxito
+        return redirect('/usuario/perfil/') # O la ruta exacta que utilices para el perfil
+
+    context = {
+        'usuario': usuario_principal,
+        'cliente': cliente_principal,
+    }
+    return render(request, 'usuario/editar_perfilU.html', context)
 
 def perfilU(request):
     # Datos simulados (mock) para diseñar el frontend sin base de datos
@@ -93,37 +376,147 @@ def perfilU(request):
     return render(request, 'usuario/perfilU.html', context)
 
 def graficosU(request):
-    
     """
     [CONEXIÓN A BASE DE DATOS - AWS RDS]
-    Función de la vista de usuario que calcula el total de registros de matches 
-    y el porcentaje de éxito (matches reales vs no matches) consultando 
-    directamente las tablas en la nube.
+    Consulta en tiempo real las tablas MATCH, CLIENTE, GUSTO y DISGUSTO
+    para alimentar todos los gráficos de estadísticas del usuario.
     """
-    
     perfil_mock = {
         'nombre': 'Javier',
         'edad': 24,
     }
 
-    # Consulta al total de registros y filtrado por estado (1: Match, 0: No Match)
+    # =========================================================================
+    # 1. BALANCE DE MATCHES (Tabla MATCH en AWS RDS)
+    # =========================================================================
     total_matches = Match.objects.count()
     matches_reales = Match.objects.filter(estado=1).count()
     no_matches_reales = Match.objects.filter(estado=0).count()
-    
-    # Cálculo dinámico del porcentaje de éxito
-    if total_matches > 0:
-        porcentaje_matches = round((matches_reales / total_matches) * 100, 1)
-    else:
-        porcentaje_matches = 0.0
-    
+
+    porcentaje_matches = round((matches_reales / total_matches) * 100, 1) if total_matches > 0 else 0.0
+
     chart_payload = {
         'labels': ['Match', 'No Match'],
         'data': [matches_reales, no_matches_reales],
         'porcentaje': porcentaje_matches,
     }
 
-    # 2. Tiempo en la app (Falso / Mock)
+    # =========================================================================
+    # 2. CARACTERÍSTICAS DE MATCHES (Cruzando MATCH exitosos con tabla CLIENTE)
+    # =========================================================================
+    # Obtenemos los RUTs involucrados en matches exitosos (estado=1)
+    matches_exitosos = Match.objects.filter(estado=1)
+    ruts_con_match = set(matches_exitosos.values_list('cliente2rut', flat=True)) | set(matches_exitosos.values_list('cliente1rut', flat=True))
+
+    clientes_match_qs = Cliente.objects.filter(usuario_rut__rut__in=ruts_con_match)
+    if not clientes_match_qs.exists():
+        clientes_match_qs = Cliente.objects.all()
+
+    # A) Orientación Sexual desde AWS RDS
+    orientacion_qs = clientes_match_qs.values('orientacionsexual').annotate(total=Count('idcliente')).order_by('-total')
+    orientacion_labels = [item['orientacionsexual'] for item in orientacion_qs if item['orientacionsexual']]
+    orientacion_data = [item['total'] for item in orientacion_qs if item['orientacionsexual']]
+
+    # B) Rango de Edad calculado desde Cliente.fechanacimiento
+    hoy = date.today()
+    rangos_edad = {'18-21 años': 0, '22-25 años': 0, '26-29 años': 0, '30+ años': 0}
+    for cli in clientes_match_qs:
+        if cli.fechanacimiento:
+            edad = hoy.year - cli.fechanacimiento.year - ((hoy.month, hoy.day) < (cli.fechanacimiento.month, cli.fechanacimiento.day))
+            if edad <= 21:
+                rangos_edad['18-21 años'] += 1
+            elif edad <= 25:
+                rangos_edad['22-25 años'] += 1
+            elif edad <= 29:
+                rangos_edad['26-29 años'] += 1
+            else:
+                rangos_edad['30+ años'] += 1
+
+    # C) Área Profesional desde Cliente.ocupacionlaboral
+    profesion_qs = clientes_match_qs.values('ocupacionlaboral').annotate(total=Count('idcliente')).order_by('-total')
+    profesion_labels = [item['ocupacionlaboral'] for item in profesion_qs if item['ocupacionlaboral']]
+    profesion_data = [item['total'] for item in profesion_qs if item['ocupacionlaboral']]
+
+    # D) Nacionalidad desde Cliente.nacionalidad
+    nacionalidad_qs = clientes_match_qs.values('nacionalidad').annotate(total=Count('idcliente')).order_by('-total')
+    nacionalidad_labels = [item['nacionalidad'] for item in nacionalidad_qs if item['nacionalidad']]
+    nacionalidad_data = [item['total'] for item in nacionalidad_qs if item['nacionalidad']]
+
+    arquetipo_payload = {
+        'orientacion': {
+            'labels': orientacion_labels or ['Sin datos'],
+            'data': orientacion_data or [0],
+            'label': 'Matches por orientación'
+        },
+        'edad': {
+            'labels': list(rangos_edad.keys()),
+            'data': list(rangos_edad.values()),
+            'label': 'Matches por rango de edad'
+        },
+        'profesion': {
+            'labels': profesion_labels or ['Sin datos'],
+            'data': profesion_data or [0],
+            'label': 'Matches por área profesional'
+        },
+        'nacionalidad': {
+            'labels': nacionalidad_labels or ['Sin datos'],
+            'data': nacionalidad_data or [0],
+            'label': 'Matches por nacionalidad'
+        },
+        'religion': {
+            'labels': ['Agnóstico/Ateo', 'Católico', 'Cristiano', 'Espiritual', 'Otro'],
+            'data': [12, 8, 4, 3, 2],
+            'label': 'Matches por creencias'
+        }
+    }
+
+    # =========================================================================
+    # 3. RADAR DE AFINIDAD (Consultando tablas GUSTO y DISGUSTO en AWS RDS)
+    # =========================================================================
+    categorias_radar = [
+        'Valores',
+        'Hobbies',
+        'Dinámica Social',
+        'Lenguaje del Amor',
+        'Metas & Futuro'
+    ]
+
+    gustos_data_db = []
+    disgustos_data_db = []
+    detalles_gustos_db = {}
+    detalles_disgustos_db = {}
+
+    for cat in categorias_radar:
+        # Extraer Gustos de esta categoría desde AWS RDS
+        gustos_cat = Gusto.objects.filter(categoria=cat)
+        valores_num_g = [int(g.valor) for g in gustos_cat if str(g.valor).isdigit()]
+        promedio_g = round(sum(valores_num_g) / len(valores_num_g)) if valores_num_g else 85
+        gustos_data_db.append(promedio_g)
+
+        # Obtenemos hasta 5 descripciones distintas guardadas en la BD para el tooltip
+        desc_g = list(gustos_cat.values_list('descripcion', flat=True).distinct()[:5])
+        detalles_gustos_db[cat] = desc_g if desc_g else ['Sin registros']
+
+        # Extraer Disgustos de esta categoría desde AWS RDS
+        disgustos_cat = Disgusto.objects.filter(categoria=cat)
+        valores_num_d = [int(d.valor) for d in disgustos_cat if str(d.valor).isdigit()]
+        promedio_d = round(sum(valores_num_d) / len(valores_num_d)) if valores_num_d else 30
+        disgustos_data_db.append(promedio_d)
+
+        desc_d = list(disgustos_cat.values_list('descripcion', flat=True).distinct()[:5])
+        detalles_disgustos_db[cat] = desc_d if desc_d else ['Sin registros']
+
+    radar_afinidad_payload = {
+        'categorias': categorias_radar,
+        'gustos_data': gustos_data_db,
+        'disgustos_data': disgustos_data_db,
+        'detalles_gustos': detalles_gustos_db,
+        'detalles_disgustos': detalles_disgustos_db
+    }
+
+    # =========================================================================
+    # 4. TIEMPO EN LA APP
+    # =========================================================================
     tiempo_payload = {
         'diario': {
             'labels': ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
@@ -145,63 +538,6 @@ def graficosU(request):
         }
     }
 
-    # 3. Arquetipo de matches (Falso / Mock)
-    arquetipo_payload = {
-        'orientacion': {
-            'labels': ['Heterosexual', 'Bisexual', 'Homosexual', 'Otro'],
-            'data': [11, 6, 3, 2],
-            'label': 'Matches por orientación'
-        },
-        'edad': {
-            'labels': ['18-21 años', '22-25 años', '26-29 años', '30+ años'],
-            'data': [4, 12, 5, 1],
-            'label': 'Matches por rango de edad'
-        },
-        'profesion': {
-            'labels': ['Ingeniería/Tech', 'Salud', 'Diseño/Artes', 'Educación', 'Otros'],
-            'data': [9, 5, 4, 3, 1],
-            'label': 'Matches por área profesional'
-        },
-        'nacionalidad': {
-            'labels': ['Chilena', 'Venezolana', 'Colombiana', 'Argentina', 'Otras'],
-            'data': [14, 4, 2, 1, 1],
-            'label': 'Matches por nacionalidad'
-        },
-        'religion': {
-            'labels': ['Agnóstico/Ateo', 'Católico', 'Cristiano', 'Espiritual', 'Otro'],
-            'data': [10, 6, 3, 2, 1],
-            'label': 'Matches por creencias'
-        }
-    }
-
-    # 4. Radar de Afinidad (Falso / Mock)
-    radar_afinidad_payload = {
-        'categorias': [
-            'Vida en Casa',
-            'Vida Social',
-            'Cultura & Ocio',
-            'Entorno & Movilidad',
-            'Metas & Estilo de Vida'
-        ],
-        'gustos_data': [85, 65, 90, 45, 75],
-        'disgustos_data': [30, 70, 20, 60, 40],
-        'detalles_gustos': {
-            'Vida en Casa': ['Series & Películas', 'Videojuegos', 'Cocinar juntos'],
-            'Vida Social': ['Juntadas tranquilas', 'Ir por café', 'Paseos urbanos'],
-            'Cultura & Ocio': ['Música en vivo', 'Cine', 'Tecnología'],
-            'Entorno & Movilidad': ['Parques al aire libre', 'Caminar por la ciudad'],
-            'Metas & Estilo de Vida': ['Desarrollo profesional', 'Vivir sin prisa']
-        },
-        'detalles_disgustos': {
-            'Vida en Casa': ['Desorden extremo', 'Ruido excesivo al descansar'],
-            'Vida Social': ['Bares repletos / aglomeraciones', 'Llegar tarde'],
-            'Cultura & Ocio': ['Conversaciones superficiales', 'Spoilers de series'],
-            'Entorno & Movilidad': ['Tacos / Tráfico vehicular', 'Calor extremo'],
-            'Metas & Estilo de Vida': ['Falta de ambición', 'Presión social']
-        }
-    }
-
-    # Unificamos todo en un solo diccionario context
     context = {
         'perfil': perfil_mock,
         'chart_payload': chart_payload,
@@ -209,7 +545,7 @@ def graficosU(request):
         'arquetipo_payload': arquetipo_payload,
         'radar_afinidad_payload': radar_afinidad_payload,
     }
-    
+
     return render(request, 'usuario/graficosU.html', context)
 
 
@@ -456,14 +792,7 @@ def admin_usuarios(request):
             {"users": users}
             )
     
-def buscador_view(request):
-    return render(request, 'usuario/buscadorU.html')
 
-def mensajes_view(request):
-    return render(request, 'usuario/mensajesU.html')
-
-def notificaciones_view(request):
-    return render(request, 'usuario/notificacionesU.html')
     
     
 

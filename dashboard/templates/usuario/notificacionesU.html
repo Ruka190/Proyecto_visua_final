@@ -5,9 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notificaciones · Beyond Date</title>
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
@@ -16,48 +14,108 @@
             color: #4a4a4a;
         }
 
-        .notif-main-container {
-            max-width: 800px;
+        .notif-wrapper {
+            max-width: 820px;
             margin: 0 auto;
-            padding: 2.5rem 1.5rem;
+            padding: 2.2rem 1.5rem 4rem;
         }
 
-        .notif-card {
-            background-color: #FFFDFB;
-            border: 1px solid #F3CFC4;
-            border-radius: 20px;
-            padding: 20px 24px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
+        /* Pestañas de filtrado rápido */
+        .notif-tab-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: #6b6b6b;
+            font-weight: 500;
+            font-size: 0.88rem;
+            padding: 7px 18px;
+            border-radius: 999px;
             transition: all 0.2s ease;
         }
 
-        .notif-card.unread {
-            background-color: #FFF9F8;
-            border-left: 4px solid #E87265;
+        .notif-tab-btn:hover {
+            color: #E87265;
+            background-color: #FAF6F2;
         }
 
-        .notif-card:hover {
+        .notif-tab-btn.active {
+            background-color: #E87265;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 3px 10px rgba(232, 114, 101, 0.25);
+        }
+
+        /* Tarjeta de Notificación */
+        .notif-tile {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            border-radius: 20px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .notif-tile:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(232, 114, 101, 0.08);
+            box-shadow: 0 8px 22px rgba(232, 114, 101, 0.09);
         }
 
-        .notif-icon-box {
+        .notif-tile.unread {
+            background-color: #FFF9F8;
+            border-left: 4.5px solid #E87265;
+        }
+
+        .notif-icon-circle {
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background-color: #FDECE7;
-            color: #E87265;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             flex-shrink: 0;
+        }
+
+        .notif-icon-circle.match {
+            background-color: #FDECE7;
+            color: #E87265;
             border: 1px solid #F3CFC4;
+        }
+
+        .notif-icon-circle.chat {
+            background-color: #FAF4F0;
+            color: #a88279;
+            border: 1px solid #E3B9AE;
+        }
+
+        .notif-icon-circle.system {
+            background-color: #F2F8F4;
+            color: #28a745;
+            border: 1px solid #d4edd9;
+        }
+
+        .btn-notif-action {
+            background-color: #FAF6F2;
+            color: #E87265;
+            border: 1px solid #E3B9AE;
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-notif-action:hover {
+            background-color: #E87265;
+            color: #ffffff;
+            border-color: #E87265;
         }
     </style>
 </head>
@@ -65,69 +123,68 @@
 
     {% include 'usuario/barraU.html' %}
 
-    <main class="notif-main-container">
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <main class="notif-wrapper">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
-                <h1 class="h4 fw-bold mb-1 text-dark">Notificaciones</h1>
-                <p class="text-muted small mb-0">Mantente al tanto de la actividad en tus conexiones</p>
+                <h1 class="h4 fw-bold text-dark mb-1">Centro de Notificaciones</h1>
+                <p class="text-muted small mb-0">Mostrando {{ total_notificaciones }} alertas desde AWS RDS ({{ no_leidas }} sin leer)</p>
             </div>
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 bg-white">
-                Marcar leídas
+            <button class="btn btn-sm btn-light border rounded-pill px-3 py-1 text-muted" id="btnMarkAll">
+                <i class="bi bi-check2-all me-1"></i> Marcar leídas
             </button>
         </div>
 
-        <!-- Lista de notificaciones -->
-        <div class="notif-list">
-            
-            <!-- Notificación 1 (Nueva / No leída) -->
-            <div class="notif-card unread">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="notif-icon-box">
-                        <i class="bi bi-heart-fill"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-1 fw-bold text-dark">¡Nuevo Match Exitoso!</h6>
-                        <p class="text-secondary small mb-0">Hiciste match con <strong>Camila</strong> (94% de afinidad en gustos).</p>
-                        <span class="text-muted" style="font-size: 0.7rem;">Hace 25 minutos</span>
-                    </div>
-                </div>
-                <a href="{% url 'mensajesU' %}" class="btn btn-sm btn-coral-action rounded-pill px-3 text-white fw-semibold" style="background-color: #E87265; font-size: 0.8rem; text-decoration: none;">Ver chat</a>
-            </div>
-
-            <!-- Notificación 2 -->
-            <div class="notif-card">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="notif-icon-box" style="background-color: #FAF4F0; color: #a88279;">
-                        <i class="bi bi-chat-heart-fill"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-1 fw-bold text-dark">Nuevo mensaje de Elena</h6>
-                        <p class="text-secondary small mb-0">"¡Hola Javier! Me encantó tu foto escalando..."</p>
-                        <span class="text-muted" style="font-size: 0.7rem;">Hace 2 horas</span>
-                    </div>
-                </div>
-                <a href="{% url 'mensajesU' %}" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold" style="font-size: 0.8rem; text-decoration: none;">Responder</a>
-            </div>
-
-            <!-- Notificación 3 -->
-            <div class="notif-card">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="notif-icon-box" style="background-color: #FAF4F0; color: #a88279;">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-1 fw-bold text-dark">Perfil Verificado con Éxito</h6>
-                        <p class="text-secondary small mb-0">Tu identidad ha sido confirmada correctamente por el sistema.</p>
-                        <span class="text-muted" style="font-size: 0.7rem;">Ayer</span>
-                    </div>
-                </div>
-            </div>
-
+        <!-- Filtros Rápidos con JS -->
+        <div class="d-flex gap-2 mb-4 overflow-auto pb-1">
+            <button class="notif-tab-btn active" data-filter="all">Todas ({{ total_notificaciones }})</button>
+            <button class="notif-tab-btn" data-filter="match">Matches</button>
+            <button class="notif-tab-btn" data-filter="chat">Mensajes</button>
+            <button class="notif-tab-btn" data-filter="system">Sistema</button>
         </div>
 
+        <!-- Lista desde AWS RDS -->
+        <div class="notif-stream">
+            {% for n in notificaciones %}
+            <div class="notif-tile {% if n.unread %}unread{% endif %}" data-category="{{ n.tipo }}">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="notif-icon-circle {{ n.tipo }}">
+                        <i class="bi {{ n.icono }}"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h2 class="h6 fw-bold text-dark mb-0">{{ n.titulo }}</h2>
+                            {% if n.unread %}
+                            <span class="badge bg-danger rounded-circle p-1" style="width: 7px; height: 7px;"></span>
+                            {% endif %}
+                        </div>
+                        <p class="text-secondary small mb-0">{{ n.informacion }}</p>
+                        <span class="text-muted" style="font-size: 0.72rem;">Fecha: {{ n.fecha }}</span>
+                    </div>
+                </div>
+                <a href="{% url 'mensajesU' %}" class="btn-notif-action">Ver</a>
+            </div>
+            {% endfor %}
+        </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Limpieza visual al marcar todas como leídas
+        document.getElementById('btnMarkAll')?.addEventListener('click', () => {
+            document.querySelectorAll('.notif-tile.unread').forEach(t => t.classList.remove('unread'));
+            document.querySelectorAll('.notif-tile .badge.bg-danger').forEach(b => b.remove());
+            document.querySelectorAll('.notif-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.notif-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filtro = btn.getAttribute('data-filter');
+        document.querySelectorAll('.notif-tile').forEach(tile => {
+            tile.style.display = (filtro === 'all' || tile.getAttribute('data-category') === filtro) ? 'flex' : 'none';
+        });
+    });
+});
+        });
+    </script>
 </body>
 </html>

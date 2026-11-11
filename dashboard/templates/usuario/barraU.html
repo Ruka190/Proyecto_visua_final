@@ -316,33 +316,52 @@
     </div>
 </nav>
 
-<!-- Script para la interactividad de colapsar el menú -->
+<!-- Script síncrono anti-parpadeo para mantener fluidez total entre vistas -->
+<style>
+    /* Bloquea transiciones durante el milisegundo de carga inicial */
+    body.preload-no-transition,
+    body.preload-no-transition *,
+    body.preload-no-transition .app-sidebar {
+        transition: none !important;
+    }
+</style>
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    (function () {
+        const body = document.body;
         const toggleBtn = document.getElementById('toggleSidebarBtn');
         const toggleIcon = document.getElementById('toggleIcon');
-        const body = document.body;
 
-        // Recordar preferencia del usuario en la sesión si desea el menú oculto
+        // 1. Congelar animaciones en el instante 0
+        body.classList.add('preload-no-transition');
+
+        // 2. Aplicar estado colapsado inmediatamente (sin esperar a DOMContentLoaded)
         if (localStorage.getItem('sidebar_collapsed') === 'true') {
             body.classList.add('sidebar-collapsed');
-            if(toggleIcon) toggleIcon.className = 'bi bi-chevron-right';
+            if (toggleIcon) toggleIcon.className = 'bi bi-chevron-right';
         }
 
+        // 3. Reactivar animaciones suaves justo después del primer renderizado
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                body.classList.remove('preload-no-transition');
+            });
+        });
+
+        // 4. Evento del botón para abrir/cerrar manualmente con fluidez
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 body.classList.toggle('sidebar-collapsed');
                 const isCollapsed = body.classList.contains('sidebar-collapsed');
-                
-                // Cambiar icono de la flecha
+
                 if (isCollapsed) {
-                    toggleIcon.className = 'bi bi-chevron-right';
+                    if (toggleIcon) toggleIcon.className = 'bi bi-chevron-right';
                     localStorage.setItem('sidebar_collapsed', 'true');
                 } else {
-                    toggleIcon.className = 'bi bi-chevron-left';
+                    if (toggleIcon) toggleIcon.className = 'bi bi-chevron-left';
                     localStorage.setItem('sidebar_collapsed', 'false');
                 }
             });
         }
-    });
+    })();
 </script>

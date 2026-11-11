@@ -15,10 +15,10 @@ urlpatterns = [
     path('usuario/', views.inicioU, name='inicioU'),
     path('usuario/perfilU/', views.perfilU, name='perfilU'),
     path('usuario/graficos/', views.graficosU, name='graficosU'),
-    
-    path('usuario/buscador/', views.buscador_view, name='buscadorU'),
-    path('usuario/mensajes/', views.mensajes_view, name='mensajesU'),
-    path('usuario/notificaciones/', views.notificaciones_view, name='notificacionesU'),
+    path('usuario/perfil/editar/', views.editar_perfilU, name='editar_perfilU'),
+    path('usuario/buscador/', views.buscadorU, name='buscadorU'),
+    path('usuario/mensajes/', views.mensajesU, name='mensajesU'),
+    path('usuario/notificaciones/', views.notificacionesU, name='notificacionesU'),
     
     ## Administrador
     path('administrador/', views.administrador, name='administrador'),

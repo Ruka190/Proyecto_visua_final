@@ -1,57 +1,120 @@
 {% extends 'admin/base_admin.html' %}
-{% load static %}
 
-{% block title %}Notificaciones admin{% endblock %}
-
+{% block title %}Notificaciones | Beyond Date{% endblock %}
 
 {% block header %}
-    <div class="admin-welcome">
-        <h1>Notificaciones</h1>
-    </div>
+    <h1 class="h4 fw-bold mb-0" style="color: #4C2A36;">Notificaciones</h1>
 {% endblock %}
 
-
 {% block content %}
-<div class="list-group notificaciones">
+<section class="admin-notifications" aria-labelledby="admin-notifications-title">
+    <div class="admin-notifications-intro">
+        <div>
+            <span class="admin-notifications-eyebrow">Centro de administración</span>
+            <h2 id="admin-notifications-title">Avisos para revisar</h2>
+            <p>Consulta reportes, comunicaciones y avisos del sistema para decidir el siguiente paso.</p>
+        </div>
+        <div class="admin-notifications-total" aria-label="Total de avisos">
+            <i class="bi bi-bell-fill" aria-hidden="true"></i>
+            <span id="admin-notifications-total">{{ notificaciones|length }}</span>
+            <span>avisos</span>
+        </div>
+    </div>
 
-    {% for notificacion in notificaciones %}
+    <div class="admin-notifications-tabs" role="group" aria-label="Filtrar avisos">
+        <button type="button" class="admin-notifications-tab is-active" data-notification-filter="todos" aria-pressed="true">Todos</button>
+        <button type="button" class="admin-notifications-tab" data-notification-filter="reportes" aria-pressed="false">Reportes</button>
+        <button type="button" class="admin-notifications-tab" data-notification-filter="mensajes" aria-pressed="false">Comunicaciones</button>
+        <button type="button" class="admin-notifications-tab" data-notification-filter="sistema" aria-pressed="false">Sistema</button>
+    </div>
 
-    <a href="#" class="notificacion">
+    <p id="admin-notifications-summary" class="admin-notifications-summary" aria-live="polite"></p>
 
-        <img class="notificacion-icono"
-             src="{% static 'admin/img/botonNotificacionAdmin.png' %}"
-             alt="">
+    <div class="admin-notifications-list" id="admin-notifications-list">
+        {% for n in notificaciones %}
+        <article class="admin-notification-card"
+                 data-admin-notification
+                 data-category="{% if n.tema == 'Reporte' %}reportes{% elif n.tema == 'Mensaje' %}mensajes{% else %}sistema{% endif %}">
+            <div class="admin-notification-icon {% if n.tema == 'Reporte' %}is-report{% elif n.tema == 'Mensaje' %}is-message{% else %}is-system{% endif %}" aria-hidden="true">
+                {% if n.tema == 'Reporte' %}<i class="bi bi-shield-exclamation"></i>
+                {% elif n.tema == 'Mensaje' %}<i class="bi bi-envelope-paper"></i>
+                {% else %}<i class="bi bi-gear"></i>{% endif %}
+            </div>
 
-        <span class="notificacion-texto">
+            <div class="admin-notification-content">
+                <div class="admin-notification-meta">
+                    <span class="admin-notification-category">
+                        {% if n.tema == 'Reporte' %}Moderación
+                        {% elif n.tema == 'Mensaje' %}Comunicación
+                        {% else %}Sistema{% endif %}
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <span>{{ n.fecha }}</span>
+                    {% if n.id_usuario %}<span aria-hidden="true">·</span><span>Usuario {{ n.id_usuario }}</span>{% endif %}
+                </div>
+                <h3>
+                    {% if n.tema == 'Reporte' %}Revisar reporte de usuario
+                    {% elif n.tema == 'Mensaje' %}Revisar comunicación recibida
+                    {% else %}Revisar aviso del sistema{% endif %}
+                </h3>
+                <p class="admin-notification-description">{{ n.mensaje }}</p>
+                <p class="admin-notification-guidance">
+                    {% if n.tema == 'Reporte' %}Acción sugerida: comprobar el caso y decidir si corresponde intervenir la cuenta.
+                    {% elif n.tema == 'Mensaje' %}Acción sugerida: leer el contenido y responder por el canal correspondiente.
+                    {% else %}Acción sugerida: verificar el estado del sistema y registrar el seguimiento.{% endif %}
+                </p>
+            </div>
 
-            <span class="notificacion-titulo">
-                {% if notificacion.tema == "Reporte" %}
-                    Usuario Reportado
-                {% elif notificacion.tema == "Mensaje" %}
-                    Nuevo Mensaje
-                {% else %}
-                    {{ notificacion.tema }}
-                {% endif %}
-            </span>
+            {% if n.tema == 'Reporte' %}
+                <a class="admin-notification-action" href="{% url 'admin_usuarios' %}">
+                    Ir a Usuarios <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                </a>
+            {% endif %}
+        </article>
+        {% empty %}
+        <div class="admin-notifications-empty" id="admin-notifications-db-empty">
+            <i class="bi bi-inbox" aria-hidden="true"></i>
+            <h3>No hay avisos por ahora</h3>
+            <p>Las nuevas tareas de administración aparecerán aquí.</p>
+        </div>
+        {% endfor %}
+        <div class="admin-notifications-empty" id="admin-notifications-filter-empty" hidden>
+            <i class="bi bi-funnel" aria-hidden="true"></i>
+            <h3>Sin avisos en esta categoría</h3>
+            <p>Selecciona otro filtro para continuar revisando.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
 
-            <span class="notificacion-descripcion">
-                {{ notificacion.mensaje }}
-            </span>
+{% block body_extra %}
+<script>
+    const avisosAdmin = [...document.querySelectorAll('[data-admin-notification]')];
+    const filtrosAvisosAdmin = document.querySelectorAll('[data-notification-filter]');
+    const resumenAvisosAdmin = document.getElementById('admin-notifications-summary');
+    const vacioFiltroAvisosAdmin = document.getElementById('admin-notifications-filter-empty');
 
-        </span>
+    const mostrarAvisosAdmin = categoria => {
+        let visibles = 0;
+        avisosAdmin.forEach(aviso => {
+            const mostrar = categoria === 'todos' || aviso.dataset.category === categoria;
+            aviso.hidden = !mostrar;
+            if (mostrar) visibles++;
+        });
+        filtrosAvisosAdmin.forEach(boton => {
+            const activo = boton.dataset.notificationFilter === categoria;
+            boton.classList.toggle('is-active', activo);
+            boton.setAttribute('aria-pressed', String(activo));
+        });
+        vacioFiltroAvisosAdmin.hidden = visibles > 0 || avisosAdmin.length === 0;
+        resumenAvisosAdmin.textContent = visibles === avisosAdmin.length && categoria === 'todos'
+            ? `${visibles} avisos disponibles`
+            : `${visibles} avisos en ${categoria === 'todos' ? 'total' : categoria}`;
+    };
 
-        <img class="notificacion-flecha"
-             src="{% static 'admin/img/BotonFlechaD.png' %}"
-             alt="">
-
-    </a>
-
-    {% empty %}
-
-        <p>No tienes notificaciones disponibles.</p>
-
-    {% endfor %}
-
-</div>
-
+    filtrosAvisosAdmin.forEach(boton => boton.addEventListener('click', () =>
+        mostrarAvisosAdmin(boton.dataset.notificationFilter)
+    ));
+    mostrarAvisosAdmin('todos');
+</script>
 {% endblock %}

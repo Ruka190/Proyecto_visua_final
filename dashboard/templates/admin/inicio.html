@@ -4,76 +4,91 @@
 {% block title %}Inicio del administrador{% endblock %}
 
 {% block header %}
-    <div class="d-flex align-items-center justify-content-center gap-3">
-        <img class="rounded-circle shadow-sm" src="{% static 'admin/img/javier.jpg' %}" alt="Foto de Javier" style="width: 50px; height: 50px; object-fit: cover;">
-        <h1 class="h4 fw-bold mb-0" style="color: #4C2A36;">Bienvenido, Javier</h1>
-    </div>
+    <h1 class="h4 fw-bold mb-0" style="color: #4C2A36;">Bienvenido, Javier</h1>
 {% endblock %}
 
 {% block content %}
     
-    <!-- 1. FILA DE INDICADORES PRINCIPALES (KPIs) -->
-    <section aria-label="Resumen del sitio" class="mb-4">
-        <div class="row g-3">
-            <div class="col-6 col-lg-3">
-                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
-                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Registrados</h2>
-                    <p class="fs-3 fw-bold mb-0" style="color: #D62D5A;">{{ clientes_registrados }}</p>
-                </article>
-            </div>
-            <div class="col-6 col-lg-3">
-                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
-                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Matches Totales</h2>
-                    <p class="fs-3 fw-bold mb-0" style="color: #D62D5A;">{{ matches_totales }}</p>
-                </article>
-            </div>
-            <div class="col-6 col-lg-3">
-                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
-                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Con Match</h2>
-                    <p class="fs-3 fw-bold mb-0" style="color: #4C2A36;">{{ kpi_matchs }}%</p>
-                </article>
-            </div>
-            <div class="col-6 col-lg-3">
-                <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center" style="border-top: 4px solid #f3a69a;">
-                    <h2 class="h6 text-muted fw-bold text-uppercase mb-1">Sin Match</h2>
-                    <p class="fs-3 fw-bold mb-0" style="color: #4C2A36;">{{ kpi_estancados }}%</p>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <!-- 2. CUADRÍCULA DE GRÁFICOS (2x2 en PC, 1 columna en Móvil) -->
+    <!-- 1. ACTIVIDAD Y USUARIOS -->
     <div class="row g-4">
-        
-        <!-- Gráfico: Conexiones Recientes -->
-        <div class="col-12 col-xl-6">
-            <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
-                <div class="mb-3">
-                    <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Conexiones recientes</h2>
-                    <p class="text-muted small mb-0">Usuarios conectados en la semana</p>
+        <div class="col-12">
+            <header class="admin-dashboard-section-heading" aria-labelledby="admin-actividad-titulo">
+                <span class="admin-dashboard-section-number" aria-hidden="true">01</span>
+                <div>
+                    <h2 id="admin-actividad-titulo">Actividad de Beyond Date</h2>
+                    <p>Matches, conexiones y distribución de usuarios</p>
                 </div>
-                <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
-                    <canvas id="ventasChart"></canvas>
+            </header>
+        </div>
+
+        <!-- Indicadores del periodo seleccionado en el histórico -->
+        <div class="col-12">
+            <section aria-label="Indicadores de actividad">
+                <p id="admin-kpi-periodo" class="admin-kpi-period mb-2" aria-live="polite">Indicadores del año</p>
+                <div class="row g-3">
+                    <div class="col-6 col-lg-3">
+                        <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center admin-kpi-card">
+                            <h3 class="h6 text-muted fw-bold text-uppercase mb-1">Crecimiento de matches</h3>
+                            <p id="admin-kpi-crecimiento" class="fs-3 fw-bold mb-0 admin-kpi-value" aria-live="polite">—</p>
+                        </article>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center admin-kpi-card">
+                            <h3 class="h6 text-muted fw-bold text-uppercase mb-1">Matches del periodo</h3>
+                            <p id="admin-kpi-total" class="fs-3 fw-bold mb-0 admin-kpi-value" aria-live="polite">—</p>
+                        </article>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center admin-kpi-card">
+                            <h3 class="h6 text-muted fw-bold text-uppercase mb-1">Tasa de Match</h3>
+                            <p id="admin-kpi-con-match" class="fs-3 fw-bold mb-0 admin-kpi-value admin-kpi-value--secondary" aria-live="polite">—</p>
+                        </article>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <article class="bg-white p-3 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center admin-kpi-card">
+                            <h3 class="h6 text-muted fw-bold text-uppercase mb-1">Tasa sin Match</h3>
+                            <p id="admin-kpi-sin-match" class="fs-3 fw-bold mb-0 admin-kpi-value admin-kpi-value--secondary" aria-live="polite">—</p>
+                        </article>
+                    </div>
                 </div>
             </section>
         </div>
 
         <!-- Gráfico: Histórico de Matches -->
-        <div class="col-12 col-xl-6">
+        <div class="col-12">
             <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
                 <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
                     <div>
-                        <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Histórico Matchs</h2>
-                        <p id="detalle-historico-matchs" class="text-muted small mb-0">Matches por día de la semana</p>
+                        <h3 class="h5 fw-bold mb-0" style="color: #4C2A36;">Histórico Matchs</h3>
+                        <p id="detalle-historico-matchs" class="text-muted small mb-0" aria-live="polite">Matches por mes del año</p>
                     </div>
-                    <div class="btn-group rounded-pill border" style="border-color: #f3a69a !important; padding: 2px;" role="group">
-                        <button type="button" class="btn btn-sm admin-period-button active rounded-pill border-0" data-periodo="semana">Semana</button>
-                        <button type="button" class="btn btn-sm admin-period-button rounded-pill border-0" data-periodo="mes">Mes</button>
-                        <button type="button" class="btn btn-sm admin-period-button rounded-pill border-0" data-periodo="anio">Año</button>
+                    <button type="button" id="volver-historico-matchs" class="admin-chart-back" hidden>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i> Volver
+                    </button>
+                </div>
+                <p id="ayuda-historico-matchs" class="admin-chart-hint"></p>
+                <div class="admin-chart-primary">
+                    <canvas id="ChartHistoricoMatchs"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- Gráfico: Conexiones Recientes -->
+        <div class="col-12 col-xl-6">
+            <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
+                <div class="admin-connections-header mb-3">
+                    <div>
+                        <h3 class="h5 fw-bold mb-0" style="color: #4C2A36;">Conexiones recientes</h3>
+                        <p id="detalle-conexiones" class="text-muted small mb-0" aria-live="polite">Usuarios conectados en la semana</p>
+                    </div>
+                    <div class="admin-connections-filter" role="group" aria-label="Filtrar conexiones por tipo de cuenta">
+                        <button type="button" class="admin-connections-filter__button active" data-tipo="usuarios" aria-pressed="true">Usuarios</button>
+                        <button type="button" class="admin-connections-filter__button" data-tipo="administradores" aria-pressed="false">Administradores</button>
                     </div>
                 </div>
+                <p id="estado-conexiones" class="admin-chart-hint" aria-live="polite"></p>
                 <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
-                    <canvas id="ChartHistoricoMatchs"></canvas>
+                    <canvas id="ventasChart"></canvas>
                 </div>
             </section>
         </div>
@@ -82,7 +97,7 @@
         <div class="col-12 col-xl-6">
             <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
                 <div class="mb-3">
-                    <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Distribución de edades</h2>
+                    <h3 class="h5 fw-bold mb-0" style="color: #4C2A36;">Distribución de edades</h3>
                     <p class="text-muted small mb-0">Proporción por género</p>
                 </div>
                 <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
@@ -91,16 +106,124 @@
             </section>
         </div>
 
-        <!-- Gráfico: Top Gustos -->
+        <!-- 3. PREFERENCIAS Y PAREJAS -->
+        <div class="col-12">
+            <header class="admin-dashboard-section-heading admin-dashboard-section-heading--separated" aria-labelledby="admin-afinidad-titulo">
+                <span class="admin-dashboard-section-number" aria-hidden="true">02</span>
+                <div>
+                    <h2 id="admin-afinidad-titulo">Preferencias y parejas</h2>
+                    <p>Gustos de usuarios y relaciones entre parejas</p>
+                </div>
+            </header>
+        </div>
+
+
+        <!-- Recorrido descriptivo de gustos, disgustos y resultados -->
+        <div class="col-12">
+            <section class="bg-white p-4 rounded-4 shadow-sm admin-sankey-card" aria-labelledby="admin-sankey-titulo">
+                <div class="admin-sankey-header">
+                    <div>
+                        <h3 id="admin-sankey-titulo" class="h5 fw-bold mb-1">Cómo se relacionan gustos y matches</h3>
+                        <p class="text-muted small mb-0">Explora los gustos y disgustos compartidos según el resultado</p>
+                    </div>
+                    <div class="admin-sankey-controls">
+                        <div class="admin-sankey-filter" role="group" aria-label="Filtrar parejas del diagrama">
+                            <button type="button" class="admin-sankey-filter__button active" data-sankey-filtro="comunes" aria-pressed="true">Con gustos comunes</button>
+                            <button type="button" class="admin-sankey-filter__button" data-sankey-filtro="todas" aria-pressed="false">Todas</button>
+                        </div>
+                        <span id="admin-sankey-origen" class="admin-sankey-badge">Datos demostrativos</span>
+                    </div>
+                </div>
+                <div class="admin-sankey-scroll" tabindex="0" aria-label="Desplazar diagrama de gustos y matches horizontalmente">
+                    <svg id="adminSankey" viewBox="0 0 1200 600" role="img" aria-labelledby="admin-sankey-svg-titulo admin-sankey-svg-descripcion">
+                        <title id="admin-sankey-svg-titulo">Relación entre gustos, disgustos y matches</title>
+                        <desc id="admin-sankey-svg-descripcion">Las bandas muestran cuántas parejas comparten un gusto y un disgusto, agrupadas por resultado. Los controles permiten incluir las parejas sin gustos comunes.</desc>
+                        <g id="adminSankeyContent"></g>
+                    </svg>
+                    <p id="admin-sankey-vacio" class="admin-sankey-empty" hidden>Sin datos para mostrar el recorrido.</p>
+                </div>
+                <div class="admin-sankey-footer">
+                    <p id="admin-sankey-resumen" class="mb-0" aria-live="polite"></p>
+                    <div class="admin-sankey-legend" aria-label="Resultados">
+                        <span><i class="admin-sankey-legend__match" aria-hidden="true"></i> Match</span>
+                        <span><i class="admin-sankey-legend__no-match" aria-hidden="true"></i> No match</span>
+                    </div>
+                </div>
+                <p class="admin-sankey-note mb-0">Cada pareja cuenta una vez. Compartir preferencias no demuestra la causa de un match.</p>
+            </section>
+        </div>
+
+        <!-- Radar global de gustos y disgustos -->
         <div class="col-12 col-xl-6">
             <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
-                <div class="mb-3">
-                    <h2 class="h5 fw-bold mb-0" style="color: #4C2A36;">Top 5 gustos populares</h2>
-                    <p class="text-muted small mb-0">Cantidad de usuarios por gusto</p>
+                <div class="admin-radar-header mb-3">
+                    <div>
+                        <h3 class="h5 fw-bold mb-0" style="color: #4C2A36;">Radar de gustos y disgustos</h3>
+                        <p id="admin-radar-descripcion" class="text-muted small mb-0" aria-live="polite">Promedio de gustos de los usuarios</p>
+                    </div>
+                    <div class="admin-radar-filter" role="group" aria-label="Tipo de radar">
+                        <button type="button" class="admin-radar-filter__button active" data-radar-tipo="gustos" aria-pressed="true">Gustos</button>
+                        <button type="button" class="admin-radar-filter__button" data-radar-tipo="disgustos" aria-pressed="false">Disgustos</button>
+                    </div>
                 </div>
-                <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
-                    <canvas id="ChartTopGustos"></canvas>
+                <button type="button" id="admin-radar-volver" class="admin-chart-back admin-radar-back" hidden>
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i> Volver al radar
+                </button>
+                <div id="admin-radar-principal">
+                    <div class="admin-radar-canvas">
+                        <canvas id="ChartRadarAdmin" aria-label="Promedio por pilar" role="img"></canvas>
+                        <p id="admin-radar-sin-datos" class="admin-radar-empty" hidden>Sin datos de gustos disponibles.</p>
+                    </div>
+                    <div id="admin-radar-pilares" class="admin-radar-pilares" aria-label="Explorar pilares"></div>
+                    <p id="admin-radar-ayuda" class="admin-chart-hint mb-0">Selecciona un punto o un pilar para ver sus subcategorías.</p>
                 </div>
+                <div id="admin-radar-detalle" hidden>
+                    <h4 id="admin-radar-titulo-detalle" class="h6 fw-semibold mb-2"></h4>
+                    <div class="admin-radar-canvas">
+                        <canvas id="ChartRadarSubcategorias" aria-label="Promedio por subcategoría" role="img"></canvas>
+                        <p id="admin-radar-sin-subcategorias" class="admin-radar-empty" hidden>Sin subcategorías disponibles.</p>
+                    </div>
+                    <p class="admin-chart-hint mb-0">Cada barra es un puntaje promedio sobre 100. Selecciona una para ver quiénes registraron esa preferencia.</p>
+                </div>
+                <div id="admin-radar-genero" hidden>
+                    <button type="button" id="admin-radar-volver-detalle" class="admin-chart-back admin-radar-back">
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i> Volver a las preferencias
+                    </button>
+                    <div class="admin-radar-gender-header">
+                        <h4 id="admin-radar-genero-titulo" class="h6 fw-semibold mb-1"></h4>
+                        <span id="admin-radar-genero-origen" class="admin-sankey-badge"></span>
+                    </div>
+                    <p id="admin-radar-genero-resumen" class="text-muted small mb-2"></p>
+                    <div class="admin-radar-gender-canvas">
+                        <canvas id="ChartRadarGenero" aria-label="Distribución por género de quienes registraron la preferencia" role="img"></canvas>
+                        <p id="admin-radar-genero-vacio" class="admin-radar-empty" hidden>Sin datos de género disponibles.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Resultado de matches según características de la pareja -->
+        <div class="col-12 col-xl-6">
+            <section class="bg-white p-4 rounded-4 shadow-sm h-100 admin-match-factors-card" aria-labelledby="admin-match-factores-titulo">
+                <div class="admin-match-factors-header">
+                    <div>
+                        <h3 id="admin-match-factores-titulo" class="h5 fw-bold mb-1">¿En qué parejas hubo match?</h3>
+                        <p id="admin-match-factores-descripcion" class="text-muted small mb-0">Resultados por combinación de orientaciones declaradas</p>
+                    </div>
+                    <div class="admin-match-factors-controls">
+                        <div class="admin-radar-filter" role="group" aria-label="Característica para comparar matches">
+                            <button type="button" class="admin-radar-filter__button active" data-match-factor="orientacion" aria-pressed="true">Orientación</button>
+                            <button type="button" class="admin-radar-filter__button" data-match-factor="brecha_edad" aria-pressed="false">Diferencia de edad</button>
+                        </div>
+                        <span id="admin-match-factores-origen" class="admin-sankey-badge">Datos demostrativos</span>
+                    </div>
+                </div>
+                <div class="admin-match-factors-canvas">
+                    <canvas id="ChartMatchFactores" aria-label="Porcentaje de Match y No match por característica de la pareja" role="img"></canvas>
+                    <p id="admin-match-factores-vacio" class="admin-radar-empty" hidden>Sin datos para esta comparación.</p>
+                </div>
+                <p id="admin-match-factores-resumen" class="admin-match-factors-summary mb-1" aria-live="polite"></p>
+                <p class="admin-sankey-note mb-0">Se compara el resultado observado, sin atribuir una causa. Las tasas deben leerse junto al número de parejas de cada grupo.</p>
             </section>
         </div>
 
@@ -110,11 +233,6 @@
 {% block body_extra %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
-  <style>
-      .admin-period-button { color: #4C2A36; background-color: transparent; font-weight: 500; }
-      .admin-period-button.active, .admin-period-button:hover { background-color: #f3a69a !important; font-weight: 600; color: #4C2A36; }
-  </style>
-
   <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Configuraciones globales de Chart.js
@@ -124,7 +242,21 @@
         // 1. Gráfico Conexiones Recientes
         const labels_conexiones = JSON.parse('{{ labels_json|escapejs }}');
         const datasets_conexiones = JSON.parse('{{ datasets_json|escapejs }}');
-        new Chart(document.getElementById("ventasChart"), {
+        const conexionesPorTipo = JSON.parse('{{ conexiones_recientes_json|default:"{}"|escapejs }}');
+        const botonesConexiones = document.querySelectorAll('.admin-connections-filter__button');
+        const detalleConexiones = document.getElementById('detalle-conexiones');
+        const estadoConexiones = document.getElementById('estado-conexiones');
+        const etiquetasConexiones = Array.isArray(conexionesPorTipo.labels) ? conexionesPorTipo.labels : labels_conexiones;
+        const serieGenero = (nombre, valores, color) => ({
+            label: nombre,
+            data: valores,
+            borderColor: color,
+            backgroundColor: color,
+            tension: 0.35,
+            borderWidth: 3,
+            pointRadius: 4
+        });
+        const chartConexiones = new Chart(document.getElementById("ventasChart"), {
             type: "line",
             data: { labels: labels_conexiones, datasets: datasets_conexiones },
             options: {
@@ -132,40 +264,246 @@
                 interaction: { mode: "index", intersect: false },
                 plugins: { legend: { display: false } },
                 elements: { line: { tension: 0.4, borderWidth: 3 }, point: { radius: 4 } },
-                scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }
             }
         });
+        const mostrarConexiones = tipo => {
+            const datos = conexionesPorTipo[tipo];
+            const serieCompleta = valores => Array.isArray(conexionesPorTipo.labels)
+                && Array.isArray(valores)
+                && valores.length === conexionesPorTipo.labels.length
+                && valores.every(valor => typeof valor === 'number' && Number.isFinite(valor));
+            const tieneGeneros = tipo === 'usuarios'
+                && serieCompleta(datos?.hombres) && serieCompleta(datos?.mujeres);
+            const totalAdministradores = tipo === 'administradores'
+                ? serieCompleta(datos?.total) ? datos.total
+                    : serieCompleta(datos?.hombres) && serieCompleta(datos?.mujeres)
+                        ? datos.hombres.map((valor, indice) => valor + datos.mujeres[indice])
+                        : null
+                : null;
+
+            chartConexiones.data.labels = tieneGeneros || totalAdministradores ? etiquetasConexiones : labels_conexiones;
+            chartConexiones.data.datasets = tieneGeneros
+                ? [serieGenero('Hombres', datos.hombres, '#652E38'), serieGenero('Mujeres', datos.mujeres, '#E87265')]
+                : totalAdministradores
+                    ? [serieGenero('Administradores', totalAdministradores, '#652E38')]
+                    : tipo === 'usuarios' ? datasets_conexiones : [];
+            chartConexiones.options.plugins.legend.display = tieneGeneros;
+            detalleConexiones.textContent = `${tipo === 'usuarios' ? 'Usuarios' : 'Administradores'} conectados en la semana`;
+            estadoConexiones.textContent = tieneGeneros
+                ? 'Comparación de conexiones de hombres y mujeres.'
+                : totalAdministradores ? 'Total de conexiones de administradores.'
+                    : tipo === 'usuarios' ? 'Total de conexiones; desglose por género no disponible.' : 'Sin datos de conexiones de administradores.';
+            botonesConexiones.forEach(boton => {
+                const activo = boton.dataset.tipo === tipo;
+                boton.classList.toggle('active', activo);
+                boton.setAttribute('aria-pressed', String(activo));
+            });
+            chartConexiones.update();
+        };
+        botonesConexiones.forEach(boton => boton.addEventListener('click', () => mostrarConexiones(boton.dataset.tipo)));
+        mostrarConexiones('usuarios');
 
         // 2. Gráfico Histórico de Matches
         const periodosMatchs = JSON.parse('{{ periodos_matchs_json|escapejs }}');
-        const botonesPeriodo = document.querySelectorAll('.admin-period-button[data-periodo]');
-        let periodoActual = periodosMatchs.semana;
+        const matchesDiarios = JSON.parse('{{ matches_diarios_json|default:"[]"|escapejs }}');
+        const totalesPorFecha = new Map();
+        if (Array.isArray(matchesDiarios)) {
+            matchesDiarios.forEach(({ fecha, total }) => {
+                if (/^\d{4}-\d{2}-\d{2}$/.test(fecha) && Number.isFinite(Number(total))) {
+                    totalesPorFecha.set(fecha, (totalesPorFecha.get(fecha) || 0) + Number(total));
+                }
+            });
+        }
+        const kpiDiarios = JSON.parse('{{ kpi_diarios_json|default:"[]"|escapejs }}');
+        const estadosPorFecha = new Map();
+        if (Array.isArray(kpiDiarios)) {
+            kpiDiarios.forEach(fila => {
+                const match = Number(fila?.match);
+                const noMatch = Number(fila?.no_match);
+                if (/^\d{4}-\d{2}-\d{2}$/.test(fila?.fecha)
+                    && Number.isFinite(match) && match >= 0
+                    && Number.isFinite(noMatch) && noMatch >= 0) {
+                    estadosPorFecha.set(fila.fecha, { match, noMatch });
+                }
+            });
+        }
+        if (estadosPorFecha.size) {
+            totalesPorFecha.clear();
+            estadosPorFecha.forEach((valores, fecha) => totalesPorFecha.set(fecha, valores.match));
+        }
+        const aniosDisponibles = [...totalesPorFecha.keys()].map(fecha => Number(fecha.slice(0, 4)));
+        const anioInicial = aniosDisponibles.length ? Math.max(...aniosDisponibles) : new Date().getFullYear();
+        const nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const volverHistorico = document.getElementById('volver-historico-matchs');
+        const detalleHistorico = document.getElementById('detalle-historico-matchs');
+        const ayudaHistorico = document.getElementById('ayuda-historico-matchs');
+        const historialVistas = [];
+        let vistaActual = { nivel: 'anio', anio: anioInicial };
+
+        const totalDia = (anio, mes, dia) => {
+            const fecha = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+            return totalesPorFecha.get(fecha) || 0;
+        };
+        const diasDelMes = (anio, mes) => new Date(anio, mes + 1, 0).getDate();
+        const datosVista = vista => {
+            if (vista.nivel === 'anio') {
+                const data = nombresMeses.map((_, mes) =>
+                    Array.from({ length: diasDelMes(vista.anio, mes) }, (_, indice) => totalDia(vista.anio, mes, indice + 1))
+                        .reduce((total, cantidad) => total + cantidad, 0)
+                );
+                return {
+                    labels: periodosMatchs.anio.labels,
+                    data: totalesPorFecha.size ? data : periodosMatchs.anio.data,
+                    detalle: totalesPorFecha.size ? `Matches por mes de ${vista.anio}` : 'Matches por mes del año',
+                    eje: 'Mes',
+                    ayuda: totalesPorFecha.size ? 'Selecciona un mes para ver sus semanas.' : 'Detalle mensual no disponible todavía.'
+                };
+            }
+            if (vista.nivel === 'mes') {
+                const semanas = Math.ceil(diasDelMes(vista.anio, vista.mes) / 7);
+                return {
+                    labels: Array.from({ length: semanas }, (_, indice) => `Semana ${indice + 1}`),
+                    data: Array.from({ length: semanas }, (_, indice) => {
+                        const inicio = indice * 7 + 1;
+                        const fin = Math.min(inicio + 6, diasDelMes(vista.anio, vista.mes));
+                        return Array.from({ length: fin - inicio + 1 }, (_, dia) => totalDia(vista.anio, vista.mes, inicio + dia))
+                            .reduce((total, cantidad) => total + cantidad, 0);
+                    }),
+                    detalle: `${nombresMeses[vista.mes]} ${vista.anio}: matches por semana`,
+                    eje: 'Semana del mes',
+                    ayuda: 'Selecciona una semana para ver sus días.'
+                };
+            }
+            const inicio = vista.semana * 7 + 1;
+            const fin = Math.min(inicio + 6, diasDelMes(vista.anio, vista.mes));
+            return {
+                labels: Array.from({ length: fin - inicio + 1 }, (_, indice) => String(inicio + indice)),
+                data: Array.from({ length: fin - inicio + 1 }, (_, indice) => totalDia(vista.anio, vista.mes, inicio + indice)),
+                detalle: `Semana ${vista.semana + 1} de ${nombresMeses[vista.mes]} ${vista.anio} (${inicio}–${fin})`,
+                eje: 'Día del mes',
+                ayuda: 'Usa Volver para regresar al mes.'
+            };
+        };
+        const fechaUTC = (anio, mes, dia) => new Date(Date.UTC(anio, mes, dia));
+        const claveFecha = fecha => fecha.toISOString().slice(0, 10);
+        const diaMs = 86400000;
+        const rangoKpi = vista => {
+            let inicio;
+            let fin;
+            let anteriorInicio;
+            let anteriorFin;
+            let etiqueta;
+            if (vista.nivel === 'anio') {
+                inicio = fechaUTC(vista.anio, 0, 1);
+                fin = fechaUTC(vista.anio + 1, 0, 1);
+                anteriorInicio = fechaUTC(vista.anio - 1, 0, 1);
+                anteriorFin = inicio;
+                etiqueta = `Año ${vista.anio}`;
+            } else if (vista.nivel === 'mes') {
+                inicio = fechaUTC(vista.anio, vista.mes, 1);
+                fin = fechaUTC(vista.anio, vista.mes + 1, 1);
+                anteriorInicio = fechaUTC(vista.anio, vista.mes - 1, 1);
+                anteriorFin = inicio;
+                etiqueta = `${nombresMeses[vista.mes]} ${vista.anio}`;
+            } else {
+                const primerDia = vista.semana * 7 + 1;
+                const ultimoDia = Math.min(primerDia + 6, diasDelMes(vista.anio, vista.mes));
+                inicio = fechaUTC(vista.anio, vista.mes, primerDia);
+                fin = fechaUTC(vista.anio, vista.mes, ultimoDia + 1);
+                anteriorFin = inicio;
+                anteriorInicio = new Date(inicio.getTime() - (fin - inicio));
+                etiqueta = `Semana ${vista.semana + 1} de ${nombresMeses[vista.mes]} ${vista.anio}`;
+            }
+            const hoy = new Date();
+            const manana = fechaUTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1);
+            if (inicio < manana && manana < fin) {
+                const diasTranscurridos = (manana - inicio) / diaMs;
+                fin = manana;
+                anteriorFin = new Date(Math.min(anteriorFin.getTime(), anteriorInicio.getTime() + diasTranscurridos * diaMs));
+            }
+            return { inicio: claveFecha(inicio), fin: claveFecha(fin),
+                anteriorInicio: claveFecha(anteriorInicio), anteriorFin: claveFecha(anteriorFin), etiqueta };
+        };
+        const sumarFechas = (mapa, inicio, fin, clave) => [...mapa]
+            .reduce((suma, [fecha, valores]) => suma + (fecha >= inicio && fecha < fin ? (clave ? valores[clave] : valores) : 0), 0);
+        const numeroKpi = valor => new Intl.NumberFormat('es-CL').format(valor);
+        const porcentajeKpi = valor => new Intl.NumberFormat('es-CL', { maximumFractionDigits: 1 }).format(valor);
+        const actualizarKpis = () => {
+            const rango = rangoKpi(vistaActual);
+            const mapaMatch = estadosPorFecha.size ? estadosPorFecha : totalesPorFecha;
+            const clave = estadosPorFecha.size ? 'match' : null;
+            const matches = sumarFechas(mapaMatch, rango.inicio, rango.fin, clave);
+            const anteriores = sumarFechas(mapaMatch, rango.anteriorInicio, rango.anteriorFin, clave);
+            const crecimiento = anteriores > 0
+                ? `${matches >= anteriores ? '+' : ''}${porcentajeKpi((matches - anteriores) * 100 / anteriores)}%`
+                : matches > 0 ? 'Nuevo' : '—';
+            document.getElementById('admin-kpi-crecimiento').textContent = crecimiento;
+            document.getElementById('admin-kpi-total').textContent = numeroKpi(matches);
+            let detalle = `${rango.etiqueta}`;
+            let conMatch = '—';
+            let sinMatch = '—';
+            if (estadosPorFecha.size) {
+                const noMatches = sumarFechas(estadosPorFecha, rango.inicio, rango.fin, 'noMatch');
+                const evaluadas = matches + noMatches;
+                if (evaluadas > 0) {
+                    const tasa = matches * 100 / evaluadas;
+                    conMatch = `${porcentajeKpi(tasa)}%`;
+                    sinMatch = `${porcentajeKpi(100 - tasa)}%`;
+                }
+            } else {
+                detalle += ' · tasas pendientes de datos';
+            }
+            document.getElementById('admin-kpi-con-match').textContent = conMatch;
+            document.getElementById('admin-kpi-sin-match').textContent = sinMatch;
+            document.getElementById('admin-kpi-periodo').textContent = detalle;
+        };
+        const vistaInicial = datosVista(vistaActual);
 
         const chartMatchs = new Chart(document.getElementById("ChartHistoricoMatchs"), {
             type: "line",
             data: {
-                labels: periodoActual.labels,
-                datasets: [{ data: periodoActual.data, borderColor: "#B94448", backgroundColor: "#B944482E", tension: 0.3, fill: true, borderWidth: 3 }]
+                labels: vistaInicial.labels,
+                datasets: [{ data: vistaInicial.data, borderColor: "#B94448", backgroundColor: "#B944482E", tension: 0.3, fill: true, borderWidth: 3, pointRadius: 5, pointHoverRadius: 8 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 interaction: { mode: "index", intersect: false },
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false }, title: { display: true, text: periodoActual.eje_x } } }
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false }, title: { display: true, text: vistaInicial.eje } } },
+                onHover: (evento, elementos, chart) => {
+                    chart.canvas.style.cursor = elementos.length && totalesPorFecha.size && vistaActual.nivel !== 'semana' ? 'pointer' : 'default';
+                },
+                onClick: (evento, elementos) => {
+                    if (!elementos.length || !totalesPorFecha.size || vistaActual.nivel === 'semana') return;
+                    const indice = elementos[0].index;
+                    historialVistas.push(vistaActual);
+                    vistaActual = vistaActual.nivel === 'anio'
+                        ? { nivel: 'mes', anio: vistaActual.anio, mes: indice }
+                        : { nivel: 'semana', anio: vistaActual.anio, mes: vistaActual.mes, semana: indice };
+                    actualizarHistorico();
+                }
             }
         });
 
-        botonesPeriodo.forEach(boton => boton.addEventListener('click', () => {
-            const periodo = periodosMatchs[boton.dataset.periodo];
-            if (!periodo) return;
-            chartMatchs.data.labels = periodo.labels;
-            chartMatchs.data.datasets[0].data = periodo.data;
-            chartMatchs.options.scales.x.title.text = periodo.eje_x;
-            document.getElementById('detalle-historico-matchs').textContent = periodo.detalle;
-            botonesPeriodo.forEach(op => op.classList.remove('active'));
-            boton.classList.add('active');
+        const actualizarHistorico = () => {
+            const vista = datosVista(vistaActual);
+            chartMatchs.data.labels = vista.labels;
+            chartMatchs.data.datasets[0].data = vista.data;
+            chartMatchs.options.scales.x.title.text = vista.eje;
+            detalleHistorico.textContent = vista.detalle;
+            ayudaHistorico.textContent = vista.ayuda;
+            volverHistorico.hidden = historialVistas.length === 0;
             chartMatchs.update();
-        }));
+            actualizarKpis();
+        };
+        ayudaHistorico.textContent = vistaInicial.ayuda;
+        detalleHistorico.textContent = vistaInicial.detalle;
+        actualizarKpis();
+        volverHistorico.addEventListener('click', () => {
+            vistaActual = historialVistas.pop();
+            actualizarHistorico();
+        });
 
         // 3. Gráfico Distribución de Edades
         const edadesLabels = JSON.parse('{{ edades_labels_json|escapejs }}');
@@ -188,24 +526,431 @@
             }
         });
 
-        // 4. Gráfico Top Gustos
-        const gustosLabels = JSON.parse('{{ gustos_labels_json|escapejs }}');
-        const gustosValores = JSON.parse('{{ gustos_valores_json|escapejs }}');
-        new Chart(document.getElementById("ChartTopGustos"), {
-            type: "bar",
-            data: {
-                labels: gustosLabels,
-                datasets: [{ data: gustosValores, backgroundColor: "#B94448", borderRadius: 4 }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, indexAxis: "y",
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-                    y: { grid: { display: false } }
-                }
+        // 4. Radar global de gustos y disgustos
+        const radarAdmin = JSON.parse('{{ radar_admin_json|default:"{}"|escapejs }}') || {};
+        const categoriasRadar = Array.isArray(radarAdmin.categorias) ? radarAdmin.categorias : [];
+        const botonesRadar = document.querySelectorAll('[data-radar-tipo]');
+        const radarPrincipal = document.getElementById('admin-radar-principal');
+        const radarDetalle = document.getElementById('admin-radar-detalle');
+        const radarGenero = document.getElementById('admin-radar-genero');
+        const radarVolver = document.getElementById('admin-radar-volver');
+        const radarVolverDetalle = document.getElementById('admin-radar-volver-detalle');
+        const radarDescripcion = document.getElementById('admin-radar-descripcion');
+        const radarVacio = document.getElementById('admin-radar-sin-datos');
+        const radarSinSubcategorias = document.getElementById('admin-radar-sin-subcategorias');
+        const radarPilares = document.getElementById('admin-radar-pilares');
+        const radarCanvas = document.getElementById('ChartRadarAdmin');
+        const subcategoriasCanvas = document.getElementById('ChartRadarSubcategorias');
+        const generoCanvas = document.getElementById('ChartRadarGenero');
+        let tipoRadar = 'gustos';
+        let categoriaActual = null;
+        let graficoRadar = null;
+        let graficoSubcategorias = null;
+        let graficoGenero = null;
+
+        const valoresRadar = tipo => tipo === 'gustos' ? radarAdmin.gustos_data : radarAdmin.disgustos_data;
+        const tieneDatosRadar = tipo => {
+            const valores = valoresRadar(tipo);
+            return categoriasRadar.length > 0 && Array.isArray(valores)
+                && valores.length === categoriasRadar.length
+                && valores.some(valor => typeof valor === 'number' && Number.isFinite(valor));
+        };
+        const mostrarRadar = tipo => {
+            tipoRadar = tipo;
+            radarPrincipal.hidden = false;
+            radarDetalle.hidden = true;
+            radarGenero.hidden = true;
+            radarVolver.hidden = true;
+            radarDescripcion.textContent = `Promedio de ${tipo} de los usuarios`;
+            botonesRadar.forEach(boton => {
+                const activo = boton.dataset.radarTipo === tipo;
+                boton.classList.toggle('active', activo);
+                boton.setAttribute('aria-pressed', String(activo));
+            });
+            const disponible = tieneDatosRadar(tipo);
+            radarVacio.textContent = `Sin datos de ${tipo} disponibles.`;
+            radarVacio.hidden = disponible;
+            radarCanvas.style.display = disponible ? 'block' : 'none';
+            radarPilares.replaceChildren();
+            if (!disponible) return;
+
+            const color = tipo === 'gustos' ? '#E87265' : '#652E38';
+            const fondo = tipo === 'gustos' ? 'rgba(232, 114, 101, .2)' : 'rgba(101, 46, 56, .18)';
+            if (!graficoRadar) {
+                graficoRadar = new Chart(radarCanvas, {
+                    type: 'radar',
+                    data: { labels: categoriasRadar, datasets: [{ data: valoresRadar(tipo), borderColor: color, backgroundColor: fondo, pointBackgroundColor: color, borderWidth: 2, pointRadius: 5, fill: true }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { r: { min: 0, max: 100, ticks: { display: false } } },
+                        plugins: { legend: { display: false } },
+                        onHover: (evento, elementos, chart) => { chart.canvas.style.cursor = elementos.length ? 'pointer' : 'default'; },
+                        onClick: (evento, elementos) => {
+                            if (elementos.length) mostrarSubcategorias(categoriasRadar[elementos[0].index]);
+                        }
+                    }
+                });
+            } else {
+                graficoRadar.data.datasets[0].data = valoresRadar(tipo);
+                graficoRadar.data.datasets[0].borderColor = color;
+                graficoRadar.data.datasets[0].backgroundColor = fondo;
+                graficoRadar.data.datasets[0].pointBackgroundColor = color;
+                graficoRadar.update();
             }
-        });
+            categoriasRadar.forEach(categoria => {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.className = 'admin-radar-pilar';
+                boton.textContent = categoria;
+                boton.addEventListener('click', () => mostrarSubcategorias(categoria));
+                radarPilares.appendChild(boton);
+            });
+        };
+        const mostrarSubcategorias = categoria => {
+            categoriaActual = categoria;
+            const items = radarAdmin.drilldown?.[tipoRadar]?.[categoria];
+            const subcategorias = Array.isArray(items)
+                ? items.filter(item => item && typeof item.nombre === 'string'
+                    && typeof item.porcentaje === 'number' && Number.isFinite(item.porcentaje))
+                : [];
+            radarPrincipal.hidden = true;
+            radarDetalle.hidden = false;
+            radarGenero.hidden = true;
+            radarVolver.hidden = false;
+            document.getElementById('admin-radar-titulo-detalle').textContent = `${categoria} · ${tipoRadar}`;
+            radarDescripcion.textContent = `Subcategorías de ${categoria}`;
+            radarSinSubcategorias.hidden = subcategorias.length > 0;
+            subcategoriasCanvas.style.display = subcategorias.length ? 'block' : 'none';
+            if (!subcategorias.length) return;
+            if (graficoSubcategorias) graficoSubcategorias.destroy();
+            graficoSubcategorias = new Chart(subcategoriasCanvas, {
+                type: 'bar',
+                data: { labels: subcategorias.map(item => item.nombre), datasets: [{ data: subcategorias.map(item => item.porcentaje), backgroundColor: tipoRadar === 'gustos' ? '#E87265' : '#652E38', borderRadius: 8 }] },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: contexto => `Puntaje promedio: ${contexto.parsed.x}/100` } } },
+                    scales: { x: { min: 0, max: 100, ticks: { callback: valor => valor } }, y: { grid: { display: false } } },
+                    onHover: (evento, elementos, chart) => { chart.canvas.style.cursor = elementos.length ? 'pointer' : 'default'; },
+                    onClick: (evento, elementos) => {
+                        if (elementos.length) mostrarGenero(subcategorias[elementos[0].index], elementos[0].index);
+                    }
+                }
+            });
+        };
+        const mostrarGenero = (item, indice) => {
+            const generoDato = item.genero;
+            const tieneGeneroReal = generoDato && ['hombres', 'mujeres']
+                .every(clave => Number.isInteger(generoDato[clave]) && generoDato[clave] >= 0);
+            const generoDemo = { hombres: 8 + indice * 3, mujeres: 10 + indice * 2, otros: 0 };
+            const genero = tieneGeneroReal ? generoDato : generoDemo;
+            const cantidades = ['hombres', 'mujeres', 'otros'].map(clave => Math.max(0, Number(genero[clave]) || 0));
+            const total = cantidades.reduce((suma, valor) => suma + valor, 0);
+            radarPrincipal.hidden = true;
+            radarDetalle.hidden = true;
+            radarGenero.hidden = false;
+            radarVolver.hidden = true;
+            document.getElementById('admin-radar-genero-titulo').textContent = item.nombre;
+            document.getElementById('admin-radar-genero-origen').textContent = tieneGeneroReal ? 'Datos de la base de datos' : 'Distribución demostrativa';
+            document.getElementById('admin-radar-genero-resumen').textContent = `${total} usuarios que registraron esta preferencia · ${tipoRadar}`;
+            radarDescripcion.textContent = `Distribución por género de ${item.nombre}`;
+            const generoVacio = document.getElementById('admin-radar-genero-vacio');
+            generoVacio.hidden = total > 0;
+            generoCanvas.style.display = total > 0 ? 'block' : 'none';
+            if (graficoGenero) graficoGenero.destroy();
+            if (!total) return;
+            const incluirOtros = cantidades[2] > 0;
+            graficoGenero = new Chart(generoCanvas, {
+                type: 'pie',
+                data: {
+                    labels: incluirOtros ? ['Hombres', 'Mujeres', 'Otros / sin dato'] : ['Hombres', 'Mujeres'],
+                    datasets: [{
+                        data: incluirOtros ? cantidades : cantidades.slice(0, 2),
+                        backgroundColor: incluirOtros ? ['#652E38', '#E87265', '#B8A5AA'] : ['#652E38', '#E87265'],
+                        borderColor: '#fff', borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: contexto =>
+                            `${contexto.label}: ${contexto.parsed} usuarios (${Math.round(contexto.parsed * 100 / total)}%)` } }
+                    }
+                }
+            });
+        };
+        botonesRadar.forEach(boton => boton.addEventListener('click', () => mostrarRadar(boton.dataset.radarTipo)));
+        radarVolver.addEventListener('click', () => mostrarRadar(tipoRadar));
+        radarVolverDetalle.addEventListener('click', () => mostrarSubcategorias(categoriaActual));
+        mostrarRadar('gustos');
+
+        // 5. Match y No match según características de la pareja.
+        const factoresPayload = JSON.parse('{{ match_factores_json|default:"{}"|escapejs }}') || {};
+        const factoresDemo = {
+            orientacion: [
+                { label: 'Heterosexual + Heterosexual', match: 31, no_match: 15 },
+                { label: 'Heterosexual + Bisexual', match: 20, no_match: 9 },
+                { label: 'Bisexual + Bisexual', match: 10, no_match: 5 },
+                { label: 'Homosexual + Homosexual', match: 8, no_match: 4 },
+                { label: 'Otras combinaciones', match: 12, no_match: 6 }
+            ],
+            brecha_edad: [
+                { label: '0–2 años', match: 25, no_match: 10 },
+                { label: '3–5 años', match: 26, no_match: 14 },
+                { label: '6–9 años', match: 18, no_match: 8 },
+                { label: '10 años o más', match: 12, no_match: 7 }
+            ]
+        };
+        const factoresCanvas = document.getElementById('ChartMatchFactores');
+        const factoresVacio = document.getElementById('admin-match-factores-vacio');
+        const factoresResumen = document.getElementById('admin-match-factores-resumen');
+        const botonesFactores = document.querySelectorAll('[data-match-factor]');
+        let graficoFactores = null;
+        const mostrarFactores = factor => {
+            const filasServidor = factoresPayload[factor];
+            const esDemo = !Array.isArray(filasServidor) || factoresPayload.sintetico === true;
+            let filas = (Array.isArray(filasServidor) ? filasServidor : factoresDemo[factor])
+                .filter(fila => fila && typeof fila.label === 'string'
+                    && Number.isFinite(Number(fila.match)) && Number(fila.match) >= 0
+                    && Number.isFinite(Number(fila.no_match)) && Number(fila.no_match) >= 0
+                    && Number(fila.match) + Number(fila.no_match) > 0)
+                .map(fila => ({ label: fila.label, match: Number(fila.match), no_match: Number(fila.no_match) }));
+            const agruparOrientaciones = factor === 'orientacion' && filas.length > 5;
+            if (agruparOrientaciones) {
+                const principales = filas.filter(fila => fila.label !== 'Otras combinaciones')
+                    .sort((a, b) => (b.match + b.no_match) - (a.match + a.no_match))
+                    .slice(0, 4);
+                const resto = filas.filter(fila => !principales.includes(fila));
+                filas = [...principales, {
+                    label: 'Otras combinaciones',
+                    match: resto.reduce((suma, fila) => suma + fila.match, 0),
+                    no_match: resto.reduce((suma, fila) => suma + fila.no_match, 0)
+                }];
+            }
+            botonesFactores.forEach(boton => {
+                const activo = boton.dataset.matchFactor === factor;
+                boton.classList.toggle('active', activo);
+                boton.setAttribute('aria-pressed', String(activo));
+            });
+            document.getElementById('admin-match-factores-origen').textContent = esDemo ? 'Datos demostrativos' : 'Datos de la base de datos';
+            document.getElementById('admin-match-factores-descripcion').textContent = factor === 'orientacion'
+                ? `Resultados por orientaciones declaradas${agruparOrientaciones ? ' · principales y otras' : ''}`
+                : 'Resultados según la diferencia de edad entre las dos personas';
+            factoresVacio.hidden = filas.length > 0;
+            factoresCanvas.style.display = filas.length ? 'block' : 'none';
+            if (graficoFactores) graficoFactores.destroy();
+            if (!filas.length) {
+                factoresResumen.textContent = 'Sin parejas evaluadas para este desglose.';
+                return;
+            }
+            const matches = filas.reduce((suma, fila) => suma + fila.match, 0);
+            const noMatches = filas.reduce((suma, fila) => suma + fila.no_match, 0);
+            factoresResumen.textContent = `${matches + noMatches} parejas evaluadas · ${matches} Match · ${noMatches} No match`;
+            factoresCanvas.parentElement.style.height = `${Math.max(245, filas.length * 42 + 55)}px`;
+            const etiquetaCorta = nombre => nombre
+                .replaceAll('Heterosexual', 'Hetero')
+                .replaceAll('Homosexual', 'Homo')
+                .replaceAll('Bisexual', 'Bi');
+            graficoFactores = new Chart(factoresCanvas, {
+                type: 'bar',
+                data: {
+                    labels: filas.map(fila => factor === 'orientacion' ? etiquetaCorta(fila.label) : fila.label),
+                    datasets: [
+                        { label: 'Match', data: filas.map(fila => fila.match * 100 / (fila.match + fila.no_match)), backgroundColor: '#E87265', borderRadius: 5 },
+                        { label: 'No match', data: filas.map(fila => fila.no_match * 100 / (fila.match + fila.no_match)), backgroundColor: 'rgba(232, 114, 101, .28)', borderRadius: 5 }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, min: 0, max: 100, ticks: { callback: valor => `${valor}%` } },
+                        y: { stacked: true, grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { title: contextos => filas[contextos[0].dataIndex].label, label: contexto => {
+                            const fila = filas[contexto.dataIndex];
+                            const cantidad = contexto.datasetIndex === 0 ? fila.match : fila.no_match;
+                            return `${contexto.dataset.label}: ${cantidad} de ${fila.match + fila.no_match} (${contexto.parsed.x.toFixed(1)}%)`;
+                        } } }
+                    }
+                }
+            });
+        };
+        botonesFactores.forEach(boton => boton.addEventListener('click', () => mostrarFactores(boton.dataset.matchFactor)));
+        mostrarFactores('orientacion');
+
+        // 6. Sankey descriptivo: cada fila representa un grupo de parejas, sin duplicarlas.
+        const sankeyPayload = JSON.parse('{{ sankey_admin_json|default:"{}"|escapejs }}') || {};
+        const sankeyDemo = [
+            { gusto: 'Valores', disgusto: 'Sin disgusto común', resultado: 'Match', total: 22 },
+            { gusto: 'Valores', disgusto: 'Valores', resultado: 'No match', total: 8 },
+            { gusto: 'Hobbies', disgusto: 'Sin disgusto común', resultado: 'Match', total: 17 },
+            { gusto: 'Hobbies', disgusto: 'Dinámica Social', resultado: 'No match', total: 7 },
+            { gusto: 'Dinámica Social', disgusto: 'Sin disgusto común', resultado: 'Match', total: 12 },
+            { gusto: 'Dinámica Social', disgusto: 'Valores', resultado: 'No match', total: 7 },
+            { gusto: 'Lenguaje del Amor', disgusto: 'Sin disgusto común', resultado: 'Match', total: 11 },
+            { gusto: 'Lenguaje del Amor', disgusto: 'Lenguaje del Amor', resultado: 'No match', total: 5 },
+            { gusto: 'Metas & Futuro', disgusto: 'Sin disgusto común', resultado: 'Match', total: 9 },
+            { gusto: 'Metas & Futuro', disgusto: 'Metas & Futuro', resultado: 'No match', total: 2 }
+        ];
+        const esDemoSankey = !Array.isArray(sankeyPayload.paths) || sankeyPayload.sintetico === true;
+        const rutasSankey = (Array.isArray(sankeyPayload.paths) ? sankeyPayload.paths : sankeyDemo)
+            .filter(fila => fila && typeof fila.gusto === 'string' && typeof fila.disgusto === 'string'
+                && ['Match', 'No match'].includes(fila.resultado)
+                && Number.isFinite(Number(fila.total)) && Number(fila.total) > 0)
+            .map(fila => ({ ...fila, total: Number(fila.total) }));
+        const sankeySvg = document.getElementById('adminSankey');
+        const sankeyContenido = document.getElementById('adminSankeyContent');
+        const sankeyVacio = document.getElementById('admin-sankey-vacio');
+        const sankeyResumen = document.getElementById('admin-sankey-resumen');
+        document.getElementById('admin-sankey-origen').textContent = esDemoSankey ? 'Datos demostrativos' : 'Datos de la base de datos';
+
+        const totalGeneral = rutasSankey.reduce((total, fila) => total + fila.total, 0);
+        const rutasComunes = rutasSankey.filter(fila => !/^sin gusto com[uú]n$/i.test(fila.gusto.trim()));
+        const filtrosSankey = document.querySelectorAll('[data-sankey-filtro]');
+        const ns = 'http://www.w3.org/2000/svg';
+        const elementoSvg = (nombre, atributos = {}) => {
+            const elemento = document.createElementNS(ns, nombre);
+            Object.entries(atributos).forEach(([clave, valor]) => elemento.setAttribute(clave, String(valor)));
+            return elemento;
+        };
+        const textoSvg = (padre, texto, x, y, clase, extra = {}) => {
+            const etiqueta = elementoSvg('text', { x, y, class: clase, ...extra });
+            etiqueta.textContent = texto;
+            padre.appendChild(etiqueta);
+        };
+
+        const mostrarSankey = filtro => {
+            const rutas = filtro === 'comunes' ? rutasComunes : rutasSankey;
+            filtrosSankey.forEach(boton => {
+                const activo = boton.dataset.sankeyFiltro === filtro;
+                boton.classList.toggle('active', activo);
+                boton.setAttribute('aria-pressed', String(activo));
+            });
+            sankeyContenido.replaceChildren();
+            sankeySvg.hidden = rutas.length === 0;
+            sankeyVacio.hidden = rutas.length !== 0;
+            if (!rutas.length) {
+                sankeyVacio.textContent = totalGeneral ? 'No hay parejas con gustos comunes en estos registros.' : 'Sin datos para mostrar el recorrido.';
+                sankeyResumen.textContent = totalGeneral ? `${totalGeneral} parejas evaluadas en total` : 'No hay parejas evaluadas para mostrar.';
+                return;
+            }
+
+            const columnas = [new Map(), new Map(), new Map()];
+            ['gusto', 'disgusto', 'resultado'].forEach((clave, indice) => rutas.forEach(fila => {
+                const nombre = fila[clave];
+                if (!columnas[indice].has(nombre)) columnas[indice].set(nombre, { nombre, total: 0, entrada: 0, salida: 0 });
+                columnas[indice].get(nombre).total += fila.total;
+            }));
+            const pilares = ['Valores', 'Hobbies', 'Dinámica Social', 'Lenguaje del Amor', 'Metas & Futuro'];
+            const ordenar = (mapa, orden) => [...mapa.values()].sort((a, b) => {
+                const ia = orden.indexOf(a.nombre);
+                const ib = orden.indexOf(b.nombre);
+                return (ia === -1 ? orden.length : ia) - (ib === -1 ? orden.length : ib)
+                    || a.nombre.localeCompare(b.nombre, 'es');
+            });
+            const nodos = [
+                ordenar(columnas[0], pilares),
+                ordenar(columnas[1], pilares),
+                ordenar(columnas[2], ['Match', 'No match'])
+            ];
+            const total = rutas.reduce((suma, fila) => suma + fila.total, 0);
+            const altoDisponible = 470;
+            const gap = 14;
+            const minimo = Math.min(34, (altoDisponible - gap * (Math.max(...nodos.map(c => c.length)) - 1)) / Math.max(...nodos.map(c => c.length)));
+            const cabe = escala => nodos.every(columna => columna.reduce((alto, nodo) => alto + Math.max(minimo, nodo.total * escala), gap * (columna.length - 1)) <= altoDisponible);
+            let inferior = 0;
+            let superior = altoDisponible / total;
+            for (let i = 0; i < 35; i++) {
+                const medio = (inferior + superior) / 2;
+                if (cabe(medio)) inferior = medio;
+                else superior = medio;
+            }
+            const escala = inferior;
+            const posicionesX = [42, 505, 968];
+            nodos.forEach((columna, indice) => {
+                const altoColumna = columna.reduce((alto, nodo) => alto + Math.max(minimo, nodo.total * escala), gap * (columna.length - 1));
+                let y = 78 + (altoDisponible - altoColumna) / 2;
+                columna.forEach(nodo => {
+                    nodo.x = posicionesX[indice];
+                    nodo.y = y;
+                    nodo.flujoAlto = nodo.total * escala;
+                    nodo.alto = Math.max(minimo, nodo.flujoAlto);
+                    y += nodo.alto + gap;
+                });
+            });
+
+            const capaEnlaces = elementoSvg('g');
+            const capaNodos = elementoSvg('g');
+            sankeyContenido.append(capaEnlaces, capaNodos);
+            ['Gusto compartido', 'Disgusto compartido', 'Resultado'].forEach((titulo, indice) =>
+                textoSvg(sankeyContenido, titulo, posicionesX[indice], 37, 'admin-sankey-heading')
+            );
+            const matches = rutas.filter(fila => fila.resultado === 'Match').reduce((suma, fila) => suma + fila.total, 0);
+            const resumenBase = `${total} de ${totalGeneral} parejas · ${matches} Match · ${total - matches} No match`;
+            sankeyResumen.textContent = resumenBase;
+
+            const dibujarEnlace = (origen, destino, fila) => {
+                const grosor = fila.total * escala;
+                const yOrigen = origen.y + (origen.alto - origen.flujoAlto) / 2 + origen.salida + grosor / 2;
+                const yDestino = destino.y + (destino.alto - destino.flujoAlto) / 2 + destino.entrada + grosor / 2;
+                origen.salida += grosor;
+                destino.entrada += grosor;
+                const xOrigen = origen.x + 190;
+                const xDestino = destino.x;
+                const curva = (xDestino - xOrigen) * .48;
+                const ruta = elementoSvg('path', {
+                    d: `M ${xOrigen} ${yOrigen} C ${xOrigen + curva} ${yOrigen}, ${xDestino - curva} ${yDestino}, ${xDestino} ${yDestino}`,
+                    stroke: fila.resultado === 'Match' ? '#44785E' : '#A25D68',
+                    'stroke-width': Math.max(1, grosor),
+                    class: 'admin-sankey-flow', tabindex: 0,
+                    'aria-label': `${origen.nombre} a ${destino.nombre}: ${fila.total} parejas`
+                });
+                const detalle = `${origen.nombre} → ${destino.nombre}: ${fila.total} parejas`;
+                ruta.appendChild(elementoSvg('title')).textContent = detalle;
+                const activar = () => {
+                    sankeyContenido.classList.add('is-inspecting');
+                    ruta.classList.add('is-active');
+                    sankeyResumen.textContent = detalle;
+                };
+                const desactivar = () => {
+                    sankeyContenido.classList.remove('is-inspecting');
+                    ruta.classList.remove('is-active');
+                    sankeyResumen.textContent = resumenBase;
+                };
+                ruta.addEventListener('mouseenter', activar);
+                ruta.addEventListener('focus', activar);
+                ruta.addEventListener('mouseleave', desactivar);
+                ruta.addEventListener('blur', desactivar);
+                capaEnlaces.appendChild(ruta);
+            };
+            rutas.forEach(fila => {
+                dibujarEnlace(columnas[0].get(fila.gusto), columnas[1].get(fila.disgusto), fila);
+                dibujarEnlace(columnas[1].get(fila.disgusto), columnas[2].get(fila.resultado), fila);
+            });
+            nodos.forEach((columna, indice) => columna.forEach(nodo => {
+                const fondo = indice === 0 ? '#FBE9E4' : indice === 1 ? '#F5EEEF'
+                    : nodo.nombre === 'Match' ? '#E7F1E9' : '#F5E8EA';
+                const acento = indice === 0 ? '#D87468' : indice === 1 ? '#98727D'
+                    : nodo.nombre === 'Match' ? '#44785E' : '#8C4D5A';
+                const grupo = elementoSvg('g');
+                grupo.appendChild(elementoSvg('rect', {
+                    x: nodo.x, y: nodo.y, width: 190, height: nodo.alto, rx: 10, fill: fondo,
+                    stroke: acento, 'stroke-opacity': .18
+                }));
+                grupo.appendChild(elementoSvg('rect', {
+                    x: nodo.x, y: nodo.y, width: 7, height: nodo.alto, rx: 3, fill: acento
+                }));
+                grupo.appendChild(elementoSvg('title')).textContent = `${nodo.nombre}: ${nodo.total} parejas`;
+                textoSvg(grupo, nodo.nombre, nodo.x + 17, nodo.y + nodo.alto / 2 + 5, 'admin-sankey-node-label');
+                textoSvg(grupo, String(nodo.total), nodo.x + 178, nodo.y + nodo.alto / 2 + 5,
+                    'admin-sankey-node-count', { 'text-anchor': 'end' });
+                capaNodos.appendChild(grupo);
+            }));
+        };
+        filtrosSankey.forEach(boton => boton.addEventListener('click', () => mostrarSankey(boton.dataset.sankeyFiltro)));
+        mostrarSankey(rutasComunes.length && rutasComunes.length < rutasSankey.length ? 'comunes' : 'todas');
     });
   </script>
 {% endblock %}

@@ -1,51 +1,271 @@
 {% extends 'admin/base_admin.html' %}
 {% load static %}
 
-{% block title %}Registros Usuarios admin{% endblock %}
+{% block title %}Usuarios | Beyond Date{% endblock %}
 
 
 {% block header %}
-    <div class="admin-welcome">
-        <h1>Panel de Usuarios</h1>
-    </div>
+    <h1 class="h4 fw-bold mb-0" style="color: #4C2A36;">Usuarios</h1>
 {% endblock %}
 
 
 {% block content %}
-<section class="admin-panel admin-users-panel">
+{% if messages %}
+<div class="admin-users-feedback" role="status">
+    {% for message in messages %}
+        <p class="admin-users-feedback__message {% if message.tags == 'success' %}is-success{% else %}is-error{% endif %}">{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+<section class="admin-users-panel" aria-labelledby="admin-users-title">
+    <div class="admin-users-toolbar">
+        <div>
+            <h2 id="admin-users-title">Usuarios registrados</h2>
+            <p>Consulta las cuentas de Beyond Date.</p>
+        </div>
+        <span class="admin-users-count" id="admin-users-count">{{ users|length }} usuarios</span>
+    </div>
+    <div class="admin-users-filters">
+        <div class="admin-users-search">
+            <label for="admin-users-search-input">Buscar por nombre</label>
+            <div class="admin-users-search-field">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="admin-users-search-input" type="search" placeholder="Nombre o apellido" autocomplete="off" aria-controls="lista-users">
+            </div>
+        </div>
+        <p class="admin-users-filter-hint">Se muestran 10 personas por página.</p>
+    </div>
     <div class="admin-users-scroll">
         <table class="admin-users-table" id="lista-users">
             <thead>
                 <tr>
-                    <th>RUT</th>
-                    <th>Nombre</th>
-                    <th>Apellido paterno</th>
-                    <th>Apellido materno</th>
-                    <th>Correo</th>
-                    <th>Estado</th>
+                    <th scope="col">RUT</th>
+                    <th scope="col">Nombre completo</th>
+                    <th scope="col">Correo</th>
+                    <th scope="col">Teléfono</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for u in users %}
-                <tr>
-                    <td>{{ u.rut }}</td>
-                    <td>{{ u.nombre }}</td>
-                    <td>{{ u.apellidoPaterno }}</td>
-                    <td>{{ u.apellidoMaterno }}</td>
-                    <td>{{ u.correo }}</td>
+                <tr data-user-row data-search="{{ u.nombre }} {{ u.apellidoPaterno }} {{ u.apellidoMaterno }}">
+                    <td class="admin-users-rut">{{ u.rut }}</td>
+                    <td class="admin-users-name">{{ u.nombre }} {{ u.apellidoPaterno }} {{ u.apellidoMaterno }}</td>
+                    <td class="admin-users-email">{{ u.correo }}</td>
+                    <td class="admin-users-phone">{{ u.telefono|default:"—" }}</td>
                     <td>
                         <span class="admin-user-status {% if u.estado == 'Activo' %}is-active{% endif %}">
                             {{ u.estado }}
                         </span>
                     </td>
+                    <td>
+                        <div class="admin-users-actions">
+                        <button type="button" class="admin-user-action admin-user-action--edit"
+                                data-bs-toggle="modal" data-bs-target="#editarUsuarioModal"
+                                data-rut="{{ u.rut }}" data-nombre="{{ u.nombre }}"
+                                data-apellido-paterno="{{ u.apellidoPaterno }}"
+                                data-apellido-materno="{{ u.apellidoMaterno }}"
+                                data-correo="{{ u.correo }}" data-telefono="{{ u.telefono|default:'' }}"
+                                data-estado="{{ u.estado }}"
+                                data-action="{{ u.editar_url|default:'' }}"
+                                aria-label="Editar a {{ u.nombre }} {{ u.apellidoPaterno }}">
+                            <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
+                        </button>
+                        <button type="button" class="admin-user-action admin-user-action--delete"
+                                data-bs-toggle="modal" data-bs-target="#eliminarUsuarioModal"
+                                data-rut="{{ u.rut }}" data-nombre="{{ u.nombre }} {{ u.apellidoPaterno }}"
+                                data-action="{{ u.eliminar_url|default:'' }}"
+                                aria-label="Eliminar a {{ u.nombre }} {{ u.apellidoPaterno }}">
+                            <i class="bi bi-trash" aria-hidden="true"></i> Eliminar
+                        </button>
+                        </div>
+                    </td>
                 </tr>
                 {% empty %}
-                <tr>
+                <tr id="admin-users-db-empty">
                     <td colspan="6" class="admin-users-empty">No hay usuarios registrados.</td>
                 </tr>
                 {% endfor %}
+                <tr id="admin-users-search-empty" hidden>
+                    <td colspan="6" class="admin-users-empty">No se encontraron usuarios con ese nombre.</td>
+                </tr>
             </tbody>
         </table>
     </div>
+    <div class="admin-users-footer">
+        <p id="admin-users-summary" class="admin-users-summary" aria-live="polite"></p>
+        <nav id="admin-users-pagination" class="admin-users-pagination" aria-label="Páginas de usuarios">
+            <button type="button" id="admin-users-previous" aria-label="Página anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i> Anterior</button>
+            <span id="admin-users-page" aria-live="polite"></span>
+            <button type="button" id="admin-users-next" aria-label="Página siguiente">Siguiente <i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+        </nav>
+    </div>
 </section>
+
+<div class="modal fade admin-user-modal" id="editarUsuarioModal" tabindex="-1" aria-labelledby="editarUsuarioTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="editarUsuarioForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="editar">
+                <input type="hidden" name="rut" id="editarUsuarioRutInput">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="editarUsuarioTitulo">Editar usuario</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="admin-user-modal__rut">RUT: <strong id="editarUsuarioRut"></strong></p>
+                    <div class="admin-user-modal__fields">
+                        <div>
+                            <label for="editarNombre">Nombre</label>
+                            <input id="editarNombre" name="nombre" type="text" maxlength="100" required>
+                        </div>
+                        <div>
+                            <label for="editarApellidoPaterno">Apellido paterno</label>
+                            <input id="editarApellidoPaterno" name="apellidopaterno" type="text" maxlength="100" required>
+                        </div>
+                        <div>
+                            <label for="editarApellidoMaterno">Apellido materno</label>
+                            <input id="editarApellidoMaterno" name="apellidomaterno" type="text" maxlength="100" required>
+                        </div>
+                        <div>
+                            <label for="editarCorreo">Correo</label>
+                            <input id="editarCorreo" name="correo" type="email" maxlength="300" required>
+                        </div>
+                        <div>
+                            <label for="editarTelefono">Teléfono</label>
+                            <input id="editarTelefono" name="telefono" type="tel" inputmode="numeric" pattern="[0-9]+" maxlength="15" required>
+                        </div>
+                        <div>
+                            <label for="editarEstado">Estado</label>
+                            <select id="editarEstado" name="estado" required>
+                                <option value="Activo">Activo</option>
+                                <option value="Suspendido">Suspendido</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="admin-user-modal__unavailable" id="editarUsuarioAviso" hidden>Esta acción aún no está disponible.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="admin-user-action" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="admin-user-action admin-user-action--primary" id="guardarUsuario" disabled>Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade admin-user-modal" id="eliminarUsuarioModal" tabindex="-1" aria-labelledby="eliminarUsuarioTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="eliminarUsuarioForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="eliminar">
+                <input type="hidden" name="rut" id="eliminarUsuarioRutInput">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="eliminarUsuarioTitulo">Eliminar usuario</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Eliminar a <strong id="eliminarUsuarioNombre"></strong> (RUT <span id="eliminarUsuarioRut"></span>) de la base de datos?</p>
+                    <p class="admin-user-modal__unavailable" id="eliminarUsuarioAviso" hidden>Esta acción aún no está disponible.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="admin-user-action" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="admin-user-action admin-user-action--danger" id="confirmarEliminarUsuario" disabled>Eliminar definitivamente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_extra %}
+<script>
+    const filasUsuarios = [...document.querySelectorAll('#lista-users tbody tr[data-user-row]')];
+    const buscarUsuarios = document.getElementById('admin-users-search-input');
+    const resumenUsuarios = document.getElementById('admin-users-summary');
+    const conteoUsuarios = document.getElementById('admin-users-count');
+    const paginacionUsuarios = document.getElementById('admin-users-pagination');
+    const paginaUsuarios = document.getElementById('admin-users-page');
+    const anteriorUsuarios = document.getElementById('admin-users-previous');
+    const siguienteUsuarios = document.getElementById('admin-users-next');
+    const sinResultadosUsuarios = document.getElementById('admin-users-search-empty');
+    const porPagina = 10;
+    let paginaActualUsuarios = 1;
+
+    const normalizarNombre = texto => (texto || '').normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
+    const nombresUsuarios = filasUsuarios.map(fila => ({
+        fila,
+        nombre: normalizarNombre(fila.dataset.search)
+    }));
+
+    const mostrarPaginaUsuarios = () => {
+        const termino = normalizarNombre(buscarUsuarios.value);
+        const coincidencias = nombresUsuarios.filter(usuario => usuario.nombre.includes(termino));
+        const total = coincidencias.length;
+        const paginas = Math.max(1, Math.ceil(total / porPagina));
+        paginaActualUsuarios = Math.min(paginaActualUsuarios, paginas);
+        const inicio = (paginaActualUsuarios - 1) * porPagina;
+        const visibles = new Set(coincidencias.slice(inicio, inicio + porPagina).map(usuario => usuario.fila));
+
+        filasUsuarios.forEach(fila => { fila.hidden = !visibles.has(fila); });
+        sinResultadosUsuarios.hidden = total !== 0 || filasUsuarios.length === 0;
+        conteoUsuarios.textContent = termino
+            ? `${total} de ${filasUsuarios.length} usuarios`
+            : `${filasUsuarios.length} usuarios`;
+        resumenUsuarios.textContent = total
+            ? `Mostrando ${inicio + 1}–${Math.min(inicio + porPagina, total)} de ${total} usuarios`
+            : termino ? 'No hay resultados para esta búsqueda.' : 'No hay usuarios registrados.';
+        paginaUsuarios.textContent = `Página ${paginaActualUsuarios} de ${paginas}`;
+        paginacionUsuarios.hidden = paginas <= 1;
+        anteriorUsuarios.disabled = paginaActualUsuarios === 1;
+        siguienteUsuarios.disabled = paginaActualUsuarios === paginas;
+    };
+
+    buscarUsuarios.addEventListener('input', () => {
+        paginaActualUsuarios = 1;
+        mostrarPaginaUsuarios();
+    });
+    anteriorUsuarios.addEventListener('click', () => {
+        if (paginaActualUsuarios > 1) {
+            paginaActualUsuarios--;
+            mostrarPaginaUsuarios();
+        }
+    });
+    siguienteUsuarios.addEventListener('click', () => {
+        paginaActualUsuarios++;
+        mostrarPaginaUsuarios();
+    });
+    mostrarPaginaUsuarios();
+
+    document.getElementById('editarUsuarioModal').addEventListener('show.bs.modal', event => {
+        const datos = event.relatedTarget.dataset;
+        const form = document.getElementById('editarUsuarioForm');
+        form.action = datos.action || '';
+        document.getElementById('editarUsuarioRut').textContent = datos.rut;
+        document.getElementById('editarUsuarioRutInput').value = datos.rut;
+        document.getElementById('editarNombre').value = datos.nombre;
+        document.getElementById('editarApellidoPaterno').value = datos.apellidoPaterno;
+        document.getElementById('editarApellidoMaterno').value = datos.apellidoMaterno;
+        document.getElementById('editarCorreo').value = datos.correo;
+        document.getElementById('editarTelefono').value = datos.telefono || '';
+        document.getElementById('editarEstado').value = datos.estado;
+        document.getElementById('guardarUsuario').disabled = !datos.action;
+        document.getElementById('editarUsuarioAviso').hidden = Boolean(datos.action);
+    });
+
+    document.getElementById('eliminarUsuarioModal').addEventListener('show.bs.modal', event => {
+        const datos = event.relatedTarget.dataset;
+        const form = document.getElementById('eliminarUsuarioForm');
+        form.action = datos.action || '';
+        document.getElementById('eliminarUsuarioNombre').textContent = datos.nombre;
+        document.getElementById('eliminarUsuarioRut').textContent = datos.rut;
+        document.getElementById('eliminarUsuarioRutInput').value = datos.rut;
+        document.getElementById('confirmarEliminarUsuario').disabled = !datos.action;
+        document.getElementById('eliminarUsuarioAviso').hidden = Boolean(datos.action);
+    });
+</script>
 {% endblock %}

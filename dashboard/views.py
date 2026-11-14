@@ -3,6 +3,7 @@ import base64
 from django.core.cache import cache
 from django.shortcuts import render, redirect
 from django.db.models import Count, Sum, Avg, Q
+from collections import Counter, defaultdict
 from .models import (
     Administrador,
     Cliente,
@@ -924,6 +925,25 @@ def admin_inicio(request):
     gustos_labels = ["Música", "Viajes", "Cine", "Deporte", "Libros"]
     gustos_valores = [60, 55, 49, 32, 2]
 
+    conexiones_resientes = {
+        "labels": ["Lun", "Mar", "Mié"],
+        "usuarios": {"hombres": [3, 4, 2], "mujeres": [5, 2, 4]},
+        "administradores": {"hombres": [1, 0, 1], "mujeres": [0, 1, 0]}
+        }
+
+    matches_diarios = [
+        {
+            "fecha": fila["fechamatch"].isoformat(),
+            "total": fila["total"],
+        }
+        for fila in (
+            matches_exitosos.order_by()
+            .values("fechamatch")
+            .annotate(total=Count("idmatch"))
+            .order_by("fechamatch")
+        )
+    ]
+    
     context = {
         "clientes_registrados": 20, 
         "matches_totales": f"{matches_totales:,}".replace(",", "."), 
@@ -938,7 +958,247 @@ def admin_inicio(request):
         "gustos_valores_json": json.dumps(gustos_valores),
         "kpi_matchs": 60.3,
         "kpi_estancados": 3.25,
+        "conexiones_recientes_json": json.dumps(conexiones_resientes),
+        "matches_diarios_json": json.dumps(matches_diarios, ensure_ascii=False),
     }
+    ######## Bloque para probar el sankey
+    parejas = {}
+    registros = (
+        Match.objects.filter(estado__in=[0, 1])
+        .order_by("-fechamatch", "-idmatch")
+        .values_list("cliente1rut", "cliente2rut", "estado")
+    )
+    for rut1, rut2, estado in registros:
+        if rut1 and rut2 and rut1 != rut2:
+            parejas.setdefault(tuple(sorted((rut1, rut2))), (rut1, rut2, estado))
+
+    ruts = {rut for pareja in parejas for rut in pareja}
+
+    def preferencias_por_usuario(modelo):
+        datos = defaultdict(lambda: defaultdict(set))
+        filas = modelo.objects.filter(rut__in=ruts).values_list(
+            "rut", "categoria", "descripcion"
+        )
+        for rut, categoria, descripcion in filas:
+            if categoria and descripcion:
+                datos[rut][categoria].add(descripcion.strip().casefold())
+        return datos
+
+    gustos = preferencias_por_usuario(Gusto)
+    disgustos = preferencias_por_usuario(Disgusto)
+
+    def categoria_compartida(datos, rut1, rut2, alternativa):
+        coincidencias = []
+        for categoria in datos[rut1].keys() & datos[rut2].keys():
+            cantidad = len(datos[rut1][categoria] & datos[rut2][categoria])
+            if cantidad:
+                coincidencias.append((cantidad, categoria))
+        return sorted(coincidencias, key=lambda item: (-item[0], item[1]))[0][1] if coincidencias else alternativa
+
+    conteo = Counter()
+    for rut1, rut2, estado in parejas.values():
+        gusto = categoria_compartida(gustos, rut1, rut2, "Sin gusto común")
+        disgusto = categoria_compartida(disgustos, rut1, rut2, "Sin disgusto común")
+        resultado = "Match" if estado == 1 else "No match"
+        conteo[(gusto, disgusto, resultado)] += 1
+
+    context["sankey_admin_json"] = json.dumps({
+        "sintetico": False,
+        "paths": [
+            {"gusto": gusto, "disgusto": disgusto,
+            "resultado": resultado, "total": total}
+            for (gusto, disgusto, resultado), total in conteo.items()
+        ],
+    }, ensure_ascii=False)
+    ########
+
+    ####### Radar
+    pilares = [
+        "Valores", "Hobbies", "Dinámica Social",
+        "Lenguaje del Amor", "Metas & Futuro",
+    ]
+
+    def datos_radar(modelo):
+        por_persona = defaultdict(list)
+        por_descripcion = defaultdict(list)
+
+        for rut, categoria, descripcion, valor in modelo.objects.values_list(
+            "rut", "categoria", "descripcion", "valor"
+        ):
+            categoria = (categoria or "").strip()
+            if categoria not in pilares or not rut:
+                continue
+            try:
+                puntuacion = float(str(valor).replace(",", "."))
+            except (TypeError, ValueError):
+                continue
+            if not 0 <= puntuacion <= 100:
+                continue
+
+            por_persona[(categoria, rut)].append(puntuacion)
+            if descripcion:
+                por_descripcion[(categoria, descripcion.strip())].append(puntuacion)
+
+        promedios = []
+        detalle = {}
+        for categoria in pilares:
+            valores = [
+                sum(puntos) / len(puntos)
+                for (cat, _rut), puntos in por_persona.items()
+                if cat == categoria
+            ]
+            promedios.append(round(sum(valores) / len(valores), 1) if valores else None)
+
+            items = [
+                (nombre, puntos)
+                for (cat, nombre), puntos in por_descripcion.items()
+                if cat == categoria
+            ]
+            items.sort(key=lambda item: (-len(item[1]), item[0]))
+            detalle[categoria] = [
+                {"nombre": nombre, "porcentaje": round(sum(puntos) / len(puntos), 1)}
+                for nombre, puntos in items[:5]
+            ]
+
+        return promedios, detalle
+
+    gustos_data, gustos_detalle = datos_radar(Gusto)
+    disgustos_data, disgustos_detalle = datos_radar(Disgusto)
+
+    sexo_por_rut = dict(
+        Cliente.objects.values_list("usuario_rut_id", "sexo")
+    )
+
+    def agregar_genero(detalle, modelo):
+        usuarios_por_preferencia = defaultdict(set)
+
+        for rut, categoria, descripcion, valor in modelo.objects.values_list(
+            "rut", "categoria", "descripcion", "valor"
+        ):
+            if not rut or not categoria or not descripcion:
+                continue
+            try:
+                puntuacion = float(str(valor).replace(",", "."))
+            except (TypeError, ValueError):
+                continue
+            if not 0 <= puntuacion <= 100:
+                continue
+
+            clave = (categoria.strip(), descripcion.strip())
+            usuarios_por_preferencia[clave].add(rut)
+
+        for categoria, items in detalle.items():
+            for item in items:
+                conteo = {"hombres": 0, "mujeres": 0, "otros": 0}
+                for rut in usuarios_por_preferencia[(categoria, item["nombre"])]:
+                    sexo = (sexo_por_rut.get(rut) or "").strip().casefold()
+                    if sexo in ("masculino", "hombre"):
+                        conteo["hombres"] += 1
+                    elif sexo in ("femenino", "mujer"):
+                        conteo["mujeres"] += 1
+                    else:
+                        conteo["otros"] += 1
+                item["genero"] = conteo
+
+    agregar_genero(gustos_detalle, Gusto)
+    agregar_genero(disgustos_detalle, Disgusto)
+
+
+    context["radar_admin_json"] = json.dumps({
+        "categorias": pilares,
+        "gustos_data": gustos_data,
+        "disgustos_data": disgustos_data,
+        "drilldown": {
+            "gustos": gustos_detalle,
+            "disgustos": disgustos_detalle,
+        },
+    }, ensure_ascii=False)
+
+    clientes = {
+        rut: (orientacion, nacimiento)
+        for rut, orientacion, nacimiento in Cliente.objects.values_list(
+            "usuario_rut_id", "orientacionsexual", "fechanacimiento"
+        )
+    }
+
+    por_orientacion = defaultdict(Counter)
+    por_brecha = defaultdict(Counter)
+
+    for rut1, rut2, estado in parejas.values():
+        persona1 = clientes.get(rut1)
+        persona2 = clientes.get(rut2)
+        if not persona1 or not persona2:
+            continue
+
+        clave_resultado = "match" if estado == 1 else "no_match"
+        orientacion1, nacimiento1 = persona1
+        orientacion2, nacimiento2 = persona2
+
+        if orientacion1 and orientacion2:
+            grupo = " + ".join(sorted(
+                [orientacion1.strip(), orientacion2.strip()],
+                key=str.casefold
+            ))
+            por_orientacion[grupo][clave_resultado] += 1
+
+        if nacimiento1 and nacimiento2:
+            diferencia = abs((nacimiento1 - nacimiento2).days) / 365.2425
+            if diferencia < 3:
+                grupo = "0–2 años"
+            elif diferencia < 6:
+                grupo = "3–5 años"
+            elif diferencia < 10:
+                grupo = "6–9 años"
+            else:
+                grupo = "10 años o más"
+            por_brecha[grupo][clave_resultado] += 1
+
+    def filas_factor(conteos, orden=None):
+        nombres = orden or sorted(
+            conteos,
+            key=lambda nombre: -sum(conteos[nombre].values())
+        )
+        return [
+            {
+                "label": nombre,
+                "match": conteos[nombre]["match"],
+                "no_match": conteos[nombre]["no_match"],
+            }
+            for nombre in nombres
+            if nombre in conteos
+        ]
+
+    context["match_factores_json"] = json.dumps({
+        "sintetico": False,
+        "orientacion": filas_factor(por_orientacion),
+        "brecha_edad": filas_factor(
+            por_brecha,
+            ["0–2 años", "3–5 años", "6–9 años", "10 años o más"]
+        ),
+    }, ensure_ascii=False)
+        #######
+    ####kpis
+    resultados_diarios = (
+        Match.objects
+        .filter(fechamatch__isnull=False, estado__in=[0, 1])
+        .values("fechamatch")
+        .annotate(
+            match=Count("idmatch", filter=Q(estado=1)),
+            no_match=Count("idmatch", filter=Q(estado=0)),
+        )
+        .order_by("fechamatch")
+    )
+
+    context["kpi_diarios_json"] = json.dumps([
+        {
+            "fecha": fila["fechamatch"].isoformat(),
+            "match": fila["match"],
+            "no_match": fila["no_match"],
+        }
+        for fila in resultados_diarios
+    ], ensure_ascii=False)
+
+        #####
 
     return render(request, "admin/inicio.html", context)
 
@@ -1067,33 +1327,27 @@ def admin_notificaciones(request):
 
 
 def admin_usuarios(request):
+    registros = Usuario.objects.values(
+        "rut", "nombre", "apellidopaterno",
+        "apellidomaterno", "correo", "estado", "telefono"
+    ).order_by("nombre", "apellidopaterno")
 
     users = [
         {
-            "rut": "12.345.678-9",
-            "nombre": "María",
-            "apellidoPaterno": "González",
-            "apellidoMaterno": "Pérez",
-            "correo": "maria@ejemplo.cl",
-            "estado": "Activo",
-        },
-        {
-            "rut": "18.765.432-1",
-            "nombre": "Juan",
-            "apellidoPaterno": "Soto",
-            "apellidoMaterno": "Rojas",
-            "correo": "juan@ejemplo.cl",
-            "estado": "Suspendido",
-        },
+            "rut": u["rut"],
+            "nombre": u["nombre"],
+            "apellidoPaterno": u["apellidopaterno"],
+            "apellidoMaterno": u["apellidomaterno"],
+            "correo": u["correo"],
+            "estado": "Activo" if u["estado"] == 1 else "Suspendido",
+            "telefono": u["telefono"],
+            "editar_url": request.path,
+            "eliminar_url": request.path,
+        }
+        for u in registros
     ]
 
-    #users = Users.objects.all()
-    return render(
-            request,
-            "admin/usuarios.html",
-            {"users": users}
-            )
-    
+    return render(request, "admin/usuarios.html", {"users": users})
 
     
     

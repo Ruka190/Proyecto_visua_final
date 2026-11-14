@@ -9,7 +9,7 @@
   <!-- Fuentes e íconos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -17,13 +17,14 @@
   
   <style>
   :root {
-    --bg-page: #F4E6E9; /* Crema durazno suave: contraste cálido y armónico con la app */
+    --bg-page: #F4E6E9;
   }
 
   body {
     background-color: var(--bg-page) !important;
     min-height: 100vh;
     margin: 0;
+    font-family: 'Poppins', sans-serif;
   }
 
   .btn-group.rounded-pill {
@@ -54,59 +55,339 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
   
-  /* Tarjetas blancas con borde y sombra cálida para alto contraste */
   .card-grafico {
-      background-color: #F4EAE6 !important;
-      border: 1px solid #EBD8D0 !important;
-      box-shadow: 0 8px 24px rgba(166, 58, 50, 0.05) !important;
-      height: 100%;
+    background-color: #F4EAE6 !important;
+    border: 1px solid #EBD8D0 !important;
+    box-shadow: 0 8px 24px rgba(166, 58, 50, 0.05) !important;
+    height: 100%;
+    transition: all 0.25s ease;
+  }
+
+  #miGrafico, #graficoRadar {
+    cursor: pointer;
+  }
+
+  .drilldown-breadcrumb {
+    background-color: #FFFDFB;
+    border: 1px solid #F3CFC4;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    color: #7a4957;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-drill-nav {
+    background-color: #FFFDFB;
+    border: 1px solid #E3B9AE;
+    color: #A63A32;
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-drill-nav:hover {
+    background-color: #D62D5A;
+    border-color: #D62D5A;
+    color: #ffffff;
+  }
+
+  .drill-table-wrapper {
+    max-height: 250px;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid #EBD8D0;
+    background-color: #FFFDFB;
+  }
+
+  .drill-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-bottom: 0;
+  }
+
+  .drill-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #FDECE7;
+    color: #4C2A36;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 1px solid #F3CFC4;
+    z-index: 2;
+  }
+
+  .drill-table tbody tr {
+    border-bottom: 1px solid #F7ECE8;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .drill-table tbody tr:hover {
+    background-color: #FFF3F0;
+  }
+
+  .drill-table td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    color: #4a4a4a;
+  }
+
+  .affinity-pill {
+    background-color: #FDECE7;
+    color: #D62D5A;
+    border: 1px solid #F3CFC4;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pilar-chip {
+    background-color: #FFFDFB;
+    border: 1px solid #E3B9AE;
+    color: #4C2A36;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .pilar-chip:hover {
+    background-color: #D62D5A;
+    border-color: #D62D5A;
+    color: #fff;
   }
   </style>
 </head>
 <body>
 
-  <!-- Quitamos el max-width: 420px para que ocupe todo el ancho disponible -->
   <main class="container py-4" style="padding-bottom: 95px !important;">
     <div class="d-flex flex-column gap-4">
 
       <!-- Cabecera de navegación -->
       <header class="d-flex align-items-center gap-3">
-        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1 bg-white">
-          <i class="bi bi-arrow-left"></i> Volver
+        <a href="{% url 'perfilU' %}" class="btn btn-sm btn-outline-secondary rounded-pill d-flex align-items-center gap-1 bg-white">
+          <i class="bi bi-arrow-left"></i> Volver al Perfil
         </a>
         <h1 class="h4 fw-bold mb-0">Estadísticas</h1>
       </header>
 
-      <!-- SISTEMA DE GRILLA BOOTSTRAP (1 columna en móvil, 2 columnas en PC) -->
       <div class="row g-4">
 
-        <!-- ================= 1. Balance de Matches ================= -->
+        <!-- ================= 1. Balance de Matches (Interactivo 4 Niveles) ================= -->
         <div class="col-12 col-lg-6">
-          <section class="card-grafico p-4 rounded-4 d-flex flex-column align-items-center justify-content-center">
-            <h2 class="h5 fw-bold text-center mb-1">Balance de Matches</h2>
-            <div class="text-center mb-3">
-              <span class="text-muted small">% de Match Exitosos</span>
-              <strong class="fs-4 d-block" style="color: #D62D5A;">{{ chart_payload.porcentaje }}%</strong>
+          <section class="card-grafico p-4 rounded-4 d-flex flex-column justify-content-between">
+            
+            <div id="drilldownHeader" class="d-none mb-2">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <div class="d-flex gap-2">
+                  <button type="button" id="btnDrillBack" class="btn-drill-nav">
+                    <i class="bi bi-arrow-left"></i> Atrás
+                  </button>
+                  <button type="button" id="btnDrillReset" class="btn-drill-nav">
+                    <i class="bi bi-pie-chart-fill"></i> Inicio
+                  </button>
+                </div>
+                <span id="drillBreadcrumb" class="drilldown-breadcrumb">
+                  <i class="bi bi-hearts text-danger"></i> Resumen ➔ Tus Matches
+                </span>
+              </div>
             </div>
-            <div style="position: relative; width: 100%; max-width: 260px; margin: 0 auto;">
-              <canvas id="miGrafico"></canvas>
+
+            <!-- NIVEL 0: Gráfico Dona Original -->
+            <div id="drillNivel0" class="d-flex flex-column align-items-center justify-content-center my-auto">
+              <h2 class="h5 fw-bold text-center mb-1">Balance de Matches</h2>
+              <div class="text-center mb-2">
+                <span class="text-muted small">% de Match Exitosos</span>
+                <strong class="fs-4 d-block" style="color: #D62D5A;">{{ chart_payload.porcentaje }}%</strong>
+              </div>
+              <div style="position: relative; width: 100%; max-width: 250px; margin: 0 auto;">
+                <canvas id="miGrafico"></canvas>
+              </div>
+              <small class="text-muted mt-2 text-center" style="font-size: 0.74rem;">
+                <i class="bi bi-hand-index-thumb text-danger"></i> Toca en <strong>Match</strong> o <strong>No Match</strong> para ver las personas de esta semana
+              </small>
             </div>
+
+            <!-- NIVEL 1: Lista de Personas -->
+            <div id="drillNivel1" class="d-none flex-column">
+              <div class="d-flex justify-content-between align-items-baseline mb-2">
+                <h3 id="tituloNivel1" class="h6 fw-bold mb-0 text-dark">Tus Matches Recientes</h3>
+                <span class="text-muted" style="font-size: 0.72rem;">Toca a alguien para ver su afinidad</span>
+              </div>
+              <div class="drill-table-wrapper">
+                <table class="drill-table">
+                  <thead>
+                    <tr>
+                      <th>Persona</th>
+                      <th>Ocupación y País</th>
+                      <th>Afinidad</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyNivel1"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- NIVEL 2: Sub-Gráfico de Compatibilidad por Pilar de la Persona -->
+            <div id="drillNivel2" class="d-none flex-column">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <div>
+                  <h3 id="tituloNivel2" class="h6 fw-bold mb-0 text-dark">Compatibilidad</h3>
+                  <span id="subtituloNivel2" class="text-muted fst-italic" style="font-size: 0.74rem;"></span>
+                </div>
+                <button type="button" id="btnIrNivel3" class="btn-drill-nav" style="background:#D62D5A; color:#fff; border-color:#D62D5A;">
+                  <i class="bi bi-stars"></i> Ver intereses y chat
+                </button>
+              </div>
+              <div style="position: relative; height: 210px; width: 100%;">
+                <canvas id="graficoDrillPersona"></canvas>
+              </div>
+              <small class="text-muted text-center mt-1" style="font-size: 0.72rem;">
+                Toca cualquier barra para filtrar qué le gusta en ese pilar
+              </small>
+            </div>
+
+            <!-- NIVEL 3: Intereses e Historial de Conversación -->
+            <div id="drillNivel3" class="d-none flex-column">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <h3 id="tituloNivel3" class="h6 fw-bold mb-0 text-dark">Detalle de la persona</h3>
+                <div class="btn-group rounded-pill" role="group">
+                  <button type="button" class="btn btn-periodo active" id="tabDrillGustos">Intereses</button>
+                  <button type="button" class="btn btn-periodo" id="tabDrillMensajes">Conversación</button>
+                </div>
+              </div>
+              <div class="drill-table-wrapper">
+                <table class="drill-table">
+                  <thead id="theadNivel3"></thead>
+                  <tbody id="tbodyNivel3"></tbody>
+                </table>
+              </div>
+            </div>
+
           </section>
         </div>
 
-        <!-- ================= 2. Radar de Afinidad ================= -->
+        <!-- ================= 2. Radar de Afinidad (Interactivo 4 Niveles por Subcategorías) ================= -->
         <div class="col-12 col-lg-6">
-          <section class="card-grafico p-4 rounded-4 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-              <h2 class="h5 fw-bold mb-0">Radar de Afinidad</h2>
-              <div class="btn-group rounded-pill" role="group">
-                <button type="button" class="btn btn-periodo active" data-tipo-radar="gustos">Gustos</button>
-                <button type="button" class="btn btn-periodo" data-tipo-radar="disgustos">Disgustos</button>
+          <section class="card-grafico p-4 rounded-4 d-flex flex-column justify-content-between">
+            
+            <!-- Barra superior de navegación del Radar (Oculta en Nivel 0) -->
+            <div id="radarDrillHeader" class="d-none mb-2">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <div class="d-flex gap-2">
+                  <button type="button" id="btnRadarBack" class="btn-drill-nav">
+                    <i class="bi bi-arrow-left"></i> Atrás
+                  </button>
+                  <button type="button" id="btnRadarReset" class="btn-drill-nav">
+                    <i class="bi bi-pentagon-half"></i> Radar
+                  </button>
+                </div>
+                <span id="radarBreadcrumb" class="drilldown-breadcrumb">
+                  <i class="bi bi-compass text-danger"></i> Radar ➔ Pilar
+                </span>
               </div>
             </div>
-            <div style="position: relative; height: 260px; width: 100%; flex-grow: 1;">
-              <canvas id="graficoRadar"></canvas>
+
+            <!-- NIVEL 0: Pentágono Original -->
+            <div id="radarNivel0" class="d-flex flex-column h-100">
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <h2 class="h5 fw-bold mb-0">Radar de Afinidad</h2>
+                <div class="btn-group rounded-pill" role="group">
+                  <button type="button" class="btn btn-periodo active" data-tipo-radar="gustos">Gustos</button>
+                  <button type="button" class="btn btn-periodo" data-tipo-radar="disgustos">Disgustos</button>
+                </div>
+              </div>
+              <div style="position: relative; height: 225px; width: 100%; flex-grow: 1;">
+                <canvas id="graficoRadar"></canvas>
+              </div>
+              <!-- Botones rápidos de los 5 pilares + instrucción -->
+              <div class="d-flex flex-wrap justify-content-center gap-1 mt-2">
+                <button type="button" class="pilar-chip" data-pilar-jump="Valores">Valores</button>
+                <button type="button" class="pilar-chip" data-pilar-jump="Hobbies">Hobbies</button>
+                <button type="button" class="pilar-chip" data-pilar-jump="Dinámica Social">Dinámica Social</button>
+                <button type="button" class="pilar-chip" data-pilar-jump="Lenguaje del Amor">Lenguaje del Amor</button>
+                <button type="button" class="pilar-chip" data-pilar-jump="Metas & Futuro">Metas & Futuro</button>
+              </div>
+              <small class="text-muted text-center mt-1" style="font-size: 0.72rem;">
+                <i class="bi bi-hand-index-thumb text-danger"></i> Toca un punto del radar o un pilar para explorar sus subcategorías
+              </small>
             </div>
+
+            <!-- NIVEL 1: Sub-Gráfico de Subcategorías del Pilar seleccionado -->
+            <div id="radarNivel1" class="d-none flex-column">
+              <div class="mb-2">
+                <h3 id="tituloRadarNivel1" class="h6 fw-bold mb-0 text-dark">Subcategorías del Pilar</h3>
+                <span id="subtituloRadarNivel1" class="text-muted" style="font-size: 0.73rem;">Toca una barra para ver qué intereses y personas coinciden</span>
+              </div>
+              <div style="position: relative; height: 215px; width: 100%;">
+                <canvas id="graficoRadarSubcat"></canvas>
+              </div>
+              <small class="text-muted text-center mt-2" style="font-size: 0.72rem;">
+                Haz clic sobre una subcategoría para descubrir personas compatibles
+              </small>
+            </div>
+
+            <!-- NIVEL 2: Temas de la Subcategoría + Tabla de Personas que coinciden -->
+            <div id="radarNivel2" class="d-none flex-column">
+              <div class="mb-2">
+                <h3 id="tituloRadarNivel2" class="h6 fw-bold mb-1 text-dark">Personas afines en esta subcategoría</h3>
+                <div id="tagsTemasSubcat" class="d-flex flex-wrap gap-1 mb-2"></div>
+              </div>
+              <div class="drill-table-wrapper">
+                <table class="drill-table">
+                  <thead>
+                    <tr>
+                      <th>Persona</th>
+                      <th>Coincidencia</th>
+                      <th>Estado</th>
+                      <th>Sintonía</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyRadarNivel2"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- NIVEL 3: Ficha de Sintonía con la Persona + Acción al Chat -->
+            <div id="radarNivel3" class="d-none flex-column">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <div>
+                  <h3 id="tituloRadarNivel3" class="h6 fw-bold mb-0 text-dark">Ficha de Sintonía</h3>
+                  <span id="bioRadarNivel3" class="text-muted fst-italic" style="font-size: 0.73rem;"></span>
+                </div>
+                <a id="btnRadarIrChat" href="/usuario/mensajes/" class="btn-drill-nav" style="background:#D62D5A; color:#fff; border-color:#D62D5A;">
+                  <i class="bi bi-chat-heart-fill"></i> Ir al chat
+                </a>
+              </div>
+              <div class="drill-table-wrapper">
+                <table class="drill-table">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Pilar</th>
+                      <th>Interés o Mensaje</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyRadarNivel3"></tbody>
+                </table>
+              </div>
+            </div>
+
           </section>
         </div>
 
@@ -149,7 +430,7 @@
           </section>
         </div>
 
-      </div> <!-- Cierre de row -->
+      </div>
     </div>
   </main>
 
@@ -158,6 +439,7 @@
 
   <!-- Inyección de datos desde Django -->
   {{ chart_payload|json_script:"datos-grafico" }}
+  {{ drilldown_payload|json_script:"datos-drilldown" }}
   {{ tiempo_payload|json_script:"datos-tiempo" }}
   {{ arquetipo_payload|json_script:"datos-caracteristicas" }}
   {{ radar_afinidad_payload|json_script:"datos-radar" }}
@@ -166,5 +448,473 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{% static 'usuario/js/graficosU.js' %}?v=2"></script>
+
+  <!-- Navegación Interactiva Multinivel (1. Balance de Matches y 2. Radar de Afinidad) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // =========================================================================
+    // MOTOR 1: DRILL-DOWN DE BALANCE DE MATCHES (DONA)
+    // =========================================================================
+    const drillDataEl = document.getElementById('datos-drilldown');
+    if (drillDataEl) {
+      const drillData = JSON.parse(drillDataEl.textContent);
+      let nivelActual = 0;
+      let segmentoActual = 'match';
+      let personaActual = null;
+      let subChartInstance = null;
+
+      const headerEl = document.getElementById('drilldownHeader');
+      const breadcrumbEl = document.getElementById('drillBreadcrumb');
+      const btnBack = document.getElementById('btnDrillBack');
+      const btnReset = document.getElementById('btnDrillReset');
+
+      const vistas = {
+        0: document.getElementById('drillNivel0'),
+        1: document.getElementById('drillNivel1'),
+        2: document.getElementById('drillNivel2'),
+        3: document.getElementById('drillNivel3'),
+      };
+
+      function mostrarVista(nivel) {
+        nivelActual = nivel;
+        Object.keys(vistas).forEach(k => {
+          const el = vistas[k];
+          if (parseInt(k) === nivel) {
+            el.classList.remove('d-none');
+            el.classList.add('d-flex');
+          } else {
+            el.classList.add('d-none');
+            el.classList.remove('d-flex');
+          }
+        });
+        headerEl.classList.toggle('d-none', nivel === 0);
+      }
+
+      function abrirNivel1(tipoSegmento) {
+        segmentoActual = tipoSegmento;
+        const lista = drillData[tipoSegmento] || [];
+        const tituloSegmento = tipoSegmento === 'match' ? 'Tus Matches' : 'Perfiles Descartados';
+
+        breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> Resumen ➔ ${tituloSegmento}`;
+        document.getElementById('tituloNivel1').textContent =
+          tipoSegmento === 'match'
+            ? `Personas con las que hiciste Match (${lista.length})`
+            : `Personas sin Match reciente (${lista.length})`;
+
+        const tbody = document.getElementById('tbodyNivel1');
+        tbody.innerHTML = '';
+
+        if (lista.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Aún no hay personas en esta categoría.</td></tr>`;
+        } else {
+          lista.forEach((item) => {
+            const promedioAfinidad = item.pilares_data && item.pilares_data.length
+              ? Math.round(item.pilares_data.reduce((a, b) => a + b, 0) / item.pilares_data.length)
+              : 88;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>
+                <strong class="text-dark d-block">${item.nombre}, ${item.edad}</strong>
+                <small class="text-muted">${item.orientacion}</small>
+              </td>
+              <td>
+                <span>${item.ocupacion}</span><br>
+                <small class="text-muted"><i class="bi bi-geo-alt text-danger"></i> ${item.nacionalidad}</small>
+              </td>
+              <td><span class="affinity-pill"><i class="bi bi-stars"></i> ${promedioAfinidad}%</span></td>
+              <td><small class="text-muted">${item.fechamatch}</small></td>
+            `;
+            tr.addEventListener('click', () => abrirNivel2(item));
+            tbody.appendChild(tr);
+          });
+        }
+        mostrarVista(1);
+      }
+
+      function abrirNivel2(persona) {
+        personaActual = persona;
+        const tituloSegmento = segmentoActual === 'match' ? 'Tus Matches' : 'Descartados';
+        const nombreCorto = persona.nombre.split(' ')[0];
+
+        breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> ${tituloSegmento} ➔ ${nombreCorto}`;
+        document.getElementById('tituloNivel2').textContent = `${persona.nombre}, ${persona.edad} (${persona.ocupacion})`;
+        document.getElementById('subtituloNivel2').textContent = `"${persona.biografia}"`;
+
+        mostrarVista(2);
+
+        const ctxSub = document.getElementById('graficoDrillPersona').getContext('2d');
+        if (subChartInstance) subChartInstance.destroy();
+
+        subChartInstance = new Chart(ctxSub, {
+          type: 'bar',
+          data: {
+            labels: persona.pilares_labels,
+            datasets: [{
+              label: 'Compatibilidad',
+              data: persona.pilares_data,
+              backgroundColor: ['#D62D5A', '#E87265', '#F3A69A', '#A63A32', '#652E38'],
+              borderRadius: 8,
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { beginAtZero: true, max: 100, ticks: { callback: (val) => val + '%' } } },
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw}% de compatibilidad (Toca para ver detalle)` } }
+            },
+            onClick: (evt, elements) => {
+              if (elements.length > 0) {
+                const idx = elements[0].index;
+                abrirNivel3(persona, 'gustos', persona.pilares_labels[idx]);
+              }
+            }
+          }
+        });
+      }
+
+      function abrirNivel3(persona, modo = 'gustos', filtroPilar = null) {
+        personaActual = persona;
+        const nombreCorto = persona.nombre.split(' ')[0];
+        const tabGustos = document.getElementById('tabDrillGustos');
+        const tabMensajes = document.getElementById('tabDrillMensajes');
+        const thead = document.getElementById('theadNivel3');
+        const tbody = document.getElementById('tbodyNivel3');
+
+        if (modo === 'gustos') {
+          tabGustos.classList.add('active');
+          tabMensajes.classList.remove('active');
+          breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> ${nombreCorto} ➔ Intereses`;
+          document.getElementById('tituloNivel3').textContent = filtroPilar
+            ? `Lo que piensa ${nombreCorto} sobre ${filtroPilar}`
+            : `Gustos y Disgustos de ${nombreCorto}`;
+
+          thead.innerHTML = `<tr><th>Preferencia</th><th>Pilar</th><th>Detalle</th><th>Intensidad</th></tr>`;
+          tbody.innerHTML = '';
+
+          const gustosFiltrados = filtroPilar ? persona.gustos.filter(g => g.categoria === filtroPilar) : persona.gustos;
+          const disgustosFiltrados = filtroPilar ? persona.disgustos.filter(d => d.categoria === filtroPilar) : persona.disgustos;
+
+          const combinados = [
+            ...gustosFiltrados.map(g => ({ ...g, etiqueta: '<span class="text-success fw-semibold"><i class="bi bi-heart-fill me-1"></i>Le encanta</span>' })),
+            ...disgustosFiltrados.map(d => ({ ...d, etiqueta: '<span class="text-danger fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Evita</span>' }))
+          ];
+
+          if (combinados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">No hay intereses específicos en este pilar. Toca "Intereses" para ver todos.</td></tr>`;
+          } else {
+            combinados.forEach(reg => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${reg.etiqueta}</td>
+                <td><small class="text-muted fw-semibold">${reg.categoria}</small></td>
+                <td>${reg.descripcion}</td>
+                <td><span class="affinity-pill">${reg.valor}%</span></td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+        } else {
+          tabMensajes.classList.add('active');
+          tabGustos.classList.remove('active');
+          breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> ${nombreCorto} ➔ Conversación`;
+          document.getElementById('tituloNivel3').textContent = `Historial de chat con ${nombreCorto}`;
+
+          thead.innerHTML = `<tr><th>Quién envió</th><th>Mensaje</th><th>Fecha</th></tr>`;
+          tbody.innerHTML = '';
+
+          if (!persona.mensajes || persona.mensajes.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Aún no han intercambiado mensajes en el chat.</td></tr>`;
+          } else {
+            persona.mensajes.forEach(m => {
+              const quien = m.direccion === 'Enviado' ? 'Tú' : nombreCorto;
+              const badgeClass = m.direccion === 'Enviado' ? 'bg-danger' : 'bg-secondary';
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td><span class="badge rounded-pill ${badgeClass}">${quien}</span></td>
+                <td>${m.contenido}</td>
+                <td><small class="text-muted">${m.fecha}</small></td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+        }
+        mostrarVista(3);
+      }
+
+      const canvasDona = document.getElementById('miGrafico');
+      if (canvasDona) {
+        canvasDona.addEventListener('click', (evt) => {
+          const chartDona = Chart.getChart(canvasDona);
+          if (!chartDona) return abrirNivel1('match');
+          const points = chartDona.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+          if (points.length > 0) {
+            abrirNivel1(points[0].index === 0 ? 'match' : 'no_match');
+          } else {
+            abrirNivel1('match');
+          }
+        });
+      }
+
+      btnBack.addEventListener('click', () => {
+        if (nivelActual === 3) abrirNivel2(personaActual);
+        else if (nivelActual === 2) abrirNivel1(segmentoActual);
+        else mostrarVista(0);
+      });
+      btnReset.addEventListener('click', () => mostrarVista(0));
+      document.getElementById('btnIrNivel3')?.addEventListener('click', () => {
+        if (personaActual) abrirNivel3(personaActual, 'gustos', null);
+      });
+      document.getElementById('tabDrillGustos')?.addEventListener('click', () => {
+        if (personaActual) abrirNivel3(personaActual, 'gustos', null);
+      });
+      document.getElementById('tabDrillMensajes')?.addEventListener('click', () => {
+        if (personaActual) abrirNivel3(personaActual, 'mensajes', null);
+      });
+    }
+
+    // =========================================================================
+    // MOTOR 2: DRILL-DOWN DEL RADAR DE AFINIDAD (POR SUBCATEGORÍAS)
+    // =========================================================================
+    const radarDataEl = document.getElementById('datos-radar');
+    if (radarDataEl) {
+      const radarData = JSON.parse(radarDataEl.textContent);
+      const drillRadar = radarData.drilldown || { gustos: {}, disgustos: {} };
+
+      let rNivel = 0;
+      let rModo = 'gustos'; // 'gustos' o 'disgustos'
+      let rPilarActual = 'Valores';
+      let rSubcatActual = null;
+      let chartRadarSubcat = null;
+
+      const rHeader = document.getElementById('radarDrillHeader');
+      const rBreadcrumb = document.getElementById('radarBreadcrumb');
+      const btnRadarBack = document.getElementById('btnRadarBack');
+      const btnRadarReset = document.getElementById('btnRadarReset');
+
+      const rVistas = {
+        0: document.getElementById('radarNivel0'),
+        1: document.getElementById('radarNivel1'),
+        2: document.getElementById('radarNivel2'),
+        3: document.getElementById('radarNivel3'),
+      };
+
+      function mostrarVistaRadar(nivel) {
+        rNivel = nivel;
+        Object.keys(rVistas).forEach(k => {
+          const el = rVistas[k];
+          if (parseInt(k) === nivel) {
+            el.classList.remove('d-none');
+            el.classList.add('d-flex');
+          } else {
+            el.classList.add('d-none');
+            el.classList.remove('d-flex');
+          }
+        });
+        rHeader.classList.toggle('d-none', nivel === 0);
+      }
+
+      // Sincronizamos cuando el usuario cambia entre Gustos y Disgustos
+      document.querySelectorAll('[data-tipo-radar]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          rModo = btn.dataset.tipoRadar || 'gustos';
+        });
+      });
+
+      // NIVEL 0 -> NIVEL 1: Gráfico de barras con las Subcategorías del Pilar elegido
+      function abrirRadarNivel1(pilarNombre) {
+        rPilarActual = pilarNombre;
+        const subcategorias = (drillRadar[rModo] && drillRadar[rModo][pilarNombre]) || [];
+        const etiquetaModo = rModo === 'gustos' ? 'Gustos' : 'Disgustos';
+
+        rBreadcrumb.innerHTML = `<i class="bi bi-compass text-danger"></i> ${etiquetaModo} ➔ ${pilarNombre}`;
+        document.getElementById('tituloRadarNivel1').textContent = `Subcategorías de ${pilarNombre} (${etiquetaModo})`;
+        document.getElementById('subtituloRadarNivel1').textContent =
+          rModo === 'gustos'
+            ? 'Toca una subcategoría para ver qué intereses y personas conectan contigo'
+            : 'Toca una subcategoría para ver qué límites comparten otros perfiles';
+
+        mostrarVistaRadar(1);
+
+        const ctxSub = document.getElementById('graficoRadarSubcat').getContext('2d');
+        if (chartRadarSubcat) chartRadarSubcat.destroy();
+
+        const labels = subcategorias.map(s => s.nombre);
+        const valores = subcategorias.map(s => s.porcentaje);
+        const colores = rModo === 'gustos'
+          ? ['#D62D5A', '#E87265', '#F3A69A']
+          : ['#4C2A36', '#7A4957', '#A67B88'];
+
+        chartRadarSubcat = new Chart(ctxSub, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: rModo === 'gustos' ? 'Afinidad promedio' : 'Nivel de rechazo',
+              data: valores,
+              backgroundColor: colores,
+              borderRadius: 10,
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                beginAtZero: true,
+                max: 100,
+                ticks: { callback: v => v + '%' }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => {
+                    const subObj = subcategorias[ctx.dataIndex];
+                    const nPersonas = subObj && subObj.personas ? subObj.personas.length : 0;
+                    return ` ${ctx.raw}% · ${nPersonas} personas afines (Toca para ver)`;
+                  }
+                }
+              }
+            },
+            onClick: (evt, elements) => {
+              if (elements.length > 0) {
+                const idx = elements[0].index;
+                if (subcategorias[idx]) {
+                  abrirRadarNivel2(subcategorias[idx]);
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // NIVEL 1 -> NIVEL 2: Temas de la Subcategoría y Personas que coinciden
+      function abrirRadarNivel2(subcatObj) {
+        rSubcatActual = subcatObj;
+        rBreadcrumb.innerHTML = `<i class="bi bi-compass text-danger"></i> ${rPilarActual} ➔ ${subcatObj.nombre}`;
+        document.getElementById('tituloRadarNivel2').textContent = `${subcatObj.nombre} (${rPilarActual})`;
+
+        const contenedorTemas = document.getElementById('tagsTemasSubcat');
+        contenedorTemas.innerHTML = '';
+        (subcatObj.temas || []).forEach(t => {
+          const span = document.createElement('span');
+          span.className = 'affinity-pill';
+          span.innerHTML = `<i class="bi ${rModo === 'gustos' ? 'bi-heart-fill' : 'bi-x-circle-fill'}"></i> ${t}`;
+          contenedorTemas.appendChild(span);
+        });
+
+        const tbody = document.getElementById('tbodyRadarNivel2');
+        tbody.innerHTML = '';
+        const personas = subcatObj.personas || [];
+
+        if (personas.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Aún no hay perfiles registrados en esta subcategoría.</td></tr>`;
+        } else {
+          personas.forEach(p => {
+            const tr = document.createElement('tr');
+            const badgeEstado = p.estado_match === 'Match Activo'
+              ? '<span class="badge rounded-pill bg-danger">Match Activo</span>'
+              : '<span class="badge rounded-pill bg-secondary">Por Conectar</span>';
+
+            tr.innerHTML = `
+              <td>
+                <strong class="text-dark d-block">${p.nombre}, ${p.edad}</strong>
+                <small class="text-muted">${p.ocupacion} · ${p.nacionalidad}</small>
+              </td>
+              <td><small>${p.interes_destacado}</small></td>
+              <td>${badgeEstado}</td>
+              <td><span class="affinity-pill"><i class="bi bi-stars"></i> ${p.afinidad}%</span></td>
+            `;
+            tr.addEventListener('click', () => abrirRadarNivel3(p));
+            tbody.appendChild(tr);
+          });
+        }
+
+        mostrarVistaRadar(2);
+      }
+
+      // NIVEL 2 -> NIVEL 3: Ficha de Sintonía de la persona seleccionada y enlace al chat
+      function abrirRadarNivel3(persona) {
+        const nombreCorto = persona.nombre.split(' ')[0];
+        rBreadcrumb.innerHTML = `<i class="bi bi-compass text-danger"></i> ${rSubcatActual.nombre} ➔ ${nombreCorto}`;
+        document.getElementById('tituloRadarNivel3').textContent = `${persona.nombre}, ${persona.edad} (${persona.ocupacion})`;
+        document.getElementById('bioRadarNivel3').textContent = `"${persona.biografia}"`;
+        document.getElementById('btnRadarIrChat').href = `/usuario/mensajes/?chat=${persona.rut}`;
+
+        const tbody = document.getElementById('tbodyRadarNivel3');
+        tbody.innerHTML = '';
+
+        (persona.gustos || []).forEach(g => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="text-success fw-semibold"><i class="bi bi-heart-fill me-1"></i>Le gusta</span></td>
+            <td><small class="text-muted fw-semibold">${g.categoria}</small></td>
+            <td>${g.descripcion} <span class="affinity-pill ms-1">${g.valor}%</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        (persona.disgustos || []).forEach(d => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="text-danger fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Evita</span></td>
+            <td><small class="text-muted fw-semibold">${d.categoria}</small></td>
+            <td>${d.descripcion}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        (persona.mensajes || []).forEach(m => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="badge bg-danger rounded-pill">Chat</span></td>
+            <td><small class="text-muted">${m.fecha}</small></td>
+            <td><em>"${m.contenido}"</em></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        mostrarVistaRadar(3);
+      }
+
+      // Clic sobre los puntos del pentágono (#graficoRadar)
+      const canvasRadar = document.getElementById('graficoRadar');
+      if (canvasRadar) {
+        canvasRadar.addEventListener('click', (evt) => {
+          const chartRadar = Chart.getChart(canvasRadar);
+          if (!chartRadar) return;
+          const points = chartRadar.getElementsAtEventForMode(evt, 'nearest', { intersect: false }, true);
+          if (points.length > 0) {
+            const idx = points[0].index;
+            const pilarElegido = (radarData.categorias && radarData.categorias[idx]) || 'Valores';
+            abrirRadarNivel1(pilarElegido);
+          }
+        });
+      }
+
+      // Clic sobre los botones rápidos de cada pilar debajo del radar
+      document.querySelectorAll('[data-pilar-jump]').forEach(chip => {
+        chip.addEventListener('click', () => {
+          abrirRadarNivel1(chip.dataset.pilarJump);
+        });
+      });
+
+      // Botones Atrás y Radar Original
+      btnRadarBack.addEventListener('click', () => {
+        if (rNivel === 3 && rSubcatActual) abrirRadarNivel2(rSubcatActual);
+        else if (rNivel === 2) abrirRadarNivel1(rPilarActual);
+        else mostrarVistaRadar(0);
+      });
+
+      btnRadarReset.addEventListener('click', () => mostrarVistaRadar(0));
+    }
+  });
+  </script>
 </body>
 </html>

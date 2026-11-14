@@ -14,7 +14,7 @@
             color: #4a4a4a;
         }
         .edit-container {
-            max-width: 700px;
+            max-width: 760px;
             margin: 0 auto;
             padding: 2.5rem 1.5rem 4rem;
         }
@@ -45,6 +45,93 @@
             border-color: #E87265;
             box-shadow: 0 0 0 4px rgba(232, 114, 101, 0.15);
         }
+        /* Etiquetas de intereses editables */
+        .interest-tag {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            color: #5c5c5c;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .interest-tag .btn-remove-tag {
+            border: none;
+            background: #FDECE7;
+            color: #E87265;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 0;
+            transition: all 0.15s ease;
+        }
+        .interest-tag .btn-remove-tag:hover {
+            background: #E87265;
+            color: #fff;
+        }
+        /* Galería editable */
+        .edit-photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 14px;
+        }
+        .edit-photo-slot {
+            height: 140px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid #F3CFC4;
+            background-color: #FAF4F0;
+            position: relative;
+        }
+        .edit-photo-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .btn-delete-photo {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(232, 114, 101, 0.92);
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .upload-slot-label {
+            height: 140px;
+            border-radius: 16px;
+            border: 2px dashed #E3B9AE;
+            background-color: #FAF4F0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #c29b90;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .upload-slot-label:hover {
+            border-color: #E87265;
+            color: #E87265;
+            background-color: #FDECE7;
+        }
         .btn-save-changes {
             background-color: #E87265;
             color: #ffffff;
@@ -59,7 +146,6 @@
         .btn-save-changes:hover {
             background-color: #d85b53;
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(232, 114, 101, 0.4);
         }
         .btn-cancel {
             background-color: #FAF6F2;
@@ -72,10 +158,6 @@
             text-decoration: none;
             transition: all 0.2s ease;
         }
-        .btn-cancel:hover {
-            background-color: #f3e8e2;
-            color: #4a4a4a;
-        }
     </style>
 </head>
 <body class="p-0">
@@ -87,52 +169,116 @@
             
             <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
                 <div>
-                    <span class="badge bg-light text-danger border px-3 py-1 rounded-pill mb-1" style="font-size: 0.72rem;">CONFIGURACIÓN</span>
+                    <span class="badge bg-light text-danger border px-3 py-1 rounded-pill mb-1" style="font-size: 0.72rem;">CONFIGURACIÓN COMPLETA</span>
                     <h1 class="h4 fw-bold text-dark mb-0">Editar tu Perfil</h1>
                 </div>
-                <a href="javascript:history.back()" class="text-muted small text-decoration-none">
+                <a href="{% url 'perfilU' %}" class="text-muted small text-decoration-none" title="Volver al perfil">
                     <i class="bi bi-x-lg fs-5"></i>
                 </a>
             </div>
 
-            <!-- Formulario conectado a AWS RDS por POST -->
-            <form method="POST">
+            <!-- Importante: enctype="multipart/form-data" para permitir subir fotos -->
+            <form method="POST" action="{% url 'editar_perfilU' %}" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <div class="mb-3">
-                    <label class="form-label">Nombre</label>
-                    <input type="text" name="nombre" class="form-control" value="{{ usuario.nombre }}" required>
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" class="form-control" value="{{ usuario.nombre|default:'Javier' }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Edad</label>
+                        <input type="number" name="edad" class="form-control" min="18" max="99" value="{{ edad|default:21 }}" required>
+                    </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Biografía</label>
-                    <textarea name="biografia" class="form-control" rows="3" placeholder="Cuéntanos un poco sobre ti...">{{ cliente.biografia }}</textarea>
-                    <small class="text-muted" style="font-size: 0.75rem;">Máximo 200 caracteres alineados con tus valores y pasiones.</small>
+                    <textarea name="biografia" class="form-control" rows="3" maxlength="200" placeholder="Cuéntanos un poco sobre ti...">{{ cliente.biografia }}</textarea>
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Ocupación / Profesión</label>
                         <input type="text" name="ocupacionlaboral" class="form-control" value="{{ cliente.ocupacionlaboral }}">
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Nacionalidad</label>
                         <input type="text" name="nacionalidad" class="form-control" value="{{ cliente.nacionalidad }}">
                     </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Orientación Sexual</label>
+                        <select name="orientacionsexual" class="form-select">
+                            <option value="Heterosexual" {% if cliente.orientacionsexual == 'Heterosexual' %}selected{% endif %}>Heterosexual</option>
+                            <option value="Bisexual" {% if cliente.orientacionsexual == 'Bisexual' %}selected{% endif %}>Bisexual</option>
+                            <option value="Homosexual" {% if cliente.orientacionsexual == 'Homosexual' %}selected{% endif %}>Homosexual</option>
+                            <option value="Otro" {% if cliente.orientacionsexual == 'Otro' %}selected{% endif %}>Otro</option>
+                        </select>
+                    </div>
                 </div>
 
+                <hr class="my-4" style="border-color: #F3CFC4;">
+
+                <!-- SECCIÓN EDITABLE: MIS INTERESES Y PASIONES -->
                 <div class="mb-4">
-                    <label class="form-label">Orientación Sexual</label>
-                    <select name="orientacionsexual" class="form-select">
-                        <option value="Heterosexual" {% if cliente.orientacionsexual == 'Heterosexual' %}selected{% endif %}>Heterosexual</option>
-                        <option value="Bisexual" {% if cliente.orientacionsexual == 'Bisexual' %}selected{% endif %}>Bisexual</option>
-                        <option value="Homosexual" {% if cliente.orientacionsexual == 'Homosexual' %}selected{% endif %}>Homosexual</option>
-                        <option value="Otro" {% if cliente.orientacionsexual == 'Otro' %}selected{% endif %}>Otro</option>
-                    </select>
+                    <label class="form-label d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-controller text-danger"></i> Mis intereses y pasiones
+                    </label>
+                    
+                    <div id="contenedorTags" class="d-flex flex-wrap gap-2 mb-3">
+                        {% for g in gustos %}
+                        <span class="interest-tag">
+                            <i class="bi bi-stars text-danger"></i> {{ g.descripcion }}
+                            <input type="hidden" name="intereses_lista" value="{{ g.descripcion }}">
+                            <button type="button" class="btn-remove-tag" onclick="this.parentElement.remove()" title="Quitar">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <input type="text" id="inputNuevoInteres" class="form-control" placeholder="Escribe un nuevo interés o pasión (ej. Escalar, Patinar, Música rock)...">
+                        <button type="button" id="btnAgregarInteres" class="btn btn-outline-danger rounded-pill px-4 fw-semibold" style="white-space: nowrap;">
+                            <i class="bi bi-plus-lg"></i> Añadir
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="my-4" style="border-color: #F3CFC4;">
+
+                <!-- SECCIÓN EDITABLE: MIS FOTOS (HASTA 6) -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-images text-danger"></i> Mis Fotos (Máximo 6)
+                        </label>
+                        <span class="text-muted small">Haz clic en el recuadro punteado para subir desde tu PC</span>
+                    </div>
+
+                    <div class="edit-photo-grid" id="gridFotos">
+                        {% for foto_url in fotos %}
+                        <div class="edit-photo-slot shadow-sm">
+                            <img src="{{ foto_url }}" alt="Foto de perfil">
+                            <input type="hidden" name="fotos_actuales" value="{{ foto_url }}">
+                            <button type="button" class="btn-delete-photo" onclick="this.parentElement.remove()" title="Eliminar foto">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+
+                        <!-- Botón para subir fotos nuevas -->
+                        <label class="upload-slot-label" for="inputSubirFotos">
+                            <i class="bi bi-cloud-arrow-up fs-3 mb-1"></i>
+                            <span style="font-size: 0.75rem; font-weight: 600;">Subir foto</span>
+                        </label>
+                        <input type="file" id="inputSubirFotos" name="nuevas_fotos" accept="image/*" multiple class="d-none">
+                    </div>
+                    <div id="avisoFotosNuevas" class="text-success small fw-semibold mt-2 d-none"></div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-3 pt-3 border-top">
-                    <a href="javascript:history.back()" class="btn-cancel">Cancelar</a>
+                    <a href="{% url 'perfilU' %}" class="btn-cancel">Cancelar</a>
                     <button type="submit" class="btn-save-changes">
                         <i class="bi bi-check2 me-1"></i> Guardar en AWS RDS
                     </button>
@@ -142,6 +288,47 @@
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Lógica para añadir intereses dinámicamente sin recargar
+        const inputInteres = document.getElementById('inputNuevoInteres');
+        const btnAgregar = document.getElementById('btnAgregarInteres');
+        const contenedorTags = document.getElementById('contenedorTags');
+
+        function agregarTag() {
+            const valor = inputInteres.value.trim();
+            if (!valor) return;
+
+            const span = document.createElement('span');
+            span.className = 'interest-tag';
+            span.innerHTML = `
+                <i class="bi bi-stars text-danger"></i> ${valor}
+                <input type="hidden" name="intereses_lista" value="${valor}">
+                <button type="button" class="btn-remove-tag" onclick="this.parentElement.remove()" title="Quitar">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+            contenedorTags.appendChild(span);
+            inputInteres.value = '';
+            inputInteres.focus();
+        }
+
+        btnAgregar.addEventListener('click', agregarTag);
+        inputInteres.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                agregarTag();
+            }
+        });
+
+        // Previsualización inmediata al seleccionar fotos desde el computador
+        const inputFotos = document.getElementById('inputSubirFotos');
+        const avisoFotos = document.getElementById('avisoFotosNuevas');
+        inputFotos.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                avisoFotos.textContent = `✓ ${this.files.length} foto(s) lista(s) para guardarse al presionar "Guardar en AWS RDS".`;
+                avisoFotos.classList.remove('d-none');
+            }
+        });
+    </script>
 </body>
 </html>

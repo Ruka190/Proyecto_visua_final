@@ -1,4 +1,5 @@
 from datetime import date
+import base64
 from django.core.cache import cache
 from django.shortcuts import render, redirect
 from django.db.models import Count, Sum, Avg, Q
@@ -309,90 +310,155 @@ def notificacionesU(request):
 # =========================================================================
 # 5. EDITAR PERFIL USUARIO: Actualización en AWS RDS (Tablas USUARIO y CLIENTE)
 # =========================================================================
+
 def editar_perfilU(request):
-    usuario_principal = Usuario.objects.filter(nombre='Javier').first() or Usuario.objects.first()
-    cliente_principal = Cliente.objects.filter(usuario_rut=usuario_principal).first() if usuario_principal else None
+    hoy = date.today()
+    cliente_principal = Cliente.objects.select_related('usuario_rut').filter(idcliente='CLI-001').first()
+    if not cliente_principal:
+        cliente_principal = Cliente.objects.select_related('usuario_rut').first()
+    usuario_principal = cliente_principal.usuario_rut if cliente_principal else Usuario.objects.first()
+    rut_actual = usuario_principal.rut if usuario_principal else ''
+
+    # Calculamos la edad actual para mostrarla en el input
+    edad_actual = 21
+    if cliente_principal and cliente_principal.fechanacimiento:
+        fn = cliente_principal.fechanacimiento
+        edad_actual = hoy.year - fn.year - ((hoy.month, hoy.day) < (fn.month, fn.day))
+
+    fotos_guardadas = cache.get(f'fotos_galeria_{rut_actual}')
+    if fotos_guardadas is None:
+        fotos_guardadas = ['/static/usuario/img/javier.jpg']
 
     if request.method == 'POST':
-        # Capturamos los datos enviados por el formulario
+        # 1. Actualizar datos básicos en USUARIO y CLIENTE (AWS RDS)
         nuevo_nombre = request.POST.get('nombre', '').strip()
+        nueva_edad = request.POST.get('edad', '').strip()
         nueva_bio = request.POST.get('biografia', '').strip()
         nueva_ocupacion = request.POST.get('ocupacionlaboral', '').strip()
         nueva_nacionalidad = request.POST.get('nacionalidad', '').strip()
         nueva_orientacion = request.POST.get('orientacionsexual', '').strip()
 
-        # Actualizamos la tabla USUARIO si hay cambios
         if usuario_principal and nuevo_nombre:
             usuario_principal.nombre = nuevo_nombre
             usuario_principal.save()
 
-        # Actualizamos la tabla CLIENTE en AWS RDS
         if cliente_principal:
-            cliente_principal.biografia = nueva_bio
+            cliente_principal.biografia = nueva_bio[:200]
             cliente_principal.ocupacionlaboral = nueva_ocupacion
             cliente_principal.nacionalidad = nueva_nacionalidad
             cliente_principal.orientacionsexual = nueva_orientacion
+
+            # Si ingresó una edad válida, actualizamos fechanacimiento en AWS RDS
+            if nueva_edad.isdigit():
+                edad_int = max(18, min(99, int(nueva_edad)))
+                cliente_principal.fechanacimiento = date(hoy.year - edad_int, 1, 1)
+
             cliente_principal.save()
 
-        # Limpiamos la caché de contactos para que refleje el cambio de nombre de inmediato
-        cache.delete(f'contactos_usuario_{usuario_principal.rut if usuario_principal else ""}')
+        # 2. Actualizar Intereses y Pasiones en tabla GUSTO (AWS RDS)
+        intereses_finales = request.POST.getlist('intereses_lista')
+        if rut_actual:
+            Gusto.objects.filter(rut=rut_actual).exclude(descripcion__in=intereses_finales).delete()
+            existentes = set(Gusto.objects.filter(rut=rut_actual).values_list('descripcion', flat=True))
+            
+            for idx, desc in enumerate(intereses_finales):
+                desc_limpia = desc.strip()
+                if desc_limpia and desc_limpia not in existentes:
+                    nuevo_id = f"GUS-{rut_actual[:4]}-{Gusto.objects.count() + idx + 100}"[:20]
+                    Gusto.objects.create(
+                        pk=nuevo_id,
+                        categoria='Hobbies',
+                        valor='90',
+                        descripcion=desc_limpia[:100],
+                        rut=rut_actual
+                    )
 
-        # Redirigimos de vuelta al perfil con un mensaje de éxito
-        return redirect('/usuario/perfil/') # O la ruta exacta que utilices para el perfil
+        # 3. Actualizar Galería de Fotos
+        fotos_conservadas = request.POST.getlist('fotos_actuales')
+        archivos_nuevos = request.FILES.getlist('nuevas_fotos')
+
+        for archivo in archivos_nuevos:
+            if len(fotos_conservadas) < 6:
+                encoded = base64.b64encode(archivo.read()).decode('utf-8')
+                mime = archivo.content_type or 'image/jpeg'
+                fotos_conservadas.append(f"data:{mime};base64,{encoded}")
+
+        if not fotos_conservadas:
+            fotos_conservadas = ['/static/usuario/img/javier.jpg']
+
+        cache.set(f'fotos_galeria_{rut_actual}', fotos_conservadas[:6], 86400)
+        cache.delete(f'contactos_usuario_{rut_actual}')
+        return redirect('perfilU')
+
+    gustos_usr = Gusto.objects.filter(rut=rut_actual) if rut_actual else []
 
     context = {
         'usuario': usuario_principal,
         'cliente': cliente_principal,
+        'edad': edad_actual,
+        'gustos': gustos_usr,
+        'fotos': fotos_guardadas,
     }
     return render(request, 'usuario/editar_perfilU.html', context)
 
 def perfilU(request):
-    # Datos simulados (mock) para diseñar el frontend sin base de datos
-    perfil = {
-        'nombre': 'Javier',
-        'edad': 21,
-        'bio': 'Me considero un artista, chistoso, explorador y sobre todo abierto a nuevas experiencias...',
-        'genero': 'Hombre',
-        'ocupacion': 'Estudiante',
-        'nacionalidad': 'Chile',
-        'orientacion_sexual': 'Heterosexual',
-        'religion': 'Agnóstico',
-        'intereses': [
-            {'nombre': 'Escalar'},
-            {'nombre': 'Dibujar'},
-            {'nombre': 'Explorar'},
-            {'nombre': 'Dormir'},
-        ],
-        'fotos': ['usuario/img/javier2.jpg'],
-    }
+    hoy = date.today()
+    cliente_principal = Cliente.objects.select_related('usuario_rut').filter(idcliente='CLI-001').first()
+    if not cliente_principal:
+        cliente_principal = Cliente.objects.select_related('usuario_rut').first()
 
-    total_fotos = len(perfil['fotos'])
-    slots_disponibles = max(0, 6 - total_fotos)
+    usuario_principal = cliente_principal.usuario_rut if cliente_principal else Usuario.objects.first()
+    rut_actual = usuario_principal.rut if usuario_principal else ''
+
+    edad = 21
+    if cliente_principal and cliente_principal.fechanacimiento:
+        fn = cliente_principal.fechanacimiento
+        edad = hoy.year - fn.year - ((hoy.month, hoy.day) < (fn.month, fn.day))
+
+    # Traemos todos los intereses reales del usuario desde la tabla GUSTO en AWS RDS
+    gustos_usr = Gusto.objects.filter(rut=rut_actual) if rut_actual else []
+
+    # Obtenemos la galería de fotos (hasta 6) guardada para este usuario
+    fotos_guardadas = cache.get(f'fotos_galeria_{rut_actual}')
+    if fotos_guardadas is None:
+        fotos_guardadas = ['/static/usuario/img/javier.jpg']
+        cache.set(f'fotos_galeria_{rut_actual}', fotos_guardadas, 86400)
+
+    slots_vacios = range(max(0, 6 - len(fotos_guardadas)))
 
     context = {
-        'perfil': perfil,
-        'slots_restantes': range(slots_disponibles),
+        'usuario': usuario_principal,
+        'cliente': cliente_principal,
+        'edad': edad,
+        'gustos': gustos_usr,
+        'fotos': fotos_guardadas,
+        'total_fotos': len(fotos_guardadas),
+        'slots_vacios': slots_vacios,
     }
     return render(request, 'usuario/perfilU.html', context)
 
 def graficosU(request):
     """
-    [CONEXIÓN A BASE DE DATOS - AWS RDS]
-    Consulta en tiempo real las tablas MATCH, CLIENTE, GUSTO y DISGUSTO
-    para alimentar todos los gráficos de estadísticas del usuario.
+    [CONEXIÓN A BASE DE DATOS - AWS RDS + DRILL-DOWN EN DONA Y RADAR]
+    Consulta las tablas MATCH, USUARIO, CLIENTE, GUSTO, DISGUSTO y MENSAJE
+    para alimentar los gráficos y la navegación multinivel amigable.
     """
+    hoy = date.today()
     perfil_mock = {
         'nombre': 'Javier',
-        'edad': 24,
+        'edad': 21,
     }
 
+    cached_context = cache.get('graficosU_full_context_v2')
+    if cached_context:
+        return render(request, 'usuario/graficosU.html', cached_context)
+
     # =========================================================================
-    # 1. BALANCE DE MATCHES (Tabla MATCH en AWS RDS)
+    # 1. BALANCE DE MATCHES + ÁRBOL DRILL-DOWN DE DONA
     # =========================================================================
     total_matches = Match.objects.count()
     matches_reales = Match.objects.filter(estado=1).count()
     no_matches_reales = Match.objects.filter(estado=0).count()
-
     porcentaje_matches = round((matches_reales / total_matches) * 100, 1) if total_matches > 0 else 0.0
 
     chart_payload = {
@@ -401,10 +467,99 @@ def graficosU(request):
         'porcentaje': porcentaje_matches,
     }
 
+    usuarios_dict = {u.rut: u for u in Usuario.objects.all()}
+    clientes_dict = {c.usuario_rut.rut: c for c in Cliente.objects.select_related('usuario_rut').all()}
+
+    gustos_all = list(Gusto.objects.all())
+    disgustos_all = list(Disgusto.objects.all())
+    mensajes_all = list(Mensaje.objects.all().order_by('-fechaenvio', '-idmensaje')[:120])
+
+    gustos_por_rut = {}
+    for g in gustos_all:
+        gustos_por_rut.setdefault(g.rut, []).append({
+            'pk': str(g.pk),
+            'categoria': g.categoria or 'Hobbies',
+            'valor': int(g.valor) if str(g.valor).isdigit() else 85,
+            'descripcion': g.descripcion,
+        })
+
+    disgustos_por_rut = {}
+    for d in disgustos_all:
+        disgustos_por_rut.setdefault(d.rut, []).append({
+            'pk': str(d.pk),
+            'categoria': d.categoria or 'Valores',
+            'valor': int(d.valor) if str(d.valor).isdigit() else 40,
+            'descripcion': d.descripcion,
+        })
+
+    def construir_lista_drilldown(estado_filtro):
+        qs = Match.objects.filter(estado=estado_filtro).order_by('-fechamatch', '-idmatch')[:12]
+        lista = []
+        ruts_vistos = set()
+
+        for m in qs:
+            rut_persona = m.cliente2rut if m.cliente2rut != '18012345-1' else m.cliente1rut
+            if not rut_persona or rut_persona in ruts_vistos:
+                continue
+            ruts_vistos.add(rut_persona)
+
+            u_obj = usuarios_dict.get(rut_persona)
+            c_obj = clientes_dict.get(rut_persona)
+            if not u_obj:
+                continue
+
+            edad_p = 23
+            if c_obj and c_obj.fechanacimiento:
+                fn = c_obj.fechanacimiento
+                edad_p = hoy.year - fn.year - ((hoy.month, hoy.day) < (fn.month, fn.day))
+
+            gustos_p = gustos_por_rut.get(rut_persona, [])
+            disgustos_p = disgustos_por_rut.get(rut_persona, [])
+
+            pilares = ['Valores', 'Hobbies', 'Dinámica Social', 'Lenguaje del Amor', 'Metas & Futuro']
+            promedios_pilares = []
+            for p_nombre in pilares:
+                vals_p = [item['valor'] for item in gustos_p if item['categoria'] == p_nombre]
+                promedios_pilares.append(round(sum(vals_p) / len(vals_p)) if vals_p else 82)
+
+            msgs_persona = [
+                {
+                    'idmensaje': msg.idmensaje,
+                    'fecha': msg.fechaenvio.strftime('%d/%m/%Y') if msg.fechaenvio else 'Reciente',
+                    'contenido': msg.contenido,
+                    'direccion': 'Enviado' if msg.rut1 == '18012345-1' else 'Recibido',
+                }
+                for msg in mensajes_all
+                if msg.rut1 == rut_persona or msg.rut2 == rut_persona
+            ][:6]
+
+            lista.append({
+                'idmatch': m.idmatch,
+                'fechamatch': m.fechamatch.strftime('%d/%m/%Y') if m.fechamatch else 'Última semana',
+                'rut': rut_persona,
+                'idcliente': c_obj.idcliente if c_obj else 'CLI-N/A',
+                'nombre': f"{u_obj.nombre} {u_obj.apellidopaterno or ''}".strip(),
+                'edad': edad_p,
+                'ocupacion': c_obj.ocupacionlaboral if (c_obj and c_obj.ocupacionlaboral) else 'Profesional',
+                'nacionalidad': c_obj.nacionalidad if (c_obj and c_obj.nacionalidad) else 'Chilena',
+                'orientacion': c_obj.orientacionsexual if (c_obj and c_obj.orientacionsexual) else 'Heterosexual',
+                'biografia': c_obj.biografia if (c_obj and c_obj.biografia) else 'Sin biografía registrada.',
+                'pilares_labels': pilares,
+                'pilares_data': promedios_pilares,
+                'gustos': gustos_p[:8],
+                'disgustos': disgustos_p[:6],
+                'mensajes': msgs_persona,
+            })
+        return lista
+
+    drilldown_payload = {
+        'match': construir_lista_drilldown(1),
+        'no_match': construir_lista_drilldown(0),
+    }
+
     # =========================================================================
-    # 2. CARACTERÍSTICAS DE MATCHES (Cruzando MATCH exitosos con tabla CLIENTE)
+    # 2. CARACTERÍSTICAS DE MATCHES
     # =========================================================================
-    # Obtenemos los RUTs involucrados en matches exitosos (estado=1)
     matches_exitosos = Match.objects.filter(estado=1)
     ruts_con_match = set(matches_exitosos.values_list('cliente2rut', flat=True)) | set(matches_exitosos.values_list('cliente1rut', flat=True))
 
@@ -412,13 +567,10 @@ def graficosU(request):
     if not clientes_match_qs.exists():
         clientes_match_qs = Cliente.objects.all()
 
-    # A) Orientación Sexual desde AWS RDS
     orientacion_qs = clientes_match_qs.values('orientacionsexual').annotate(total=Count('idcliente')).order_by('-total')
     orientacion_labels = [item['orientacionsexual'] for item in orientacion_qs if item['orientacionsexual']]
     orientacion_data = [item['total'] for item in orientacion_qs if item['orientacionsexual']]
 
-    # B) Rango de Edad calculado desde Cliente.fechanacimiento
-    hoy = date.today()
     rangos_edad = {'18-21 años': 0, '22-25 años': 0, '26-29 años': 0, '30+ años': 0}
     for cli in clientes_match_qs:
         if cli.fechanacimiento:
@@ -432,12 +584,10 @@ def graficosU(request):
             else:
                 rangos_edad['30+ años'] += 1
 
-    # C) Área Profesional desde Cliente.ocupacionlaboral
     profesion_qs = clientes_match_qs.values('ocupacionlaboral').annotate(total=Count('idcliente')).order_by('-total')
     profesion_labels = [item['ocupacionlaboral'] for item in profesion_qs if item['ocupacionlaboral']]
     profesion_data = [item['total'] for item in profesion_qs if item['ocupacionlaboral']]
 
-    # D) Nacionalidad desde Cliente.nacionalidad
     nacionalidad_qs = clientes_match_qs.values('nacionalidad').annotate(total=Count('idcliente')).order_by('-total')
     nacionalidad_labels = [item['nacionalidad'] for item in nacionalidad_qs if item['nacionalidad']]
     nacionalidad_data = [item['total'] for item in nacionalidad_qs if item['nacionalidad']]
@@ -471,7 +621,7 @@ def graficosU(request):
     }
 
     # =========================================================================
-    # 3. RADAR DE AFINIDAD (Consultando tablas GUSTO y DISGUSTO en AWS RDS)
+    # 3. RADAR DE AFINIDAD + DRILL-DOWN POR SUBCATEGORÍAS
     # =========================================================================
     categorias_radar = [
         'Valores',
@@ -481,37 +631,187 @@ def graficosU(request):
         'Metas & Futuro'
     ]
 
+    mapa_subcategorias = {
+        'Valores': [
+            ('Ética y Confianza', ['honestidad', 'transparencia', 'lealtad', 'compromiso', 'sinceridad', 'verdad']),
+            ('Vínculo Emocional', ['empatía', 'empatia', 'comunicación', 'comunicacion', 'asertiva', 'escucha', 'apoyo']),
+            ('Respeto y Libertad', ['respeto', 'tolerancia', 'autonomía', 'igualdad', 'humildad', 'justicia']),
+        ],
+        'Hobbies': [
+            ('Arte y Creatividad', ['fotografía', 'fotografia', 'dibujar', 'ilustrar', 'pintar', 'arte', 'música', 'musica', 'diseño']),
+            ('Deporte y Aventura', ['escalar', 'boulder', 'deporte', 'correr', 'trekking', 'patinar', 'skate', 'naturaleza', 'bici']),
+            ('Cultura y Entretenimiento', ['leer', 'ciencia ficción', 'cine', 'series', 'videojuegos', 'cocinar', 'libros']),
+        ],
+        'Dinámica Social': [
+            ('Planes Tranquilos', ['café', 'cafe', 'sobremesa', 'casa', 'íntimas', 'intimas', 'tranquila', 'conversar']),
+            ('Vida al Aire Libre', ['aire libre', 'parque', 'paseo', 'escapada', 'playa', 'montaña', 'picnic']),
+            ('Eventos y Vida Social', ['conciertos', 'eventos', 'amigos', 'fiesta', 'bares', 'reuniones', 'salir']),
+        ],
+        'Lenguaje del Amor': [
+            ('Presencia y Atención', ['tiempo de calidad', 'presencia', 'juntos', 'atención', 'momento', 'escuchar']),
+            ('Expresión y Afecto', ['palabras', 'afirmación', 'contacto', 'físico', 'abrazos', 'cariño', 'afecto']),
+            ('Detalles y Gestos', ['detalles', 'significativos', 'actos', 'servicio', 'regalos', 'sorpresas', 'cuidar']),
+        ],
+        'Metas & Futuro': [
+            ('Desarrollo y Estabilidad', ['profesional', 'crecimiento', 'financiera', 'estabilidad', 'independencia', 'carrera', 'estudio']),
+            ('Proyecto de Pareja', ['relación', 'estable', 'pareja', 'familia', 'hogar', 'futuro', 'compartir']),
+            ('Estilo de Vida y Viajes', ['viajar', 'mundo', 'conocer', 'aventuras', 'mudarse', 'experiencias', 'mascotas']),
+        ],
+    }
+
+    def clasificar_en_subcategoria(pilar, descripcion_texto):
+        reglas = mapa_subcategorias.get(pilar, [])
+        desc_low = (descripcion_texto or '').lower()
+        for nombre_sub, keywords in reglas:
+            if any(k in desc_low for k in keywords):
+                return nombre_sub
+        # Si no coincide con una palabra clave específica, se asigna de forma balanceada a una subcategoría del pilar
+        if reglas:
+            idx = sum(ord(c) for c in desc_low) % len(reglas)
+            return reglas[idx][0]
+        return 'General'
+
+    def construir_ficha_persona_radar(rut_p, pilar_actual, desc_coincidente):
+        u_obj = usuarios_dict.get(rut_p)
+        c_obj = clientes_dict.get(rut_p)
+        if not u_obj:
+            return None
+        edad_p = 24
+        if c_obj and c_obj.fechanacimiento:
+            fn = c_obj.fechanacimiento
+            edad_p = hoy.year - fn.year - ((hoy.month, hoy.day) < (fn.month, fn.day))
+
+        tiene_match = rut_p in ruts_con_match
+        gustos_p = gustos_por_rut.get(rut_p, [])
+        disgustos_p = disgustos_por_rut.get(rut_p, [])
+        msgs_p = [
+            {
+                'fecha': msg.fechaenvio.strftime('%d/%m/%Y') if msg.fechaenvio else 'Reciente',
+                'contenido': msg.contenido,
+                'direccion': 'Enviado' if msg.rut1 == '18012345-1' else 'Recibido',
+            }
+            for msg in mensajes_all
+            if msg.rut1 == rut_p or msg.rut2 == rut_p
+        ][:4]
+
+        vals_p = [g['valor'] for g in gustos_p if g['categoria'] == pilar_actual]
+        afinidad_pilar = round(sum(vals_p) / len(vals_p)) if vals_p else 88
+
+        return {
+            'rut': rut_p,
+            'nombre': f"{u_obj.nombre} {u_obj.apellidopaterno or ''}".strip(),
+            'edad': edad_p,
+            'ocupacion': c_obj.ocupacionlaboral if (c_obj and c_obj.ocupacionlaboral) else 'Profesional',
+            'nacionalidad': c_obj.nacionalidad if (c_obj and c_obj.nacionalidad) else 'Chilena',
+            'biografia': c_obj.biografia if (c_obj and c_obj.biografia) else 'Le encanta conectar a través de intereses reales.',
+            'estado_match': 'Match Activo' if tiene_match else 'Por Conectar',
+            'afinidad': afinidad_pilar,
+            'interes_destacado': desc_coincidente,
+            'gustos': gustos_p[:6],
+            'disgustos': disgustos_p[:4],
+            'mensajes': msgs_p,
+        }
+
     gustos_data_db = []
     disgustos_data_db = []
     detalles_gustos_db = {}
     detalles_disgustos_db = {}
+    radar_drilldown = {'gustos': {}, 'disgustos': {}}
 
     for cat in categorias_radar:
-        # Extraer Gustos de esta categoría desde AWS RDS
-        gustos_cat = Gusto.objects.filter(categoria=cat)
+        # --- GUSTOS ---
+        gustos_cat = [g for g in gustos_all if g.categoria == cat]
         valores_num_g = [int(g.valor) for g in gustos_cat if str(g.valor).isdigit()]
         promedio_g = round(sum(valores_num_g) / len(valores_num_g)) if valores_num_g else 85
         gustos_data_db.append(promedio_g)
 
-        # Obtenemos hasta 5 descripciones distintas guardadas en la BD para el tooltip
-        desc_g = list(gustos_cat.values_list('descripcion', flat=True).distinct()[:5])
+        desc_g = list({g.descripcion for g in gustos_cat if g.descripcion})[:5]
         detalles_gustos_db[cat] = desc_g if desc_g else ['Sin registros']
 
-        # Extraer Disgustos de esta categoría desde AWS RDS
-        disgustos_cat = Disgusto.objects.filter(categoria=cat)
+        # Agrupar por subcategoría para Gustos
+        subcats_g = {nombre_sub: {'vals': [], 'temas': set(), 'personas': {}} for nombre_sub, _ in mapa_subcategorias.get(cat, [])}
+        for g in gustos_cat:
+            sub_name = clasificar_en_subcategoria(cat, g.descripcion)
+            if sub_name not in subcats_g:
+                subcats_g[sub_name] = {'vals': [], 'temas': set(), 'personas': {}}
+            val_int = int(g.valor) if str(g.valor).isdigit() else 85
+            subcats_g[sub_name]['vals'].append(val_int)
+            if g.descripcion:
+                subcats_g[sub_name]['temas'].add(g.descripcion)
+            if g.rut and g.rut != '18012345-1' and g.rut not in subcats_g[sub_name]['personas']:
+                ficha = construir_ficha_persona_radar(g.rut, cat, g.descripcion)
+                if ficha:
+                    subcats_g[sub_name]['personas'][g.rut] = ficha
+
+        lista_sub_g = []
+        for idx_s, (nombre_sub, info_s) in enumerate(subcats_g.items()):
+            prom_sub = round(sum(info_s['vals']) / len(info_s['vals'])) if info_s['vals'] else (88 - idx_s * 5)
+            temas_lista = list(info_s['temas'])[:6] or [f"Afinidad en {nombre_sub}"]
+            personas_lista = list(info_s['personas'].values())[:8]
+            # Si una subcategoría tiene pocas personas directas, completamos con perfiles afines del pilar
+            if not personas_lista:
+                for g_aux in gustos_cat[:4]:
+                    if g_aux.rut and g_aux.rut != '18012345-1':
+                        f_aux = construir_ficha_persona_radar(g_aux.rut, cat, temas_lista[0])
+                        if f_aux and f_aux not in personas_lista:
+                            personas_lista.append(f_aux)
+            lista_sub_g.append({
+                'nombre': nombre_sub,
+                'porcentaje': prom_sub,
+                'temas': temas_lista,
+                'personas': personas_lista,
+            })
+        radar_drilldown['gustos'][cat] = lista_sub_g
+
+        # --- DISGUSTOS ---
+        disgustos_cat = [d for d in disgustos_all if d.categoria == cat]
         valores_num_d = [int(d.valor) for d in disgustos_cat if str(d.valor).isdigit()]
-        promedio_d = round(sum(valores_num_d) / len(valores_num_d)) if valores_num_d else 30
+        promedio_d = round(sum(valores_num_d) / len(valores_num_d)) if valores_num_d else 35
         disgustos_data_db.append(promedio_d)
 
-        desc_d = list(disgustos_cat.values_list('descripcion', flat=True).distinct()[:5])
+        desc_d = list({d.descripcion for d in disgustos_cat if d.descripcion})[:5]
         detalles_disgustos_db[cat] = desc_d if desc_d else ['Sin registros']
+
+        subcats_d = {nombre_sub: {'vals': [], 'temas': set(), 'personas': {}} for nombre_sub, _ in mapa_subcategorias.get(cat, [])}
+        for d in disgustos_cat:
+            sub_name = clasificar_en_subcategoria(cat, d.descripcion)
+            if sub_name not in subcats_d:
+                subcats_d[sub_name] = {'vals': [], 'temas': set(), 'personas': {}}
+            val_int = int(d.valor) if str(d.valor).isdigit() else 45
+            subcats_d[sub_name]['vals'].append(val_int)
+            if d.descripcion:
+                subcats_d[sub_name]['temas'].add(d.descripcion)
+            if d.rut and d.rut != '18012345-1' and d.rut not in subcats_d[sub_name]['personas']:
+                ficha = construir_ficha_persona_radar(d.rut, cat, d.descripcion)
+                if ficha:
+                    subcats_d[sub_name]['personas'][d.rut] = ficha
+
+        lista_sub_d = []
+        for idx_s, (nombre_sub, info_s) in enumerate(subcats_d.items()):
+            prom_sub = round(sum(info_s['vals']) / len(info_s['vals'])) if info_s['vals'] else (42 - idx_s * 4)
+            temas_lista = list(info_s['temas'])[:6] or [f"Límites en {nombre_sub}"]
+            personas_lista = list(info_s['personas'].values())[:8]
+            if not personas_lista:
+                for d_aux in disgustos_cat[:4]:
+                    if d_aux.rut and d_aux.rut != '18012345-1':
+                        f_aux = construir_ficha_persona_radar(d_aux.rut, cat, temas_lista[0])
+                        if f_aux and f_aux not in personas_lista:
+                            personas_lista.append(f_aux)
+            lista_sub_d.append({
+                'nombre': nombre_sub,
+                'porcentaje': prom_sub,
+                'temas': temas_lista,
+                'personas': personas_lista,
+            })
+        radar_drilldown['disgustos'][cat] = lista_sub_d
 
     radar_afinidad_payload = {
         'categorias': categorias_radar,
         'gustos_data': gustos_data_db,
         'disgustos_data': disgustos_data_db,
         'detalles_gustos': detalles_gustos_db,
-        'detalles_disgustos': detalles_disgustos_db
+        'detalles_disgustos': detalles_disgustos_db,
+        'drilldown': radar_drilldown,
     }
 
     # =========================================================================
@@ -541,11 +841,13 @@ def graficosU(request):
     context = {
         'perfil': perfil_mock,
         'chart_payload': chart_payload,
+        'drilldown_payload': drilldown_payload,
         'tiempo_payload': tiempo_payload,
         'arquetipo_payload': arquetipo_payload,
         'radar_afinidad_payload': radar_afinidad_payload,
     }
 
+    cache.set('graficosU_full_context_v2', context, 3600)
     return render(request, 'usuario/graficosU.html', context)
 
 

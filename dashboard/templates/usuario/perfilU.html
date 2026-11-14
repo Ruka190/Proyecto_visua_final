@@ -29,7 +29,7 @@
             border-radius: 28px;
             padding: 40px;
             box-shadow: 0 10px 35px rgba(232, 114, 101, 0.06);
-            position: relative; /* Necesario para ubicar elementos absolutos si fuera necesario */
+            position: relative;
         }
 
         /* Avatar principal con marco coral */
@@ -154,13 +154,13 @@
                 </a>
             </div>
 
-            <!-- Cabecera del Perfil (Avatar y Nombre) -->
+            <!-- Cabecera del Perfil (Avatar y Nombre conectados a AWS RDS) -->
             <div class="text-center mb-5">
                 <div class="profile-avatar-wrapper">
-                    <img src="{% static 'usuario/img/javier.jpg' %}" alt="Javier" class="profile-avatar">
+                    <img src="{% static 'usuario/img/javier.jpg' %}" alt="{{ usuario.nombre|default:'Javier' }}" class="profile-avatar">
                 </div>
-                <h1 class="h3 fw-bold text-dark mb-1">Javier, 21</h1>
-                <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill text-danger"></i> Santiago, Chile</p>
+                <h1 class="h3 fw-bold text-dark mb-1">{{ usuario.nombre|default:"Javier" }}, {{ edad|default:"21" }}</h1>
+                <p class="text-muted small mb-3"><i class="bi bi-geo-alt-fill text-danger"></i> {{ cliente.nacionalidad|default:"Santiago, Chile" }}</p>
                 
                 <a href="{% url 'graficosU' %}" class="btn-stats">
                     <i class="bi bi-bar-chart-fill"></i> Ver mis Estadísticas y Gráficos
@@ -173,7 +173,7 @@
                     <i class="bi bi-person-heart text-danger"></i> Sobre mí
                 </h2>
                 <p class="mb-0 text-secondary fst-italic" style="line-height: 1.6;">
-                    "Me considero un artista, chistoso, explorador y sobre todo abierto a nuevas experiencias..."
+                    "{{ cliente.biografia|default:'Me considero un artista, chistoso, explorador y sobre todo abierto a nuevas experiencias...' }}"
                 </p>
             </div>
 
@@ -183,11 +183,10 @@
                     <i class="bi bi-info-circle text-danger"></i> Información básica
                 </h2>
                 <div class="d-flex flex-wrap gap-2">
-                    <span class="custom-badge"><i class="bi bi-gender-ambiguous text-danger"></i> Hombre</span>
-                    <span class="custom-badge"><i class="bi bi-book text-danger"></i> Estudiante</span>
-                    <span class="custom-badge"><i class="bi bi-flag text-danger"></i> Chile</span>
-                    <span class="custom-badge"><i class="bi bi-heart text-danger"></i> Heterosexual</span>
-                    <span class="custom-badge"><i class="bi bi-stars text-danger"></i> Agnóstico</span>
+                    <span class="custom-badge"><i class="bi bi-gender-ambiguous text-danger"></i> {{ cliente.sexo|default:"Hombre" }}</span>
+                    <span class="custom-badge"><i class="bi bi-book text-danger"></i> {{ cliente.ocupacionlaboral|default:"Estudiante" }}</span>
+                    <span class="custom-badge"><i class="bi bi-flag text-danger"></i> {{ cliente.nacionalidad|default:"Chile" }}</span>
+                    <span class="custom-badge"><i class="bi bi-heart text-danger"></i> {{ cliente.orientacionsexual|default:"Heterosexual" }}</span>
                 </div>
             </div>
 
@@ -197,33 +196,42 @@
                     <i class="bi bi-controller text-danger"></i> Mis intereses y pasiones
                 </h2>
                 <div class="d-flex flex-wrap gap-2">
-                    <span class="custom-badge"><i class="bi bi-mountain text-danger"></i> Escalar</span>
-                    <span class="custom-badge"><i class="bi bi-palette text-danger"></i> Dibujar</span>
-                    <span class="custom-badge"><i class="bi bi-compass text-danger"></i> Explorar</span>
-                    <span class="custom-badge"><i class="bi bi-moon-stars text-danger"></i> Dormir</span>
+                    {% if gustos %}
+                        {% for g in gustos %}
+                            <span class="custom-badge"><i class="bi bi-stars text-danger"></i> {{ g.descripcion }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="custom-badge"><i class="bi bi-mountain text-danger"></i> Escalar</span>
+                        <span class="custom-badge"><i class="bi bi-palette text-danger"></i> Dibujar</span>
+                        <span class="custom-badge"><i class="bi bi-compass text-danger"></i> Explorar</span>
+                        <span class="custom-badge"><i class="bi bi-moon-stars text-danger"></i> Dormir</span>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Sección: Mis Fotos (Galería 1/6) -->
+            <!-- Sección: Mis Fotos (Galería dinámica conectada) -->
             <div class="info-box mb-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="section-title mb-0">
-                        <i class="bi bi-images text-danger"></i> Mis Fotos (1/6)
+                        <i class="bi bi-images text-danger"></i> Mis Fotos ({{ total_fotos }}/6)
                     </h2>
-                    <span class="text-muted small">Arrastra o añade más fotos</span>
+                    <a href="{% url 'editar_perfilU' %}" class="text-muted small text-decoration-none">
+                        <i class="bi bi-plus-circle text-danger me-1"></i> Administrar o añadir fotos
+                    </a>
                 </div>
 
                 <div class="photo-grid">
-                    <!-- Foto 1 (Cargada) -->
+                    {% for foto_url in fotos %}
                     <div class="photo-slot shadow-sm">
-                        <img src="{% static 'usuario/img/javier.jpg' %}" alt="Foto 1">
+                        <img src="{{ foto_url }}" alt="Foto de perfil">
                     </div>
-                    <!-- Slots vacíos para completar hasta 6 -->
-                    <div class="photo-slot empty"><i class="bi bi-plus-lg"></i></div>
-                    <div class="photo-slot empty"><i class="bi bi-plus-lg"></i></div>
-                    <div class="photo-slot empty"><i class="bi bi-plus-lg"></i></div>
-                    <div class="photo-slot empty"><i class="bi bi-plus-lg"></i></div>
-                    <div class="photo-slot empty"><i class="bi bi-plus-lg"></i></div>
+                    {% endfor %}
+
+                    {% for _ in slots_vacios %}
+                    <a href="{% url 'editar_perfilU' %}" class="photo-slot empty text-decoration-none" title="Añadir foto">
+                        <i class="bi bi-plus-lg"></i>
+                    </a>
+                    {% endfor %}
                 </div>
             </div>
 

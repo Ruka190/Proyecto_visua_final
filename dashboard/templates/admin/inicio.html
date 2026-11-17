@@ -98,10 +98,15 @@
             <section class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
                 <div class="mb-3">
                     <h3 class="h5 fw-bold mb-0" style="color: #4C2A36;">Distribución de edades</h3>
-                    <p class="text-muted small mb-0">Proporción por género</p>
+                    <p class="text-muted small mb-0">Hombres y mujeres por edad · porcentaje sobre ambos grupos</p>
                 </div>
                 <div style="position: relative; height: 280px; width: 100%; flex-grow: 1;">
-                    <canvas id="ChartDistribucionEdades"></canvas>
+                    {% if edades_desde_bd %}
+                        <canvas id="ChartDistribucionEdades"></canvas>
+                        <p id="admin-edades-vacio" class="text-muted small text-center pt-5" hidden>No hay edades registradas para mostrar.</p>
+                    {% else %}
+                        <p class="text-muted small text-center pt-5">Pendiente de conectar las edades de la base de datos.</p>
+                    {% endif %}
                 </div>
             </section>
         </div>
@@ -131,7 +136,6 @@
                             <button type="button" class="admin-sankey-filter__button active" data-sankey-filtro="comunes" aria-pressed="true">Con gustos comunes</button>
                             <button type="button" class="admin-sankey-filter__button" data-sankey-filtro="todas" aria-pressed="false">Todas</button>
                         </div>
-                        <span id="admin-sankey-origen" class="admin-sankey-badge">Datos demostrativos</span>
                     </div>
                 </div>
                 <div class="admin-sankey-scroll" tabindex="0" aria-label="Desplazar diagrama de gustos y matches horizontalmente">
@@ -149,7 +153,7 @@
                         <span><i class="admin-sankey-legend__no-match" aria-hidden="true"></i> No match</span>
                     </div>
                 </div>
-                <p class="admin-sankey-note mb-0">Cada pareja cuenta una vez. Compartir preferencias no demuestra la causa de un match.</p>
+                <p class="admin-sankey-note mb-0">Cada pareja cuenta una vez.</p>
             </section>
         </div>
 
@@ -191,7 +195,6 @@
                     </button>
                     <div class="admin-radar-gender-header">
                         <h4 id="admin-radar-genero-titulo" class="h6 fw-semibold mb-1"></h4>
-                        <span id="admin-radar-genero-origen" class="admin-sankey-badge"></span>
                     </div>
                     <p id="admin-radar-genero-resumen" class="text-muted small mb-2"></p>
                     <div class="admin-radar-gender-canvas">
@@ -215,7 +218,6 @@
                             <button type="button" class="admin-radar-filter__button active" data-match-factor="orientacion" aria-pressed="true">Orientación</button>
                             <button type="button" class="admin-radar-filter__button" data-match-factor="brecha_edad" aria-pressed="false">Diferencia de edad</button>
                         </div>
-                        <span id="admin-match-factores-origen" class="admin-sankey-badge">Datos demostrativos</span>
                     </div>
                 </div>
                 <div class="admin-match-factors-canvas">
@@ -223,7 +225,7 @@
                     <p id="admin-match-factores-vacio" class="admin-radar-empty" hidden>Sin datos para esta comparación.</p>
                 </div>
                 <p id="admin-match-factores-resumen" class="admin-match-factors-summary mb-1" aria-live="polite"></p>
-                <p class="admin-sankey-note mb-0">Se compara el resultado observado, sin atribuir una causa. Las tasas deben leerse junto al número de parejas de cada grupo.</p>
+                <p class="admin-sankey-note mb-0"></p>
             </section>
         </div>
 
@@ -506,25 +508,62 @@
         });
 
         // 3. Gráfico Distribución de Edades
-        const edadesLabels = JSON.parse('{{ edades_labels_json|escapejs }}');
-        const datasets2 = JSON.parse('{{ datasets2_json|escapejs }}');
-        const maxEdad = Math.ceil(Math.max(...datasets2.flatMap(s => s.data.map(Math.abs))) / 20) * 20;
-
-        new Chart(document.getElementById("ChartDistribucionEdades"), {
-            type: "bar",
-            data: { labels: edadesLabels, datasets: datasets2 },
-            options: {
-                responsive: true, maintainAspectRatio: false, indexAxis: "y",
-                plugins: {
-                    legend: { position: "top" },
-                    tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Math.abs(ctx.parsed.x)} usuarios` } }
-                },
-                scales: {
-                    x: { stacked: true, min: -maxEdad, max: maxEdad, ticks: { callback: v => Math.abs(v) }, grid: { color: 'rgba(0,0,0,0.05)' } },
-                    y: { stacked: true, grid: { display: false } }
-                }
+        const edadesCanvas = document.getElementById('ChartDistribucionEdades');
+        if (edadesCanvas) {
+            const edadesLabels = JSON.parse('{{ edades_labels_json|default:"[]"|escapejs }}');
+            const datasets2 = JSON.parse('{{ datasets2_json|default:"[]"|escapejs }}');
+            const seriesEdades = datasets2.filter(serie => ['Hombres', 'Mujeres'].includes(serie.label)).map(serie => ({
+                ...serie,
+                data: edadesLabels.map((rango, indice) => ({
+                    x: Number(serie.data?.[indice]) || 0,
+                    y: rango,
+                    rango
+                })),
+                barThickness: 9
+            }));
+            const totalEdades = seriesEdades.reduce((total, serie) =>
+                total + serie.data.reduce((suma, punto) => suma + Math.abs(punto.x), 0), 0);
+            if (!totalEdades) {
+                edadesCanvas.hidden = true;
+                document.getElementById('admin-edades-vacio').hidden = false;
+            } else {
+                seriesEdades.forEach(serie => serie.data.forEach(punto => {
+                    punto.cantidad = Math.abs(punto.x);
+                    punto.x = punto.x * 100 / totalEdades;
+                }));
+                const mayorGrupo = Math.max(...edadesLabels.map((_, indice) => {
+                    const valores = seriesEdades.map(serie => serie.data[indice]?.x || 0);
+                    return Math.max(
+                        valores.filter(valor => valor > 0).reduce((suma, valor) => suma + valor, 0),
+                        Math.abs(valores.filter(valor => valor < 0).reduce((suma, valor) => suma + valor, 0))
+                    );
+                }));
+                const maxPorcentaje = Math.max(5, Math.ceil(mayorGrupo / 5) * 5);
+                new Chart(edadesCanvas, {
+                    type: 'bar',
+                    data: { labels: edadesLabels, datasets: seriesEdades },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                        parsing: { xAxisKey: 'x', yAxisKey: 'y' },
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { callbacks: {
+                                title: contextos => `Edad: ${contextos[0].raw.rango} años`,
+                                label: contexto => `${contexto.dataset.label}: ${Math.abs(contexto.parsed.x).toFixed(1)}% (${contexto.raw.cantidad} usuarios)`
+                            } }
+                        },
+                        scales: {
+                            x: { stacked: true, min: -maxPorcentaje, max: maxPorcentaje,
+                                title: { display: true, text: 'Porcentaje de usuarios' },
+                                ticks: { callback: valor => `${Math.abs(valor)}%` }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                            y: { type: 'category', stacked: true, reverse: true,
+                                title: { display: true, text: 'Rango de edad (años)' },
+                                grid: { display: false } }
+                        }
+                    }
+                });
             }
-        });
+        }
 
         // 4. Radar global de gustos y disgustos
         const radarAdmin = JSON.parse('{{ radar_admin_json|default:"{}"|escapejs }}') || {};
@@ -650,7 +689,6 @@
             radarGenero.hidden = false;
             radarVolver.hidden = true;
             document.getElementById('admin-radar-genero-titulo').textContent = item.nombre;
-            document.getElementById('admin-radar-genero-origen').textContent = tieneGeneroReal ? 'Datos de la base de datos' : 'Distribución demostrativa';
             document.getElementById('admin-radar-genero-resumen').textContent = `${total} usuarios que registraron esta preferencia · ${tipoRadar}`;
             radarDescripcion.textContent = `Distribución por género de ${item.nombre}`;
             const generoVacio = document.getElementById('admin-radar-genero-vacio');
@@ -690,7 +728,7 @@
             orientacion: [
                 { label: 'Heterosexual + Heterosexual', match: 31, no_match: 15 },
                 { label: 'Heterosexual + Bisexual', match: 20, no_match: 9 },
-                { label: 'Bisexual + Bisexual', match: 10, no_match: 5 },
+                { label: 'Bisexual + Homosexual', match: 10, no_match: 5 },
                 { label: 'Homosexual + Homosexual', match: 8, no_match: 4 },
                 { label: 'Otras combinaciones', match: 12, no_match: 6 }
             ],
@@ -706,35 +744,47 @@
         const factoresResumen = document.getElementById('admin-match-factores-resumen');
         const botonesFactores = document.querySelectorAll('[data-match-factor]');
         let graficoFactores = null;
+        const categoriasOrientacion = ['Hetero', 'Bi-hetero', 'Bi-gay', 'Gay-gay', 'Otros'];
+        const categoriaPareja = etiqueta => {
+            const nombre = etiqueta.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+            const nombresAgrupados = new Map(categoriasOrientacion.map(categoria => [categoria.toLowerCase(), categoria]));
+            if (nombresAgrupados.has(nombre)) return nombresAgrupados.get(nombre);
+            const orientaciones = nombre.split('+').map(parte => {
+                const valor = parte.trim();
+                if (valor === 'heterosexual' || valor === 'hetero') return 'hetero';
+                if (valor === 'bisexual' || valor === 'bi') return 'bi';
+                if (valor === 'homosexual' || valor === 'gay' || valor === 'homo') return 'gay';
+                return 'otro';
+            });
+            if (orientaciones.length !== 2) return 'Otros';
+            const pareja = orientaciones.sort().join('-');
+            return ({ 'hetero-hetero': 'Hetero', 'bi-hetero': 'Bi-hetero',
+                'bi-gay': 'Bi-gay', 'gay-gay': 'Gay-gay' })[pareja] || 'Otros';
+        };
         const mostrarFactores = factor => {
             const filasServidor = factoresPayload[factor];
-            const esDemo = !Array.isArray(filasServidor) || factoresPayload.sintetico === true;
             let filas = (Array.isArray(filasServidor) ? filasServidor : factoresDemo[factor])
                 .filter(fila => fila && typeof fila.label === 'string'
                     && Number.isFinite(Number(fila.match)) && Number(fila.match) >= 0
                     && Number.isFinite(Number(fila.no_match)) && Number(fila.no_match) >= 0
                     && Number(fila.match) + Number(fila.no_match) > 0)
                 .map(fila => ({ label: fila.label, match: Number(fila.match), no_match: Number(fila.no_match) }));
-            const agruparOrientaciones = factor === 'orientacion' && filas.length > 5;
-            if (agruparOrientaciones) {
-                const principales = filas.filter(fila => fila.label !== 'Otras combinaciones')
-                    .sort((a, b) => (b.match + b.no_match) - (a.match + a.no_match))
-                    .slice(0, 4);
-                const resto = filas.filter(fila => !principales.includes(fila));
-                filas = [...principales, {
-                    label: 'Otras combinaciones',
-                    match: resto.reduce((suma, fila) => suma + fila.match, 0),
-                    no_match: resto.reduce((suma, fila) => suma + fila.no_match, 0)
-                }];
+            if (factor === 'orientacion' && filas.length) {
+                const grupos = new Map(categoriasOrientacion.map(label => [label, { label, match: 0, no_match: 0 }]));
+                filas.forEach(fila => {
+                    const grupo = grupos.get(categoriaPareja(fila.label));
+                    grupo.match += fila.match;
+                    grupo.no_match += fila.no_match;
+                });
+                filas = [...grupos.values()];
             }
             botonesFactores.forEach(boton => {
                 const activo = boton.dataset.matchFactor === factor;
                 boton.classList.toggle('active', activo);
                 boton.setAttribute('aria-pressed', String(activo));
             });
-            document.getElementById('admin-match-factores-origen').textContent = esDemo ? 'Datos demostrativos' : 'Datos de la base de datos';
             document.getElementById('admin-match-factores-descripcion').textContent = factor === 'orientacion'
-                ? `Resultados por orientaciones declaradas${agruparOrientaciones ? ' · principales y otras' : ''}`
+                ? 'Resultados por tipo de pareja según orientación declarada'
                 : 'Resultados según la diferencia de edad entre las dos personas';
             factoresVacio.hidden = filas.length > 0;
             factoresCanvas.style.display = filas.length ? 'block' : 'none';
@@ -747,17 +797,13 @@
             const noMatches = filas.reduce((suma, fila) => suma + fila.no_match, 0);
             factoresResumen.textContent = `${matches + noMatches} parejas evaluadas · ${matches} Match · ${noMatches} No match`;
             factoresCanvas.parentElement.style.height = `${Math.max(245, filas.length * 42 + 55)}px`;
-            const etiquetaCorta = nombre => nombre
-                .replaceAll('Heterosexual', 'Hetero')
-                .replaceAll('Homosexual', 'Homo')
-                .replaceAll('Bisexual', 'Bi');
             graficoFactores = new Chart(factoresCanvas, {
                 type: 'bar',
                 data: {
-                    labels: filas.map(fila => factor === 'orientacion' ? etiquetaCorta(fila.label) : fila.label),
+                    labels: filas.map(fila => fila.label),
                     datasets: [
-                        { label: 'Match', data: filas.map(fila => fila.match * 100 / (fila.match + fila.no_match)), backgroundColor: '#E87265', borderRadius: 5 },
-                        { label: 'No match', data: filas.map(fila => fila.no_match * 100 / (fila.match + fila.no_match)), backgroundColor: 'rgba(232, 114, 101, .28)', borderRadius: 5 }
+                        { label: 'Match', data: filas.map(fila => fila.match + fila.no_match ? fila.match * 100 / (fila.match + fila.no_match) : 0), backgroundColor: '#E87265', borderRadius: 5 },
+                        { label: 'No match', data: filas.map(fila => fila.match + fila.no_match ? fila.no_match * 100 / (fila.match + fila.no_match) : 0), backgroundColor: 'rgba(232, 114, 101, .28)', borderRadius: 5 }
                     ]
                 },
                 options: {
@@ -794,7 +840,6 @@
             { gusto: 'Metas & Futuro', disgusto: 'Sin disgusto común', resultado: 'Match', total: 9 },
             { gusto: 'Metas & Futuro', disgusto: 'Metas & Futuro', resultado: 'No match', total: 2 }
         ];
-        const esDemoSankey = !Array.isArray(sankeyPayload.paths) || sankeyPayload.sintetico === true;
         const rutasSankey = (Array.isArray(sankeyPayload.paths) ? sankeyPayload.paths : sankeyDemo)
             .filter(fila => fila && typeof fila.gusto === 'string' && typeof fila.disgusto === 'string'
                 && ['Match', 'No match'].includes(fila.resultado)
@@ -804,7 +849,6 @@
         const sankeyContenido = document.getElementById('adminSankeyContent');
         const sankeyVacio = document.getElementById('admin-sankey-vacio');
         const sankeyResumen = document.getElementById('admin-sankey-resumen');
-        document.getElementById('admin-sankey-origen').textContent = esDemoSankey ? 'Datos demostrativos' : 'Datos de la base de datos';
 
         const totalGeneral = rutasSankey.reduce((total, fila) => total + fila.total, 0);
         const rutasComunes = rutasSankey.filter(fila => !/^sin gusto com[uú]n$/i.test(fila.gusto.trim()));

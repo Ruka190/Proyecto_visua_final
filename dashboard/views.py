@@ -3,7 +3,12 @@ import base64
 from django.core.cache import cache
 from django.shortcuts import render, redirect
 from django.db.models import Count, Sum, Avg, Q
+from django.contrib import messages
+from django.db import IntegrityError
+from urllib.parse import urlencode
+from django.urls import reverse
 from collections import Counter, defaultdict
+from uuid import uuid4
 from .models import (
     Administrador,
     Cliente,
@@ -915,11 +920,62 @@ def admin_inicio(request):
 
     # 3. Distribución de edades y Gustos
     edades_labels = ["18-19", "20-29", "30-39", "40-49", "50-59", "60+"]
-    hombres_por_edad = {"18-19": 38, "20-29": 55, "30-39": 64, "40-49": 52, "60+": 22}
-    mujeres_por_edad = {"18-19": 42, "20-29": 61, "30-39": 70, "40-49": 58, "60+": 35}
+    conteos = {
+        grupo: {rango: 0 for rango in edades_labels}
+        for grupo in ("Hombres", "Mujeres", "Otros")
+    }
+    hoy = date.today()
+
+    for nacimiento, sexo in Cliente.objects.values_list(
+        "fechanacimiento", "sexo"
+    ).iterator():
+        if not nacimiento:
+            continue
+
+        edad = hoy.year - nacimiento.year - (
+            (hoy.month, hoy.day) < (nacimiento.month, nacimiento.day)
+        )
+        if edad < 18:
+            continue
+
+        if edad < 20:
+            rango = "18-19"
+        elif edad < 30:
+            rango = "20-29"
+        elif edad < 40:
+            rango = "30-39"
+        elif edad < 50:
+            rango = "40-49"
+        elif edad < 60:
+            rango = "50-59"
+        else:
+            rango = "60+"
+
+        sexo = (sexo or "").strip().casefold()
+        if sexo in ("masculino", "hombre", "m"):
+            grupo = "Hombres"
+        elif sexo in ("femenino", "mujer", "f"):
+            grupo = "Mujeres"
+        else:
+            grupo = "Otros"
+        conteos[grupo][rango] += 1
+
     datasets2 = [
-        { "label": "Hombres", "data": [-hombres_por_edad.get(rango, 0) for rango in edades_labels], "backgroundColor": "#652E38" },
-        { "label": "Mujeres", "data": [mujeres_por_edad.get(rango, 0) for rango in edades_labels], "backgroundColor": "#E86E67" },
+        {
+            "label": "Hombres",
+            "data": [-conteos["Hombres"][r] for r in edades_labels],
+            "backgroundColor": "#652E38",
+        },
+        {
+            "label": "Mujeres",
+            "data": [conteos["Mujeres"][r] for r in edades_labels],
+            "backgroundColor": "#E86E67",
+        },
+        {
+            "label": "Otros",
+            "data": [conteos["Otros"][r] for r in edades_labels],
+            "backgroundColor": "#C7B6BC",
+        },
     ]
 
     gustos_labels = ["Música", "Viajes", "Cine", "Deporte", "Libros"]
@@ -960,6 +1016,7 @@ def admin_inicio(request):
         "kpi_estancados": 3.25,
         "conexiones_recientes_json": json.dumps(conexiones_resientes),
         "matches_diarios_json": json.dumps(matches_diarios, ensure_ascii=False),
+        "edades_desde_bd": True,
     }
     ######## Bloque para probar el sankey
     parejas = {}
@@ -1291,42 +1348,187 @@ def admin_estadisticas(request):
 
     return render(request, "admin/estadisticas.html", context)
 
+
+RUT_ADMIN_DEMO = "admin-demo"
 def admin_notificaciones(request):
-    notificaciones = [
+    if not request.session.get("es_admin"):
+        return redirect("login_view")
+
+    es_demo = not request.session.get("admin_rut")
+    if request.method == "POST" and request.POST.get("accion") in ("editar", "eliminar"):
+        accion = request.POST["accion"]
+        aviso_id = request.POST.get("idnotificacion", "").strip()
+
+        if es_demo:
+            permitidos = Notificacion.objects.filter(rut=RUT_ADMIN_DEMO)
+        else:
+            ruts_admin = Administrador.objects.values_list(
+                "usuario_rut_id", flat=True
+            )
+            permitidos = Notificacion.objects.filter(rut__in=ruts_admin)
+
+        aviso = permitidos.filter(idnotificacion=aviso_id).first()
+
+        if aviso is None:
+            messages.error(request, "No se encontró la notificación.")
+        elif accion == "editar":
+            tipo = request.POST.get("tipo", "")
+            mensaje = request.POST.get("mensaje", "").strip()
+
+            if tipo not in ("Reporte", "Mensaje", "Sistema"):
+                messages.error(request, "Tipo de aviso no válido.")
+            elif not mensaje or len(mensaje) > 180:
+                messages.error(request, "Escribe un mensaje de hasta 180 caracteres.")
+            else:
+                aviso.informacion = f"{tipo}: {mensaje}"
+                try:
+                    aviso.save(update_fields=["informacion"])
+                    messages.success(request, "Notificación actualizada.")
+                except IntegrityError:
+                    messages.error(request, "La base de datos rechazó el cambio.")
+        else:
+            try:
+                aviso.delete()
+                messages.success(request, "Notificación eliminada.")
+            except IntegrityError:
+                messages.error(request, "No se pudo eliminar la notificación.")
+
+        return redirect("admin_notificaciones")
+    if request.method == "POST" and request.POST.get("accion") == "crear":
+        rut = (
+            RUT_ADMIN_DEMO if es_demo
+            else request.POST.get("rut", "").strip()
+        )
+        tipo = request.POST.get("tipo", "")
+        mensaje = request.POST.get("mensaje", "").strip()
+
+        if tipo not in ("Reporte", "Mensaje", "Sistema"):
+            messages.error(request, "Selecciona un tipo válido.")
+        elif not mensaje or len(mensaje) > 180:
+            messages.error(request, "Escribe un mensaje de hasta 180 caracteres.")
+        elif not es_demo and not Administrador.objects.filter(
+            usuario_rut_id=rut
+        ).exists():
+            messages.error(request, "Selecciona un administrador válido.")
+        else:
+            Notificacion.objects.create(
+                idnotificacion=f"ADM-{uuid4().hex}",
+                rut=rut,
+                informacion=f"{tipo}: {mensaje}",
+                fecha=date.today(),
+                estado=0,
+            )
+            messages.success(request, "Notificación creada.")
+
+        return redirect("admin_notificaciones")
+
+    if es_demo:
+        registros = Notificacion.objects.filter(rut=RUT_ADMIN_DEMO)
+    else:
+        ruts_admin = Administrador.objects.values_list(
+            "usuario_rut_id", flat=True
+        )
+        registros = Notificacion.objects.filter(rut__in=ruts_admin)
+
+    registros = registros.order_by("-fecha", "-idnotificacion")[:50]
+
+    notificaciones_reales = []
+    for n in registros:
+        texto = (n.informacion or "").casefold()
+        if any(palabra in texto for palabra in ("reporte", "denuncia", "moderaci")):
+            tipo, titulo = "reportes", "Revisar reporte"
+        elif any(palabra in texto for palabra in ("mensaje", "correo", "comunicaci")):
+            tipo, titulo = "mensajes", "Revisar comunicación"
+        else:
+            tipo, titulo = "sistema", "Aviso del sistema"
+
+        notificaciones_reales.append({
+            "id": n.idnotificacion,
+            "tipo": tipo,
+            "titulo": titulo,
+            "informacion": n.informacion,
+            "fecha": n.fecha,
+            "no_leida": n.estado == 0,
+        })
+
+
+    administradores_destino = [
         {
-            "id_notificacion": 1,
-            "tema": "Reporte",
-            "fecha": "Enero",
-            "id_usuario": 2,
-            "mensaje": "Usuario reportado por feo",
-            "estado": 1
-        },
-        {
-            "id_notificacion": 2,
-            "tema": "Mensaje",
-            "fecha": "Febrero",
-            "id_usuario": 3,
-            "mensaje": "Nuevo correo en bandeja",
-            "estado": 1
-        },
-        {
-            "id_notificacion": 3,
-            "tema": "Reporte",
-            "fecha": "Marzo",
-            "id_usuario": 1,
-            "mensaje": "Usuario menor de edad",
-            "estado": 2
+            "rut": admin.usuario_rut.rut,
+            "nombre": f"{admin.usuario_rut.nombre} {admin.usuario_rut.apellidopaterno}",
         }
+        for admin in Administrador.objects.select_related("usuario_rut")
     ]
 
     return render(
         request,
         "admin/notificacion.html",
-        {"notificaciones": notificaciones}
+        {
+        "notificaciones_reales": notificaciones_reales,
+        "administradores_destino": administradores_destino,
+        "notificaciones_demo_bd": True,
+        "acciones_notificaciones_habilitadas": True,
+    },
     )
 
 
 def admin_usuarios(request):
+    if request.method == "POST":
+        accion = request.POST.get("accion", "")
+        rut = request.POST.get("rut", "").strip()
+        usuario = Usuario.objects.filter(rut=rut).first()
+
+        if usuario is None:
+            messages.error(request, "No se encontró el usuario.")
+            return redirect("admin_usuarios")
+
+        if accion == "editar":
+            nombre = request.POST.get("nombre", "").strip()
+            paterno = request.POST.get("apellidopaterno", "").strip()
+            materno = request.POST.get("apellidomaterno", "").strip()
+            correo = request.POST.get("correo", "").strip()
+            telefono = request.POST.get("telefono", "").strip()
+            estado = request.POST.get("estado", "")
+
+            if not all((nombre, paterno, materno, correo, telefono)):
+                messages.error(request, "Completa todos los campos.")
+            elif not telefono.isdecimal() or int(telefono) > 2147483647:
+                messages.error(request, "El teléfono debe ser un número válido.")
+            elif estado not in ("Activo", "Suspendido"):
+                messages.error(request, "Estado no válido.")
+            else:
+                usuario.nombre = nombre
+                usuario.apellidopaterno = paterno
+                usuario.apellidomaterno = materno
+                usuario.correo = correo
+                usuario.telefono = int(telefono)
+                usuario.estado = 1 if estado == "Activo" else 0
+
+                try:
+                    usuario.save(update_fields=[
+                        "nombre", "apellidopaterno", "apellidomaterno",
+                        "correo", "telefono", "estado",
+                    ])
+                    messages.success(request, "Usuario actualizado.")
+                except IntegrityError:
+                    messages.error(request, "La base de datos rechazó el cambio.")
+
+        elif accion == "eliminar":
+            try:
+                usuario.delete()
+                messages.success(request, "Usuario eliminado.")
+            except IntegrityError:
+                messages.error(
+                    request,
+                    "No se pudo eliminar: existen registros relacionados.",
+                )
+        else:
+            messages.error(request, "Acción no reconocida.")
+
+        return redirect("admin_usuarios")
+
+
+
     registros = Usuario.objects.values(
         "rut", "nombre", "apellidopaterno",
         "apellidomaterno", "correo", "estado", "telefono"
@@ -1349,8 +1551,113 @@ def admin_usuarios(request):
 
     return render(request, "admin/usuarios.html", {"users": users})
 
-    
-    
+
+def admin_mensajes(request):
+    if not request.session.get("es_admin"):
+        return redirect("login_view")
+
+    rut_admin = request.session.get("admin_rut") or RUT_ADMIN_DEMO
+
+    if request.method == "POST":
+        receptor_rut = request.POST.get("receptor_rut", "").strip()
+        contenido = request.POST.get("contenido", "").strip()
+
+        if not Usuario.objects.filter(rut=receptor_rut).exists():
+            messages.error(request, "No se encontró al usuario destinatario.")
+        elif not contenido or len(contenido) > 200:
+            messages.error(request, "Escribe un mensaje de hasta 200 caracteres.")
+        else:
+            Mensaje.objects.create(
+                idmensaje=f"MSG-ADM-{uuid4().hex[:20]}",
+                rut1=rut_admin,
+                rut2=receptor_rut,
+                contenido=contenido,
+                fechaenvio=date.today(),
+                leido=0,
+            )
+            cache.delete(f"chat_historial_{receptor_rut}_{rut_admin}")
+            cache.delete(f"contactos_usuario_{receptor_rut}")
+            messages.success(request, "Respuesta enviada.")
+
+        url = reverse("admin_mensajes")
+        return redirect(f"{url}?{urlencode({'chat': receptor_rut})}")
+
+    registros = list(
+        Mensaje.objects.filter(
+            Q(rut1=rut_admin) | Q(rut2=rut_admin)
+        ).order_by("-fechaenvio", "-idmensaje")
+    )
+
+    ruts = {
+        m.rut2 if m.rut1 == rut_admin else m.rut1
+        for m in registros
+    }
+    usuarios = {
+        u.rut: u
+        for u in Usuario.objects.filter(rut__in=ruts)
+    }
+
+    conversaciones = {}
+    for m in registros:
+        otro_rut = m.rut2 if m.rut1 == rut_admin else m.rut1
+        usuario = usuarios.get(otro_rut)
+        if usuario is None:
+            continue
+
+        if otro_rut not in conversaciones:
+            conversaciones[otro_rut] = {
+                "rut": otro_rut,
+                "nombre": f"{usuario.nombre} {usuario.apellidopaterno}".strip(),
+                "fecha": m.fechaenvio.strftime("%d/%m/%Y"),
+                "ultimo_mensaje": m.contenido,
+                "no_leidos": 0,
+                "activo": False,
+            }
+
+        if m.rut2 == rut_admin and m.leido == 0:
+            conversaciones[otro_rut]["no_leidos"] += 1
+
+    rut_activo = request.GET.get("chat", "").strip()
+    if rut_activo not in conversaciones:
+        rut_activo = next(iter(conversaciones), "")
+
+    historial_admin = []
+    conversacion_activa = None
+
+    if rut_activo:
+        Mensaje.objects.filter(
+            rut1=rut_activo,
+            rut2=rut_admin,
+            leido=0,
+        ).update(leido=1)
+
+        conversaciones[rut_activo]["no_leidos"] = 0
+        conversaciones[rut_activo]["activo"] = True
+        conversacion_activa = conversaciones[rut_activo]
+
+        historial = Mensaje.objects.filter(
+            Q(rut1=rut_admin, rut2=rut_activo) |
+            Q(rut1=rut_activo, rut2=rut_admin)
+        ).order_by("-fechaenvio", "-idmensaje")[:50]
+
+        historial_admin = [
+            {
+                "contenido": m.contenido,
+                "fecha": m.fechaenvio.strftime("%d/%m/%Y"),
+                "es_admin": m.rut1 == rut_admin,
+            }
+            for m in reversed(list(historial))
+        ]
+
+    return render(request, "admin/mensajes.html", {
+        "conversaciones_admin": list(conversaciones.values()),
+        "conversacion_activa": conversacion_activa,
+        "historial_admin": historial_admin,
+        "total_pendientes": sum(
+            c["no_leidos"] for c in conversaciones.values()
+        ),
+        "mensajeria_admin_habilitada": True,
+    })
 
 
 def index(request):###
@@ -1373,6 +1680,8 @@ def login_view(request):
 
         # Atajos rápidos para desarrollo
         if rut_input == 'admin' and pass_input == 'admin123':
+            request.session["es_admin"] = True
+            request.session.pop("admin_rut", None)
             return redirect('admin_inicio')
         if rut_input == 'user' and pass_input == 'user123':
             return redirect('inicioU')

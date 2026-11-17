@@ -1,0 +1,146 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Mensajes | Beyond Date{% endblock %}
+
+{% block header %}
+    <h1 class="h4 fw-bold mb-0" style="color: #4C2A36;">Mensajes</h1>
+{% endblock %}
+
+{% block content %}
+<section class="admin-chat" aria-labelledby="admin-chat-title">
+    <header class="admin-chat__intro">
+        <div>
+            <span class="admin-notifications-eyebrow">Centro de administración</span>
+            <h2 id="admin-chat-title">Conversaciones con usuarios</h2>
+            <p>Revisa consultas, reportes y solicitudes de soporte desde una misma bandeja.</p>
+        </div>
+        <span class="admin-chat__pending"><i class="bi bi-chat-dots" aria-hidden="true"></i> {{ total_pendientes|default:0 }} pendientes</span>
+    </header>
+
+    {% if messages %}
+    <div class="admin-notifications-feedback" role="status" aria-live="polite">
+        {% for message in messages %}
+        <p class="admin-notifications-feedback__message {% if message.tags == 'success' %}is-success{% else %}is-error{% endif %}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="admin-chat__layout">
+        <aside class="admin-chat__roster" aria-label="Conversaciones">
+            <div class="admin-chat__roster-head">
+                <div class="admin-chat__roster-title">
+                    <h3>Chats</h3>
+                    <span>{{ conversaciones_admin|length }}</span>
+                </div>
+                <label class="admin-chat__search" for="admin-chat-search">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <span class="visually-hidden">Buscar por nombre o RUT</span>
+                    <input id="admin-chat-search" type="search" placeholder="Buscar nombre o RUT" autocomplete="off">
+                </label>
+                <div class="admin-chat__filters" role="group" aria-label="Filtrar conversaciones">
+                    <button type="button" class="is-active" data-admin-chat-filter="todos" aria-pressed="true">Todos</button>
+                    <button type="button" data-admin-chat-filter="pendientes" aria-pressed="false">Pendientes</button>
+                </div>
+            </div>
+            <div class="admin-chat__roster-list" id="admin-chat-roster">
+                {% for contacto in conversaciones_admin %}
+                <a class="admin-chat__contact {% if contacto.activo %}is-active{% endif %}"
+                   href="?chat={{ contacto.rut|urlencode }}" data-admin-chat-contact
+                   data-search="{{ contacto.nombre }} {{ contacto.rut }}"
+                   data-pendiente="{% if contacto.no_leidos %}true{% else %}false{% endif %}"
+                   {% if contacto.activo %}aria-current="page"{% endif %}>
+                    <span class="admin-chat__avatar" aria-hidden="true"><i class="bi bi-person"></i></span>
+                    <span class="admin-chat__contact-body">
+                        <span class="admin-chat__contact-top">
+                            <strong>{{ contacto.nombre }}</strong>
+                            <small>{{ contacto.fecha }}</small>
+                        </span>
+                        <span class="admin-chat__contact-rut">RUT {{ contacto.rut }}</span>
+                        <span class="admin-chat__contact-preview">{{ contacto.ultimo_mensaje|default:"Sin mensajes todavía" }}</span>
+                    </span>
+                    {% if contacto.no_leidos %}<span class="admin-chat__unread" aria-label="{{ contacto.no_leidos }} mensajes sin leer">{{ contacto.no_leidos }}</span>{% endif %}
+                </a>
+                {% empty %}
+                <p class="admin-chat__roster-empty">Aún no hay conversaciones para revisar.</p>
+                {% endfor %}
+                <p id="admin-chat-search-empty" class="admin-chat__roster-empty" hidden>No hay conversaciones que coincidan con este filtro.</p>
+            </div>
+        </aside>
+
+        <div class="admin-chat__conversation">
+            {% if conversacion_activa %}
+            <div class="admin-chat__conversation-head">
+                <span class="admin-chat__avatar" aria-hidden="true"><i class="bi bi-person"></i></span>
+                <div>
+                    <h3>{{ conversacion_activa.nombre }}</h3>
+                    <p>RUT {{ conversacion_activa.rut }} · Conversación de soporte</p>
+                </div>
+                <a href="{% url 'admin_usuarios' %}" class="admin-chat__users-link">Ver usuarios <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+            </div>
+
+            <div class="admin-chat__messages" id="admin-chat-messages" aria-label="Historial de mensajes">
+                {% for mensaje in historial_admin %}
+                <div class="admin-chat__bubble {% if mensaje.es_admin %}is-outgoing{% else %}is-incoming{% endif %}">
+                    <p>{{ mensaje.contenido }}</p>
+                    <small>{{ mensaje.fecha }}</small>
+                </div>
+                {% empty %}
+                <p class="admin-chat__messages-empty">Aún no hay mensajes en esta conversación.</p>
+                {% endfor %}
+            </div>
+
+            <div class="admin-chat__composer">
+                <form method="post" action="{{ request.path }}" class="admin-chat__form">
+                    {% csrf_token %}
+                    <input type="hidden" name="receptor_rut" value="{{ conversacion_activa.rut }}">
+                    <label class="visually-hidden" for="admin-chat-input">Responder a {{ conversacion_activa.nombre }}</label>
+                    <input id="admin-chat-input" type="text" name="contenido" maxlength="200" placeholder="Escribe una respuesta para {{ conversacion_activa.nombre }}" autocomplete="off" required {% if not mensajeria_admin_habilitada %}disabled{% endif %}>
+                    <button type="submit" aria-label="Enviar respuesta" {% if not mensajeria_admin_habilitada %}disabled{% endif %}><i class="bi bi-send-fill" aria-hidden="true"></i></button>
+                </form>
+                {% if not mensajeria_admin_habilitada %}<p class="admin-chat__composer-note">El envío estará disponible cuando el programador conecte esta vista con los mensajes.</p>{% endif %}
+            </div>
+            {% else %}
+            <div class="admin-chat__conversation-empty">
+                <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+                <h3>Selecciona una conversación</h3>
+                <p>Los mensajes de los usuarios aparecerán aquí para que puedas revisarlos y responder.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block body_extra %}
+<script>
+    const buscarChatsAdmin = document.getElementById('admin-chat-search');
+    const contactosAdmin = [...document.querySelectorAll('[data-admin-chat-contact]')];
+    const sinChatsAdmin = document.getElementById('admin-chat-search-empty');
+    const filtrosChatsAdmin = [...document.querySelectorAll('[data-admin-chat-filter]')];
+    let filtroChatAdmin = 'todos';
+    const normalizarChatAdmin = texto => (texto || '').normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
+    const filtrarChatsAdmin = () => {
+        const termino = normalizarChatAdmin(buscarChatsAdmin.value.trim());
+        let visibles = 0;
+        contactosAdmin.forEach(contacto => {
+            contacto.hidden = !normalizarChatAdmin(contacto.dataset.search).includes(termino)
+                || (filtroChatAdmin === 'pendientes' && contacto.dataset.pendiente !== 'true');
+            if (!contacto.hidden) visibles++;
+        });
+        sinChatsAdmin.hidden = visibles > 0 || contactosAdmin.length === 0;
+    };
+    buscarChatsAdmin.addEventListener('input', filtrarChatsAdmin);
+    filtrosChatsAdmin.forEach(boton => boton.addEventListener('click', () => {
+        filtroChatAdmin = boton.dataset.adminChatFilter;
+        filtrosChatsAdmin.forEach(opcion => {
+            const activo = opcion === boton;
+            opcion.classList.toggle('is-active', activo);
+            opcion.setAttribute('aria-pressed', String(activo));
+        });
+        filtrarChatsAdmin();
+    }));
+    const historialAdmin = document.getElementById('admin-chat-messages');
+    if (historialAdmin) historialAdmin.scrollTop = historialAdmin.scrollHeight;
+</script>
+{% endblock %}

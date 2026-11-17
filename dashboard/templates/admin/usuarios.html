@@ -23,7 +23,6 @@
             <h2 id="admin-users-title">Usuarios registrados</h2>
             <p>Consulta las cuentas de Beyond Date.</p>
         </div>
-        <span class="admin-users-count" id="admin-users-count">{{ users|length }} usuarios</span>
     </div>
     <div class="admin-users-filters">
         <div class="admin-users-search">
@@ -33,7 +32,7 @@
                 <input id="admin-users-search-input" type="search" placeholder="Nombre o apellido" autocomplete="off" aria-controls="lista-users">
             </div>
         </div>
-        <p class="admin-users-filter-hint">Se muestran 10 personas por página.</p>
+        <p class="admin-users-filter-hint"> 10 usuarios por página.</p>
     </div>
     <div class="admin-users-scroll">
         <table class="admin-users-table" id="lista-users">
@@ -131,7 +130,7 @@
                         </div>
                         <div>
                             <label for="editarCorreo">Correo</label>
-                            <input id="editarCorreo" name="correo" type="email" maxlength="300" required>
+                            <input id="editarCorreo" name="correo" type="text" maxlength="300" required>
                         </div>
                         <div>
                             <label for="editarTelefono">Teléfono</label>
@@ -186,7 +185,6 @@
     const filasUsuarios = [...document.querySelectorAll('#lista-users tbody tr[data-user-row]')];
     const buscarUsuarios = document.getElementById('admin-users-search-input');
     const resumenUsuarios = document.getElementById('admin-users-summary');
-    const conteoUsuarios = document.getElementById('admin-users-count');
     const paginacionUsuarios = document.getElementById('admin-users-pagination');
     const paginaUsuarios = document.getElementById('admin-users-page');
     const anteriorUsuarios = document.getElementById('admin-users-previous');
@@ -213,9 +211,6 @@
 
         filasUsuarios.forEach(fila => { fila.hidden = !visibles.has(fila); });
         sinResultadosUsuarios.hidden = total !== 0 || filasUsuarios.length === 0;
-        conteoUsuarios.textContent = termino
-            ? `${total} de ${filasUsuarios.length} usuarios`
-            : `${filasUsuarios.length} usuarios`;
         resumenUsuarios.textContent = total
             ? `Mostrando ${inicio + 1}–${Math.min(inicio + porPagina, total)} de ${total} usuarios`
             : termino ? 'No hay resultados para esta búsqueda.' : 'No hay usuarios registrados.';

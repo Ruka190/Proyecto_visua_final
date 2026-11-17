@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="{% static 'inicio/css/variables.css' %}">
     <link rel="stylesheet" href="{% static 'inicio/css/typography.css' %}">
-    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}?v=sidebar-1">
+    <link rel="stylesheet" href="{% static 'admin/css/admin.css' %}?v=admin-mensajes-1">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -37,14 +37,21 @@
             <a href="{% url 'admin_usuarios' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'admin_usuarios' %}active{% endif %}" aria-label="Usuarios" title="Usuarios" {% if request.resolver_match.url_name == 'admin_usuarios' %}aria-current="page"{% endif %}>
                 <i class="bi bi-people" aria-hidden="true"></i><span class="admin-sidebar__label">Usuarios</span>
             </a>
-            <a href="{% url 'admin_estadisticas' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'admin_estadisticas' %}active{% endif %}" aria-label="Estadísticas" title="Estadísticas" {% if request.resolver_match.url_name == 'admin_estadisticas' %}aria-current="page"{% endif %}>
-                <i class="bi bi-bar-chart-line" aria-hidden="true"></i><span class="admin-sidebar__label">Estadísticas</span>
-            </a>
             <a href="{% url 'admin_notificaciones' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'admin_notificaciones' %}active{% endif %}" aria-label="Notificaciones" title="Notificaciones" {% if request.resolver_match.url_name == 'admin_notificaciones' %}aria-current="page"{% endif %}>
                 <i class="bi bi-bell" aria-hidden="true"></i><span class="admin-sidebar__label">Notificaciones</span>
             </a>
-            <span class="admin-sidebar__item admin-sidebar__item--disabled" aria-label="Mensajes, próximamente" title="Mensajes, próximamente">
-                <i class="bi bi-chat-heart" aria-hidden="true"></i><span class="admin-sidebar__label">Mensajes</span>
+            {% url 'admin_mensajes' as mensajes_admin_url %}
+            {% if mensajes_admin_url %}
+                <a href="{{ mensajes_admin_url }}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'admin_mensajes' %}active{% endif %}" aria-label="Mensajes" title="Mensajes" {% if request.resolver_match.url_name == 'admin_mensajes' %}aria-current="page"{% endif %}>
+                    <i class="bi bi-chat-heart" aria-hidden="true"></i><span class="admin-sidebar__label">Mensajes</span>
+                </a>
+            {% else %}
+                <span class="admin-sidebar__item admin-sidebar__item--disabled" aria-label="Mensajes, próximamente" title="Mensajes, próximamente">
+                    <i class="bi bi-chat-heart" aria-hidden="true"></i><span class="admin-sidebar__label">Mensajes</span>
+                </span>
+            {% endif %}
+            <span class="admin-sidebar__item admin-sidebar__item--disabled" aria-label="Estadísticas, próximamente" title="Estadísticas, próximamente">
+                <i class="bi bi-bar-chart-line" aria-hidden="true"></i><span class="admin-sidebar__label">Estadísticas</span>
             </span>
             {% url 'admin_logout' as logout_url %}
             {% if logout_url %}

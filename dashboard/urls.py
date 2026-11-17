@@ -25,5 +25,6 @@ urlpatterns = [
     path('administrador/inicio/', views.admin_inicio, name='admin_inicio'),
     path('administrador/estadisticas/', views.admin_estadisticas, name='admin_estadisticas'),
     path('administrador/notificaciones/', views.admin_notificaciones, name='admin_notificaciones'),
-    path('administrador/usuarios/', views.admin_usuarios, name='admin_usuarios')
+    path('administrador/usuarios/', views.admin_usuarios, name='admin_usuarios'),
+    path("administrador/mensajes/", views.admin_mensajes, name="admin_mensajes"),
 ]

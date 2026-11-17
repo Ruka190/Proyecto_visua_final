@@ -16,10 +16,73 @@
         </div>
         <div class="admin-notifications-total" aria-label="Total de avisos">
             <i class="bi bi-bell-fill" aria-hidden="true"></i>
-            <span id="admin-notifications-total">{{ notificaciones|length }}</span>
+            <span id="admin-notifications-total">{% if request.session.es_admin and not request.session.admin_rut and not notificaciones_demo_bd %}0{% else %}{{ notificaciones_reales|length }}{% endif %}</span>
             <span>avisos</span>
         </div>
     </div>
+
+    {% if messages %}
+    <div class="admin-notifications-feedback" role="status" aria-live="polite">
+        {% for message in messages %}
+        <p class="admin-notifications-feedback__message {% if message.tags == 'success' %}is-success{% else %}is-error{% endif %}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <details class="admin-notifications-create" id="crear-notificacion">
+        <summary class="admin-notifications-create__toggle">
+            <span><i class="bi bi-plus-circle" aria-hidden="true"></i> Crear notificación</span>
+            <i class="bi bi-chevron-down admin-notifications-create__chevron" aria-hidden="true"></i>
+        </summary>
+        <div class="admin-notifications-create__body">
+            <p>{% if request.session.es_admin and not request.session.admin_rut %}El aviso aparecerá en esta vista de prueba como sin leer.{% else %}El aviso quedará dirigido a un administrador y aparecerá como sin leer.{% endif %}</p>
+            <form id="admin-notifications-create-form" method="post" action="{% url 'admin_notificaciones' %}" class="admin-notifications-create__form">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="crear">
+                {% if request.session.es_admin and not request.session.admin_rut %}
+                <div class="admin-notifications-create__field">
+                    <label>Destinatario</label>
+                    <div class="admin-notifications-create__recipient">Administrador de prueba (admin)</div>
+                </div>
+                {% else %}
+                <div class="admin-notifications-create__field">
+                    <label for="admin-notificacion-rut">Administrador destinatario</label>
+                    <select id="admin-notificacion-rut" name="rut" required {% if not administradores_destino %}disabled{% endif %}>
+                        <option value="">Selecciona un administrador</option>
+                        {% for administrador in administradores_destino %}
+                        <option value="{{ administrador.rut }}">{{ administrador.nombre }} · {{ administrador.rut }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="admin-notifications-create__field">
+                    <label for="admin-notificacion-tipo">Tipo de aviso</label>
+                    <select id="admin-notificacion-tipo" name="tipo" required {% if not administradores_destino and not request.session.es_admin %}disabled{% endif %}>
+                        <option value="Reporte">Reporte</option>
+                        <option value="Mensaje">Comunicación</option>
+                        <option value="Sistema">Sistema</option>
+                    </select>
+                </div>
+                <div class="admin-notifications-create__field admin-notifications-create__field--message">
+                    <label for="admin-notificacion-mensaje">Mensaje</label>
+                    <textarea id="admin-notificacion-mensaje" name="mensaje" rows="3" maxlength="180" required placeholder="Describe la acción que debe revisar el administrador" {% if not administradores_destino and not request.session.es_admin %}disabled{% endif %}></textarea>
+                    <small>Máximo 180 caracteres.</small>
+                </div>
+                <div class="admin-notifications-create__footer">
+                    {% if request.session.es_admin and not request.session.admin_rut %}
+                    {% if notificaciones_demo_bd %}<p></p>
+                    {% else %}<p>Los avisos de prueba se conservan en este navegador.</p>{% endif %}
+                    {% elif not administradores_destino %}
+                    <p>El programador debe conectar los administradores y el guardado en <code>views.py</code> para habilitar este formulario.</p>
+                    {% endif %}
+                    <button type="submit" {% if not administradores_destino and not request.session.es_admin %}disabled{% endif %}>Guardar notificación</button>
+                </div>
+            </form>
+        </div>
+    </details>
+    {% if request.session.es_admin and not request.session.admin_rut and not notificaciones_demo_bd %}
+    <p id="admin-notifications-demo-feedback" class="admin-notifications-feedback__message is-success" role="status" hidden></p>
+    {% endif %}
 
     <div class="admin-notifications-tabs" role="group" aria-label="Filtrar avisos">
         <button type="button" class="admin-notifications-tab is-active" data-notification-filter="todos" aria-pressed="true">Todos</button>
@@ -31,53 +94,72 @@
     <p id="admin-notifications-summary" class="admin-notifications-summary" aria-live="polite"></p>
 
     <div class="admin-notifications-list" id="admin-notifications-list">
-        {% for n in notificaciones %}
+        {% if request.session.es_admin and not request.session.admin_rut and not notificaciones_demo_bd %}
+        <div class="admin-notifications-empty" id="admin-notifications-db-empty">
+            <i class="bi bi-inbox" aria-hidden="true"></i>
+            <h3>No hay avisos por ahora</h3>
+            <p>Crea una notificación para mostrarla en esta vista de prueba.</p>
+        </div>
+        {% else %}
+        {% for n in notificaciones_reales %}
         <article class="admin-notification-card"
                  data-admin-notification
-                 data-category="{% if n.tema == 'Reporte' %}reportes{% elif n.tema == 'Mensaje' %}mensajes{% else %}sistema{% endif %}">
-            <div class="admin-notification-icon {% if n.tema == 'Reporte' %}is-report{% elif n.tema == 'Mensaje' %}is-message{% else %}is-system{% endif %}" aria-hidden="true">
-                {% if n.tema == 'Reporte' %}<i class="bi bi-shield-exclamation"></i>
-                {% elif n.tema == 'Mensaje' %}<i class="bi bi-envelope-paper"></i>
+                 data-category="{{ n.tipo }}">
+            <div class="admin-notification-icon {% if n.tipo == 'reportes' %}is-report{% elif n.tipo == 'mensajes' %}is-message{% else %}is-system{% endif %}" aria-hidden="true">
+                {% if n.tipo == 'reportes' %}<i class="bi bi-shield-exclamation"></i>
+                {% elif n.tipo == 'mensajes' %}<i class="bi bi-envelope-paper"></i>
                 {% else %}<i class="bi bi-gear"></i>{% endif %}
             </div>
 
             <div class="admin-notification-content">
                 <div class="admin-notification-meta">
                     <span class="admin-notification-category">
-                        {% if n.tema == 'Reporte' %}Moderación
-                        {% elif n.tema == 'Mensaje' %}Comunicación
+                        {% if n.tipo == 'reportes' %}Moderación
+                        {% elif n.tipo == 'mensajes' %}Comunicación
                         {% else %}Sistema{% endif %}
                     </span>
                     <span aria-hidden="true">·</span>
-                    <span>{{ n.fecha }}</span>
-                    {% if n.id_usuario %}<span aria-hidden="true">·</span><span>Usuario {{ n.id_usuario }}</span>{% endif %}
+                    <span>{{ n.fecha|date:"d/m/Y" }}</span>
+                    {% if n.no_leida %}<span aria-hidden="true">·</span><span>Sin leer</span>{% endif %}
                 </div>
-                <h3>
-                    {% if n.tema == 'Reporte' %}Revisar reporte de usuario
-                    {% elif n.tema == 'Mensaje' %}Revisar comunicación recibida
-                    {% else %}Revisar aviso del sistema{% endif %}
-                </h3>
-                <p class="admin-notification-description">{{ n.mensaje }}</p>
+                <h3>{{ n.titulo }}</h3>
+                <p class="admin-notification-description">{{ n.informacion }}</p>
                 <p class="admin-notification-guidance">
-                    {% if n.tema == 'Reporte' %}Acción sugerida: comprobar el caso y decidir si corresponde intervenir la cuenta.
-                    {% elif n.tema == 'Mensaje' %}Acción sugerida: leer el contenido y responder por el canal correspondiente.
+                    {% if n.tipo == 'reportes' %}Acción sugerida: comprobar el caso y decidir si corresponde intervenir la cuenta.
+                    {% elif n.tipo == 'mensajes' %}Acción sugerida: leer el contenido y responder por el canal correspondiente.
                     {% else %}Acción sugerida: verificar el estado del sistema y registrar el seguimiento.{% endif %}
                 </p>
             </div>
 
-            {% if n.tema == 'Reporte' %}
-                <a class="admin-notification-action" href="{% url 'admin_usuarios' %}">
-                    Ir a Usuarios <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
-                </a>
-            {% endif %}
+            <div class="admin-notification-actions">
+                {% if n.tipo == 'reportes' %}
+                    <a class="admin-notification-action" href="{% url 'admin_usuarios' %}">
+                        Ir a Usuarios <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                    </a>
+                {% endif %}
+                <button type="button" class="admin-notification-action" data-notification-edit
+                        data-bs-toggle="modal" data-bs-target="#editarNotificacionModal"
+                        data-id="{{ n.id|default:'' }}" data-tipo="{{ n.tipo }}"
+                        data-informacion="{{ n.informacion }}"
+                        {% if not n.id or not acciones_notificaciones_habilitadas %}disabled title="Pendiente de conectar en views.py"{% endif %}>
+                    <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
+                </button>
+                <button type="button" class="admin-notification-action admin-notification-action--delete" data-notification-delete
+                        data-bs-toggle="modal" data-bs-target="#eliminarNotificacionModal"
+                        data-id="{{ n.id|default:'' }}" data-informacion="{{ n.informacion }}"
+                        {% if not n.id or not acciones_notificaciones_habilitadas %}disabled title="Pendiente de conectar en views.py"{% endif %}>
+                    <i class="bi bi-trash" aria-hidden="true"></i> Eliminar
+                </button>
+            </div>
         </article>
         {% empty %}
         <div class="admin-notifications-empty" id="admin-notifications-db-empty">
             <i class="bi bi-inbox" aria-hidden="true"></i>
             <h3>No hay avisos por ahora</h3>
-            <p>Las nuevas tareas de administración aparecerán aquí.</p>
+            <p>Las notificaciones dirigidas a administradores aparecerán aquí cuando estén disponibles en la base de datos.</p>
         </div>
         {% endfor %}
+        {% endif %}
         <div class="admin-notifications-empty" id="admin-notifications-filter-empty" hidden>
             <i class="bi bi-funnel" aria-hidden="true"></i>
             <h3>Sin avisos en esta categoría</h3>
@@ -85,14 +167,74 @@
         </div>
     </div>
 </section>
+
+<div class="modal fade admin-notification-modal" id="editarNotificacionModal" tabindex="-1" aria-labelledby="editarNotificacionTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="editarNotificacionForm" method="post" action="{% url 'admin_notificaciones' %}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="editar">
+                <input type="hidden" name="idnotificacion" id="editarNotificacionId">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="editarNotificacionTitulo">Editar notificación</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="admin-notifications-create__field">
+                        <label for="editarNotificacionTipo">Tipo de aviso</label>
+                        <select id="editarNotificacionTipo" name="tipo" required>
+                            <option value="Reporte">Reporte</option>
+                            <option value="Mensaje">Comunicación</option>
+                            <option value="Sistema">Sistema</option>
+                        </select>
+                    </div>
+                    <div class="admin-notifications-create__field">
+                        <label for="editarNotificacionMensaje">Mensaje</label>
+                        <textarea id="editarNotificacionMensaje" name="mensaje" rows="4" maxlength="180" required></textarea>
+                        <small>Máximo 180 caracteres.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="admin-notification-modal__cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="admin-notification-modal__save">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade admin-notification-modal" id="eliminarNotificacionModal" tabindex="-1" aria-labelledby="eliminarNotificacionTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="eliminarNotificacionForm" method="post" action="{% url 'admin_notificaciones' %}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="eliminar">
+                <input type="hidden" name="idnotificacion" id="eliminarNotificacionId">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="eliminarNotificacionTitulo">Eliminar notificación</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Eliminar definitivamente este aviso?</p>
+                    <p id="eliminarNotificacionTexto" class="admin-notification-modal__excerpt"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="admin-notification-modal__cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="admin-notification-modal__delete">Eliminar definitivamente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block body_extra %}
 <script>
-    const avisosAdmin = [...document.querySelectorAll('[data-admin-notification]')];
+    let avisosAdmin = [...document.querySelectorAll('[data-admin-notification]')];
     const filtrosAvisosAdmin = document.querySelectorAll('[data-notification-filter]');
     const resumenAvisosAdmin = document.getElementById('admin-notifications-summary');
     const vacioFiltroAvisosAdmin = document.getElementById('admin-notifications-filter-empty');
+    const modoDemoLocal = {% if request.session.es_admin and not request.session.admin_rut and not notificaciones_demo_bd %}true{% else %}false{% endif %};
 
     const mostrarAvisosAdmin = categoria => {
         let visibles = 0;
@@ -115,6 +257,169 @@
     filtrosAvisosAdmin.forEach(boton => boton.addEventListener('click', () =>
         mostrarAvisosAdmin(boton.dataset.notificationFilter)
     ));
-    mostrarAvisosAdmin('todos');
+
+    const modalEditarAviso = document.getElementById('editarNotificacionModal');
+    const modalEliminarAviso = document.getElementById('eliminarNotificacionModal');
+    modalEditarAviso.addEventListener('show.bs.modal', evento => {
+        const datos = evento.relatedTarget.dataset;
+        const informacion = datos.informacion || '';
+        const prefijo = informacion.split(':', 1)[0];
+        const tipos = { reportes: 'Reporte', mensajes: 'Mensaje', sistema: 'Sistema' };
+        const tipo = ['Reporte', 'Mensaje', 'Sistema'].includes(prefijo) ? prefijo : tipos[datos.tipo] || 'Sistema';
+        document.getElementById('editarNotificacionId').value = datos.id;
+        document.getElementById('editarNotificacionTipo').value = tipo;
+        document.getElementById('editarNotificacionMensaje').value = informacion.startsWith(`${tipo}: `)
+            ? informacion.slice(tipo.length + 2) : informacion;
+    });
+    modalEliminarAviso.addEventListener('show.bs.modal', evento => {
+        const datos = evento.relatedTarget.dataset;
+        document.getElementById('eliminarNotificacionId').value = datos.id;
+        document.getElementById('eliminarNotificacionTexto').textContent = datos.informacion || '';
+    });
+
+    if (modoDemoLocal) {
+        const claveDemo = 'beyond-date-admin-demo-notificaciones-v1';
+        const listaAvisos = document.getElementById('admin-notifications-list');
+        const vacioDemo = document.getElementById('admin-notifications-db-empty');
+        const formularioDemo = document.getElementById('admin-notifications-create-form');
+        const avisoGuardado = document.getElementById('admin-notifications-demo-feedback');
+        const categoriasDemo = {
+            Reporte: { tipo: 'reportes', nombre: 'Moderación', titulo: 'Revisar reporte', icono: 'bi-shield-exclamation', clase: 'is-report', accion: 'Acción sugerida: comprobar el caso y decidir si corresponde intervenir la cuenta.' },
+            Mensaje: { tipo: 'mensajes', nombre: 'Comunicación', titulo: 'Revisar comunicación', icono: 'bi-envelope-paper', clase: 'is-message', accion: 'Acción sugerida: leer el contenido y responder por el canal correspondiente.' },
+            Sistema: { tipo: 'sistema', nombre: 'Sistema', titulo: 'Aviso del sistema', icono: 'bi-gear', clase: 'is-system', accion: 'Acción sugerida: verificar el estado del sistema y registrar el seguimiento.' }
+        };
+        const leerAvisosDemo = () => {
+            try {
+                const guardados = JSON.parse(localStorage.getItem(claveDemo) || '[]');
+                return Array.isArray(guardados) ? guardados.filter(aviso =>
+                    categoriasDemo[aviso.tipo] && typeof aviso.mensaje === 'string' && typeof aviso.fecha === 'string'
+                ).slice(0, 50).map((aviso, indice) => ({ ...aviso, id: aviso.id || `legacy-${indice}` })) : [];
+            } catch (error) {
+                return [];
+            }
+        };
+        const elementoDemo = (etiqueta, clase, texto) => {
+            const elemento = document.createElement(etiqueta);
+            if (clase) elemento.className = clase;
+            if (texto) elemento.textContent = texto;
+            return elemento;
+        };
+        const crearTarjetaDemo = aviso => {
+            const categoria = categoriasDemo[aviso.tipo];
+            const tarjeta = elementoDemo('article', 'admin-notification-card');
+            tarjeta.dataset.adminNotification = '';
+            tarjeta.dataset.category = categoria.tipo;
+            const icono = elementoDemo('div', `admin-notification-icon ${categoria.clase}`);
+            icono.setAttribute('aria-hidden', 'true');
+            icono.append(elementoDemo('i', `bi ${categoria.icono}`));
+            const contenido = elementoDemo('div', 'admin-notification-content');
+            const meta = elementoDemo('div', 'admin-notification-meta');
+            meta.append(elementoDemo('span', 'admin-notification-category', categoria.nombre));
+            meta.append(elementoDemo('span', '', '·'));
+            meta.append(elementoDemo('span', '', aviso.fecha));
+            meta.append(elementoDemo('span', '', '·'));
+            meta.append(elementoDemo('span', '', 'Sin leer'));
+            contenido.append(meta, elementoDemo('h3', '', categoria.titulo),
+                elementoDemo('p', 'admin-notification-description', aviso.mensaje),
+                elementoDemo('p', 'admin-notification-guidance', categoria.accion));
+            tarjeta.append(icono, contenido);
+            const acciones = elementoDemo('div', 'admin-notification-actions');
+            if (aviso.tipo === 'Reporte') {
+                const enlace = elementoDemo('a', 'admin-notification-action', 'Ir a Usuarios ↗');
+                enlace.href = "{% url 'admin_usuarios' %}";
+                acciones.append(enlace);
+            }
+            const editar = elementoDemo('button', 'admin-notification-action', 'Editar');
+            editar.type = 'button';
+            editar.dataset.notificationEdit = '';
+            editar.dataset.id = aviso.id;
+            editar.dataset.tipo = categoria.tipo;
+            editar.dataset.informacion = aviso.mensaje;
+            editar.setAttribute('data-bs-toggle', 'modal');
+            editar.setAttribute('data-bs-target', '#editarNotificacionModal');
+            const eliminar = elementoDemo('button', 'admin-notification-action admin-notification-action--delete', 'Eliminar');
+            eliminar.type = 'button';
+            eliminar.dataset.notificationDelete = '';
+            eliminar.dataset.id = aviso.id;
+            eliminar.dataset.informacion = aviso.mensaje;
+            eliminar.setAttribute('data-bs-toggle', 'modal');
+            eliminar.setAttribute('data-bs-target', '#eliminarNotificacionModal');
+            acciones.append(editar, eliminar);
+            tarjeta.append(acciones);
+            return tarjeta;
+        };
+        const renderizarAvisosDemo = () => {
+            listaAvisos.querySelectorAll('[data-admin-notification]').forEach(aviso => aviso.remove());
+            const guardados = leerAvisosDemo();
+            guardados.forEach(aviso => listaAvisos.insertBefore(crearTarjetaDemo(aviso), vacioDemo));
+            vacioDemo.hidden = guardados.length > 0;
+            avisosAdmin = [...listaAvisos.querySelectorAll('[data-admin-notification]')];
+            document.getElementById('admin-notifications-total').textContent = guardados.length;
+            mostrarAvisosAdmin('todos');
+        };
+        formularioDemo.addEventListener('submit', evento => {
+            evento.preventDefault();
+            const tipo = document.getElementById('admin-notificacion-tipo').value;
+            const mensaje = document.getElementById('admin-notificacion-mensaje').value.trim();
+            if (!categoriasDemo[tipo] || !mensaje || mensaje.length > 180) return;
+            const nuevosAvisos = [{ id: `${Date.now()}-${Math.random()}`, tipo, mensaje, fecha: new Date().toLocaleDateString('es-CL') }, ...leerAvisosDemo()].slice(0, 50);
+            try {
+                localStorage.setItem(claveDemo, JSON.stringify(nuevosAvisos));
+            } catch (error) {
+                avisoGuardado.textContent = 'No se pudo guardar el aviso en este navegador.';
+                avisoGuardado.classList.replace('is-success', 'is-error');
+                avisoGuardado.hidden = false;
+                return;
+            }
+            formularioDemo.reset();
+            document.getElementById('crear-notificacion').open = false;
+            avisoGuardado.textContent = 'Notificación de prueba guardada.';
+            avisoGuardado.classList.replace('is-error', 'is-success');
+            avisoGuardado.hidden = false;
+            renderizarAvisosDemo();
+        });
+        document.getElementById('editarNotificacionForm').addEventListener('submit', evento => {
+            evento.preventDefault();
+            const id = document.getElementById('editarNotificacionId').value;
+            const tipo = document.getElementById('editarNotificacionTipo').value;
+            const mensaje = document.getElementById('editarNotificacionMensaje').value.trim();
+            if (!categoriasDemo[tipo] || !mensaje || mensaje.length > 180) return;
+            const avisos = leerAvisosDemo().map(aviso => aviso.id === id ? { ...aviso, tipo, mensaje } : aviso);
+            try {
+                localStorage.setItem(claveDemo, JSON.stringify(avisos));
+            } catch (error) {
+                avisoGuardado.textContent = 'No se pudo actualizar el aviso en este navegador.';
+                avisoGuardado.classList.replace('is-success', 'is-error');
+                avisoGuardado.hidden = false;
+                return;
+            }
+            bootstrap.Modal.getInstance(modalEditarAviso).hide();
+            avisoGuardado.textContent = 'Notificación de prueba actualizada.';
+            avisoGuardado.classList.replace('is-error', 'is-success');
+            avisoGuardado.hidden = false;
+            renderizarAvisosDemo();
+        });
+        document.getElementById('eliminarNotificacionForm').addEventListener('submit', evento => {
+            evento.preventDefault();
+            const id = document.getElementById('eliminarNotificacionId').value;
+            const avisos = leerAvisosDemo().filter(aviso => aviso.id !== id);
+            try {
+                localStorage.setItem(claveDemo, JSON.stringify(avisos));
+            } catch (error) {
+                avisoGuardado.textContent = 'No se pudo eliminar el aviso en este navegador.';
+                avisoGuardado.classList.replace('is-success', 'is-error');
+                avisoGuardado.hidden = false;
+                return;
+            }
+            bootstrap.Modal.getInstance(modalEliminarAviso).hide();
+            avisoGuardado.textContent = 'Notificación de prueba eliminada.';
+            avisoGuardado.classList.replace('is-error', 'is-success');
+            avisoGuardado.hidden = false;
+            renderizarAvisosDemo();
+        });
+        renderizarAvisosDemo();
+    } else {
+        mostrarAvisosAdmin('todos');
+    }
 </script>
 {% endblock %}

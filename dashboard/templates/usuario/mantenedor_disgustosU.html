@@ -1,0 +1,208 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantenedor de Límites · Beyond Date</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F4E6E9;
+            font-family: 'Poppins', sans-serif;
+            color: #4a4a4a;
+        }
+        .crud-container {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 5rem;
+        }
+        .crud-card {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            border-radius: 28px;
+            padding: 2.2rem;
+            box-shadow: 0 10px 30px rgba(232, 114, 101, 0.06);
+        }
+        .form-control, .form-select {
+            background-color: #FAF6F2;
+            border: 1.5px solid #E3B9AE;
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+        .btn-coral {
+            background-color: #D62D5A;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 10px 24px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .btn-coral:hover {
+            background-color: #b82249;
+            color: #fff;
+        }
+        .table-crud thead th {
+            background-color: #FDECE7;
+            color: #4C2A36;
+            border-bottom: 1px solid #F3CFC4;
+            font-size: 0.84rem;
+            padding: 12px;
+        }
+        .table-crud tbody td {
+            vertical-align: middle;
+            padding: 12px;
+            font-size: 0.88rem;
+            border-bottom: 1px solid #F7ECE8;
+        }
+    </style>
+</head>
+<body class="p-0">
+
+    {% include 'usuario/barraU.html' %}
+
+    <main class="crud-container">
+        <div class="crud-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-3 border-bottom">
+                <div>
+                    <span class="badge bg-light text-danger border rounded-pill px-3 py-1 mb-1" style="font-size: 0.72rem;">MANTENEDOR DE USUARIO · TABLA DISGUSTO</span>
+                    <h1 class="h4 fw-bold text-dark mb-0">Mis Límites y No Negociables</h1>
+                </div>
+                <a href="{% url 'perfilU' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                    <i class="bi bi-arrow-left"></i> Volver a Mi Perfil
+                </a>
+            </div>
+
+            <!-- FORMULARIO CREATE (Agregar nuevo límite) -->
+            <form method="POST" class="p-3 rounded-4 mb-4" style="background-color: #FAF0EC; border: 1px solid #F3CFC4;">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="crear">
+                <h2 class="h6 fw-bold mb-3"><i class="bi bi-plus-circle-fill text-danger me-1"></i> Agregar nuevo límite a tu perfil</h2>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Pilar</label>
+                        <select name="categoria" class="form-select" required>
+                            {% for p in pilares %}
+                            <option value="{{ p }}">{{ p }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label small fw-semibold mb-1">Descripción del límite / disgusto</label>
+                        <input type="text" name="descripcion" class="form-control" placeholder="Ej: Falta de empatía, Impuntualidad..." required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold mb-1">Rechazo (%)</label>
+                        <input type="number" name="valor" class="form-control" min="10" max="100" value="85" required>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn-coral"><i class="bi bi-plus-lg"></i> Crear</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- TABLA READ, UPDATE Y DELETE -->
+            <div class="table-responsive rounded-4 border">
+                <table class="table table-crud mb-0">
+                    <thead>
+                        <tr>
+                            <th>Pilar</th>
+                            <th>Límite / No Negociable</th>
+                            <th>Nivel de Rechazo</th>
+                            <th class="text-end">Acciones (Editar / Eliminar)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in disgustos %}
+                        <tr>
+                            <td><span class="badge rounded-pill bg-light text-dark border">{{ d.categoria }}</span></td>
+                            <td class="fw-medium">{{ d.descripcion }}</td>
+                            <td>
+                                <span class="badge rounded-pill" style="background-color:#FDECE7; color:#D62D5A;">
+                                    {{ d.valor }}%
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <!-- Botón Editar (Abre modal de edición) -->
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 me-1"
+                                        onclick="abrirModalEditar('{{ d.pk }}', '{{ d.categoria|escapejs }}', '{{ d.descripcion|escapejs }}', '{{ d.valor }}')">
+                                    <i class="bi bi-pencil-square text-primary"></i> Editar
+                                </button>
+                                <!-- Formulario Eliminar -->
+                                <form method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="eliminar">
+                                    <input type="hidden" name="pk_id" value="{{ d.pk }}">
+                                    <button type="submit" class="btn btn-sm btn-light border rounded-pill px-3 text-danger">
+                                        <i class="bi bi-trash3-fill"></i> Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                No tienes límites registrados aún. Usa el formulario superior para crear el primero.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL UPDATE (Editar Límite Existente) -->
+    <div class="modal fade" id="modalEditarDisgusto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="editar">
+                    <input type="hidden" name="pk_id" id="editPkId">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">Editar Límite</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Pilar</label>
+                            <select name="categoria" id="editCategoria" class="form-select" required>
+                                {% for p in pilares %}
+                                <option value="{{ p }}">{{ p }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Descripción</label>
+                            <input type="text" name="descripcion" id="editDescripcion" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Nivel de Rechazo (%)</label>
+                            <input type="number" name="valor" id="editValor" class="form-control" min="10" max="100" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn-coral">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function abrirModalEditar(pk, categoria, descripcion, valor) {
+            document.getElementById('editPkId').value = pk;
+            document.getElementById('editCategoria').value = categoria;
+            document.getElementById('editDescripcion').value = descripcion;
+            document.getElementById('editValor').value = valor;
+            new bootstrap.Modal(document.getElementById('modalEditarDisgusto')).show();
+        }
+    </script>
+</body>
+</html>

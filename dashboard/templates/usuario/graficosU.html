@@ -63,7 +63,7 @@
     transition: all 0.25s ease;
   }
 
-  #miGrafico, #graficoRadar {
+  #miGrafico, #graficoRadar, #graficoTiempo {
     cursor: pointer;
   }
 
@@ -152,24 +152,6 @@
     align-items: center;
     gap: 4px;
   }
-
-  .pilar-chip {
-    background-color: #FFFDFB;
-    border: 1px solid #E3B9AE;
-    color: #4C2A36;
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .pilar-chip:hover {
-    background-color: #D62D5A;
-    border-color: #D62D5A;
-    color: #fff;
-  }
   </style>
 </head>
 <body>
@@ -187,7 +169,7 @@
 
       <div class="row g-4">
 
-        <!-- ================= 1. Balance de Matches (Interactivo 4 Niveles) ================= -->
+        <!-- ================= 1. Balance de Matches (4 Niveles) ================= -->
         <div class="col-12 col-lg-6">
           <section class="card-grafico p-4 rounded-4 d-flex flex-column justify-content-between">
             
@@ -207,7 +189,7 @@
               </div>
             </div>
 
-            <!-- NIVEL 0: Gráfico Dona Original -->
+            <!-- NIVEL 0 -->
             <div id="drillNivel0" class="d-flex flex-column align-items-center justify-content-center my-auto">
               <h2 class="h5 fw-bold text-center mb-1">Balance de Matches</h2>
               <div class="text-center mb-2">
@@ -222,11 +204,11 @@
               </small>
             </div>
 
-            <!-- NIVEL 1: Lista de Personas -->
+            <!-- NIVEL 1 -->
             <div id="drillNivel1" class="d-none flex-column">
               <div class="d-flex justify-content-between align-items-baseline mb-2">
                 <h3 id="tituloNivel1" class="h6 fw-bold mb-0 text-dark">Tus Matches Recientes</h3>
-                <span class="text-muted" style="font-size: 0.72rem;">Toca a alguien para ver su afinidad</span>
+                <span class="text-muted" style="font-size: 0.72rem;">Toca a alguien para ver su interacción</span>
               </div>
               <div class="drill-table-wrapper">
                 <table class="drill-table">
@@ -243,32 +225,32 @@
               </div>
             </div>
 
-            <!-- NIVEL 2: Sub-Gráfico de Compatibilidad por Pilar de la Persona -->
+            <!-- NIVEL 2 -->
             <div id="drillNivel2" class="d-none flex-column">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                 <div>
-                  <h3 id="tituloNivel2" class="h6 fw-bold mb-0 text-dark">Compatibilidad</h3>
+                  <h3 id="tituloNivel2" class="h6 fw-bold mb-0 text-dark">Actividad de la Conexión</h3>
                   <span id="subtituloNivel2" class="text-muted fst-italic" style="font-size: 0.74rem;"></span>
                 </div>
                 <button type="button" id="btnIrNivel3" class="btn-drill-nav" style="background:#D62D5A; color:#fff; border-color:#D62D5A;">
-                  <i class="bi bi-stars"></i> Ver intereses y chat
+                  <i class="bi bi-chat-dots-fill"></i> Abrir historial
                 </button>
               </div>
               <div style="position: relative; height: 210px; width: 100%;">
                 <canvas id="graficoDrillPersona"></canvas>
               </div>
               <small class="text-muted text-center mt-1" style="font-size: 0.72rem;">
-                Toca cualquier barra para filtrar qué le gusta en ese pilar
+                Toca las barras de <strong>Gustos/Límites</strong> o de <strong>Mensajes</strong> para abrir su tabla respectiva
               </small>
             </div>
 
-            <!-- NIVEL 3: Intereses e Historial de Conversación -->
+            <!-- NIVEL 3 -->
             <div id="drillNivel3" class="d-none flex-column">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                <h3 id="tituloNivel3" class="h6 fw-bold mb-0 text-dark">Detalle de la persona</h3>
+                <h3 id="tituloNivel3" class="h6 fw-bold mb-0 text-dark">Detalle de la conexión</h3>
                 <div class="btn-group rounded-pill" role="group">
-                  <button type="button" class="btn btn-periodo active" id="tabDrillGustos">Intereses</button>
-                  <button type="button" class="btn btn-periodo" id="tabDrillMensajes">Conversación</button>
+                  <button type="button" class="btn btn-periodo active" id="tabDrillMensajes">Conversación</button>
+                  <button type="button" class="btn btn-periodo" id="tabDrillGustos">Coincidencias</button>
                 </div>
               </div>
               <div class="drill-table-wrapper">
@@ -282,11 +264,10 @@
           </section>
         </div>
 
-        <!-- ================= 2. Radar de Afinidad (Interactivo 4 Niveles por Subcategorías) ================= -->
+        <!-- ================= 2. Radar de Afinidad (4 Niveles por Subcategorías) ================= -->
         <div class="col-12 col-lg-6">
           <section class="card-grafico p-4 rounded-4 d-flex flex-column justify-content-between">
             
-            <!-- Barra superior de navegación del Radar (Oculta en Nivel 0) -->
             <div id="radarDrillHeader" class="d-none mb-2">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                 <div class="d-flex gap-2">
@@ -303,7 +284,7 @@
               </div>
             </div>
 
-            <!-- NIVEL 0: Pentágono Original -->
+            <!-- NIVEL 0 -->
             <div id="radarNivel0" class="d-flex flex-column h-100">
               <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                 <h2 class="h5 fw-bold mb-0">Radar de Afinidad</h2>
@@ -312,23 +293,15 @@
                   <button type="button" class="btn btn-periodo" data-tipo-radar="disgustos">Disgustos</button>
                 </div>
               </div>
-              <div style="position: relative; height: 225px; width: 100%; flex-grow: 1;">
+              <div style="position: relative; height: 255px; width: 100%; flex-grow: 1;">
                 <canvas id="graficoRadar"></canvas>
               </div>
-              <!-- Botones rápidos de los 5 pilares + instrucción -->
-              <div class="d-flex flex-wrap justify-content-center gap-1 mt-2">
-                <button type="button" class="pilar-chip" data-pilar-jump="Valores">Valores</button>
-                <button type="button" class="pilar-chip" data-pilar-jump="Hobbies">Hobbies</button>
-                <button type="button" class="pilar-chip" data-pilar-jump="Dinámica Social">Dinámica Social</button>
-                <button type="button" class="pilar-chip" data-pilar-jump="Lenguaje del Amor">Lenguaje del Amor</button>
-                <button type="button" class="pilar-chip" data-pilar-jump="Metas & Futuro">Metas & Futuro</button>
-              </div>
-              <small class="text-muted text-center mt-1" style="font-size: 0.72rem;">
-                <i class="bi bi-hand-index-thumb text-danger"></i> Toca un punto del radar o un pilar para explorar sus subcategorías
+              <small class="text-muted text-center mt-2" style="font-size: 0.73rem;">
+                <i class="bi bi-hand-index-thumb text-danger"></i> Toca cualquier vértice del pentágono para desglosar sus subcategorías
               </small>
             </div>
 
-            <!-- NIVEL 1: Sub-Gráfico de Subcategorías del Pilar seleccionado -->
+            <!-- NIVEL 1 -->
             <div id="radarNivel1" class="d-none flex-column">
               <div class="mb-2">
                 <h3 id="tituloRadarNivel1" class="h6 fw-bold mb-0 text-dark">Subcategorías del Pilar</h3>
@@ -342,7 +315,7 @@
               </small>
             </div>
 
-            <!-- NIVEL 2: Temas de la Subcategoría + Tabla de Personas que coinciden -->
+            <!-- NIVEL 2 -->
             <div id="radarNivel2" class="d-none flex-column">
               <div class="mb-2">
                 <h3 id="tituloRadarNivel2" class="h6 fw-bold mb-1 text-dark">Personas afines en esta subcategoría</h3>
@@ -363,7 +336,7 @@
               </div>
             </div>
 
-            <!-- NIVEL 3: Ficha de Sintonía con la Persona + Acción al Chat -->
+            <!-- NIVEL 3 -->
             <div id="radarNivel3" class="d-none flex-column">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                 <div>
@@ -410,23 +383,66 @@
           </section>
         </div>
 
-        <!-- ================= 4. Tiempo en la APP ================= -->
+        <!-- ================= 4. Tiempo en la APP (Con 4 Niveles sin botones superiores) ================= -->
         <div class="col-12 col-lg-6">
-          <section class="card-grafico p-4 rounded-4 d-flex flex-column">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+          <section class="card-grafico p-4 rounded-4 d-flex flex-column justify-content-between">
+            
+            <!-- Barra superior de navegación del Tiempo (Oculta en Nivel 0) -->
+            <div id="tiempoDrillHeader" class="d-none mb-2">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <div class="d-flex gap-2">
+                  <button type="button" id="btnTiempoBack" class="btn-drill-nav">
+                    <i class="bi bi-arrow-left"></i> Atrás
+                  </button>
+                  <button type="button" id="btnTiempoReset" class="btn-drill-nav">
+                    <i class="bi bi-calendar3"></i> Vista Anual
+                  </button>
+                </div>
+                <span id="tiempoBreadcrumb" class="drilldown-breadcrumb">
+                  <i class="bi bi-clock-history text-danger"></i> Año ➔ Mes
+                </span>
+              </div>
+            </div>
+
+            <!-- Cabecera dinámica del gráfico de Tiempo -->
+            <div class="d-flex justify-content-between align-items-baseline mb-2">
               <div>
-                <h2 class="h5 fw-bold mb-0">Tiempo en la aplicación</h2>
-                <span class="text-muted small">Tiempo Total: <strong style="color: #D62D5A;" id="total-tiempo">0 min</strong></span>
+                <h2 id="tituloTiempoCard" class="h5 fw-bold mb-0">Tiempo en la aplicación</h2>
+                <span class="text-muted small"><span id="labelTotalTiempo">Tiempo Anual Acumulado:</span> <strong style="color: #D62D5A;" id="total-tiempo">167 hrs</strong></span>
               </div>
-              <div class="btn-group rounded-pill" role="group">
-                <button type="button" class="btn btn-periodo active" data-periodo="diario">Semanal</button>
-                <button type="button" class="btn btn-periodo" data-periodo="semanal">Mensual</button>
-                <button type="button" class="btn btn-periodo" data-periodo="mensual">Anual</button>
+              <span id="badgeNivelTiempo" class="affinity-pill">Vista por Meses</span>
+            </div>
+
+            <!-- NIVELES 0, 1 y 2: Lienzo del Gráfico de Barras (Anual -> Semanas del Mes -> Días de la Semana) -->
+            <div id="tiempoChartWrapper" class="d-flex flex-column flex-grow-1">
+              <div style="position: relative; height: 235px; width: 100%; flex-grow: 1;">
+                <canvas id="graficoTiempo"></canvas>
               </div>
+              <small id="hintTiempoClick" class="text-muted text-center mt-2" style="font-size: 0.73rem;">
+                <i class="bi bi-hand-index-thumb text-danger"></i> Toca la barra de cualquier <strong>Mes</strong> para desglosar sus semanas
+              </small>
             </div>
-            <div style="position: relative; height: 240px; width: 100%; flex-grow: 1;">
-              <canvas id="graficoTiempo"></canvas>
+
+            <!-- NIVEL 3: Tabla de Actividad e Interacciones Reales de ese Día -->
+            <div id="tiempoNivel3" class="d-none flex-column">
+              <div class="drill-table-wrapper">
+                <table class="drill-table">
+                  <thead>
+                    <tr>
+                      <th>Actividad</th>
+                      <th>Con quién / Origen</th>
+                      <th>Detalle registrado</th>
+                      <th>Duración</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyTiempoNivel3"></tbody>
+                </table>
+              </div>
+              <small class="text-muted text-center mt-2" style="font-size: 0.72rem;">
+                Toca cualquier fila para ir directo a tu bandeja de mensajes
+              </small>
             </div>
+
           </section>
         </div>
 
@@ -449,11 +465,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{% static 'usuario/js/graficosU.js' %}?v=2"></script>
 
-  <!-- Navegación Interactiva Multinivel (1. Balance de Matches y 2. Radar de Afinidad) -->
+  <!-- Motores de Navegación Multinivel (1. Matches, 2. Radar y 4. Tiempo) -->
   <script>
   document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
-    // MOTOR 1: DRILL-DOWN DE BALANCE DE MATCHES (DONA)
+    // MOTOR 1: BALANCE DE MATCHES (4 NIVELES)
     // =========================================================================
     const drillDataEl = document.getElementById('datos-drilldown');
     if (drillDataEl) {
@@ -508,10 +524,7 @@
           tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Aún no hay personas en esta categoría.</td></tr>`;
         } else {
           lista.forEach((item) => {
-            const promedioAfinidad = item.pilares_data && item.pilares_data.length
-              ? Math.round(item.pilares_data.reduce((a, b) => a + b, 0) / item.pilares_data.length)
-              : 88;
-
+            const afinidad = item.afinidad_general || 88;
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>
@@ -522,7 +535,7 @@
                 <span>${item.ocupacion}</span><br>
                 <small class="text-muted"><i class="bi bi-geo-alt text-danger"></i> ${item.nacionalidad}</small>
               </td>
-              <td><span class="affinity-pill"><i class="bi bi-stars"></i> ${promedioAfinidad}%</span></td>
+              <td><span class="affinity-pill"><i class="bi bi-stars"></i> ${afinidad}%</span></td>
               <td><small class="text-muted">${item.fechamatch}</small></td>
             `;
             tr.addEventListener('click', () => abrirNivel2(item));
@@ -538,7 +551,7 @@
         const nombreCorto = persona.nombre.split(' ')[0];
 
         breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> ${tituloSegmento} ➔ ${nombreCorto}`;
-        document.getElementById('tituloNivel2').textContent = `${persona.nombre}, ${persona.edad} (${persona.ocupacion})`;
+        document.getElementById('tituloNivel2').textContent = `Interacción con ${persona.nombre}, ${persona.edad}`;
         document.getElementById('subtituloNivel2').textContent = `"${persona.biografia}"`;
 
         mostrarVista(2);
@@ -546,14 +559,27 @@
         const ctxSub = document.getElementById('graficoDrillPersona').getContext('2d');
         if (subChartInstance) subChartInstance.destroy();
 
+        const labelsInteraccion = persona.interaccion_labels || [
+          'Gustos que comparten',
+          'Límites que coinciden',
+          'Mensajes enviados',
+          'Mensajes recibidos'
+        ];
+        const datosInteraccion = persona.interaccion_data || [
+          (persona.gustos || []).length || 3,
+          (persona.disgustos || []).length || 2,
+          2,
+          3
+        ];
+
         subChartInstance = new Chart(ctxSub, {
           type: 'bar',
           data: {
-            labels: persona.pilares_labels,
+            labels: labelsInteraccion,
             datasets: [{
-              label: 'Compatibilidad',
-              data: persona.pilares_data,
-              backgroundColor: ['#D62D5A', '#E87265', '#F3A69A', '#A63A32', '#652E38'],
+              label: 'Registros',
+              data: datosInteraccion,
+              backgroundColor: ['#D62D5A', '#E87265', '#A63A32', '#652E38'],
               borderRadius: 8,
             }]
           },
@@ -561,22 +587,29 @@
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            scales: { x: { beginAtZero: true, max: 100, ticks: { callback: (val) => val + '%' } } },
+            scales: {
+              x: { beginAtZero: true, ticks: { stepSize: 1 } }
+            },
             plugins: {
               legend: { display: false },
-              tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw}% de compatibilidad (Toca para ver detalle)` } }
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` ${ctx.raw} registros (Toca para ver el detalle)`
+                }
+              }
             },
             onClick: (evt, elements) => {
               if (elements.length > 0) {
                 const idx = elements[0].index;
-                abrirNivel3(persona, 'gustos', persona.pilares_labels[idx]);
+                if (idx <= 1) abrirNivel3(persona, 'gustos');
+                else abrirNivel3(persona, 'mensajes');
               }
             }
           }
         });
       }
 
-      function abrirNivel3(persona, modo = 'gustos', filtroPilar = null) {
+      function abrirNivel3(persona, modo = 'mensajes') {
         personaActual = persona;
         const nombreCorto = persona.nombre.split(' ')[0];
         const tabGustos = document.getElementById('tabDrillGustos');
@@ -584,40 +617,7 @@
         const thead = document.getElementById('theadNivel3');
         const tbody = document.getElementById('tbodyNivel3');
 
-        if (modo === 'gustos') {
-          tabGustos.classList.add('active');
-          tabMensajes.classList.remove('active');
-          breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> ${nombreCorto} ➔ Intereses`;
-          document.getElementById('tituloNivel3').textContent = filtroPilar
-            ? `Lo que piensa ${nombreCorto} sobre ${filtroPilar}`
-            : `Gustos y Disgustos de ${nombreCorto}`;
-
-          thead.innerHTML = `<tr><th>Preferencia</th><th>Pilar</th><th>Detalle</th><th>Intensidad</th></tr>`;
-          tbody.innerHTML = '';
-
-          const gustosFiltrados = filtroPilar ? persona.gustos.filter(g => g.categoria === filtroPilar) : persona.gustos;
-          const disgustosFiltrados = filtroPilar ? persona.disgustos.filter(d => d.categoria === filtroPilar) : persona.disgustos;
-
-          const combinados = [
-            ...gustosFiltrados.map(g => ({ ...g, etiqueta: '<span class="text-success fw-semibold"><i class="bi bi-heart-fill me-1"></i>Le encanta</span>' })),
-            ...disgustosFiltrados.map(d => ({ ...d, etiqueta: '<span class="text-danger fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Evita</span>' }))
-          ];
-
-          if (combinados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">No hay intereses específicos en este pilar. Toca "Intereses" para ver todos.</td></tr>`;
-          } else {
-            combinados.forEach(reg => {
-              const tr = document.createElement('tr');
-              tr.innerHTML = `
-                <td>${reg.etiqueta}</td>
-                <td><small class="text-muted fw-semibold">${reg.categoria}</small></td>
-                <td>${reg.descripcion}</td>
-                <td><span class="affinity-pill">${reg.valor}%</span></td>
-              `;
-              tbody.appendChild(tr);
-            });
-          }
-        } else {
+        if (modo === 'mensajes') {
           tabMensajes.classList.add('active');
           tabGustos.classList.remove('active');
           breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> ${nombreCorto} ➔ Conversación`;
@@ -637,6 +637,33 @@
                 <td><span class="badge rounded-pill ${badgeClass}">${quien}</span></td>
                 <td>${m.contenido}</td>
                 <td><small class="text-muted">${m.fecha}</small></td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+        } else {
+          tabGustos.classList.add('active');
+          tabMensajes.classList.remove('active');
+          breadcrumbEl.innerHTML = `<i class="bi bi-hearts text-danger"></i> ${nombreCorto} ➔ Coincidencias`;
+          document.getElementById('tituloNivel3').textContent = `Gustos y Límites de ${nombreCorto}`;
+
+          thead.innerHTML = `<tr><th>Preferencia</th><th>Categoría</th><th>Detalle</th></tr>`;
+          tbody.innerHTML = '';
+
+          const combinados = [
+            ...(persona.gustos || []).map(g => ({ ...g, etiqueta: '<span class="text-success fw-semibold"><i class="bi bi-heart-fill me-1"></i>Le encanta</span>' })),
+            ...(persona.disgustos || []).map(d => ({ ...d, etiqueta: '<span class="text-danger fw-semibold"><i class="bi bi-x-circle-fill me-1"></i>Evita</span>' }))
+          ];
+
+          if (combinados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-3">Sin registros adicionales.</td></tr>`;
+          } else {
+            combinados.forEach(reg => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${reg.etiqueta}</td>
+                <td><small class="text-muted fw-semibold">${reg.categoria}</small></td>
+                <td>${reg.descripcion}</td>
               `;
               tbody.appendChild(tr);
             });
@@ -666,18 +693,18 @@
       });
       btnReset.addEventListener('click', () => mostrarVista(0));
       document.getElementById('btnIrNivel3')?.addEventListener('click', () => {
-        if (personaActual) abrirNivel3(personaActual, 'gustos', null);
+        if (personaActual) abrirNivel3(personaActual, 'mensajes');
       });
       document.getElementById('tabDrillGustos')?.addEventListener('click', () => {
-        if (personaActual) abrirNivel3(personaActual, 'gustos', null);
+        if (personaActual) abrirNivel3(personaActual, 'gustos');
       });
       document.getElementById('tabDrillMensajes')?.addEventListener('click', () => {
-        if (personaActual) abrirNivel3(personaActual, 'mensajes', null);
+        if (personaActual) abrirNivel3(personaActual, 'mensajes');
       });
     }
 
     // =========================================================================
-    // MOTOR 2: DRILL-DOWN DEL RADAR DE AFINIDAD (POR SUBCATEGORÍAS)
+    // MOTOR 2: RADAR DE AFINIDAD (4 NIVELES POR SUBCATEGORÍAS)
     // =========================================================================
     const radarDataEl = document.getElementById('datos-radar');
     if (radarDataEl) {
@@ -685,7 +712,7 @@
       const drillRadar = radarData.drilldown || { gustos: {}, disgustos: {} };
 
       let rNivel = 0;
-      let rModo = 'gustos'; // 'gustos' o 'disgustos'
+      let rModo = 'gustos';
       let rPilarActual = 'Valores';
       let rSubcatActual = null;
       let chartRadarSubcat = null;
@@ -717,14 +744,12 @@
         rHeader.classList.toggle('d-none', nivel === 0);
       }
 
-      // Sincronizamos cuando el usuario cambia entre Gustos y Disgustos
       document.querySelectorAll('[data-tipo-radar]').forEach(btn => {
         btn.addEventListener('click', () => {
           rModo = btn.dataset.tipoRadar || 'gustos';
         });
       });
 
-      // NIVEL 0 -> NIVEL 1: Gráfico de barras con las Subcategorías del Pilar elegido
       function abrirRadarNivel1(pilarNombre) {
         rPilarActual = pilarNombre;
         const subcategorias = (drillRadar[rModo] && drillRadar[rModo][pilarNombre]) || [];
@@ -764,11 +789,7 @@
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              x: {
-                beginAtZero: true,
-                max: 100,
-                ticks: { callback: v => v + '%' }
-              }
+              x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
             },
             plugins: {
               legend: { display: false },
@@ -785,16 +806,13 @@
             onClick: (evt, elements) => {
               if (elements.length > 0) {
                 const idx = elements[0].index;
-                if (subcategorias[idx]) {
-                  abrirRadarNivel2(subcategorias[idx]);
-                }
+                if (subcategorias[idx]) abrirRadarNivel2(subcategorias[idx]);
               }
             }
           }
         });
       }
 
-      // NIVEL 1 -> NIVEL 2: Temas de la Subcategoría y Personas que coinciden
       function abrirRadarNivel2(subcatObj) {
         rSubcatActual = subcatObj;
         rBreadcrumb.innerHTML = `<i class="bi bi-compass text-danger"></i> ${rPilarActual} ➔ ${subcatObj.nombre}`;
@@ -835,11 +853,9 @@
             tbody.appendChild(tr);
           });
         }
-
         mostrarVistaRadar(2);
       }
 
-      // NIVEL 2 -> NIVEL 3: Ficha de Sintonía de la persona seleccionada y enlace al chat
       function abrirRadarNivel3(persona) {
         const nombreCorto = persona.nombre.split(' ')[0];
         rBreadcrumb.innerHTML = `<i class="bi bi-compass text-danger"></i> ${rSubcatActual.nombre} ➔ ${nombreCorto}`;
@@ -870,20 +886,9 @@
           tbody.appendChild(tr);
         });
 
-        (persona.mensajes || []).forEach(m => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td><span class="badge bg-danger rounded-pill">Chat</span></td>
-            <td><small class="text-muted">${m.fecha}</small></td>
-            <td><em>"${m.contenido}"</em></td>
-          `;
-          tbody.appendChild(tr);
-        });
-
         mostrarVistaRadar(3);
       }
 
-      // Clic sobre los puntos del pentágono (#graficoRadar)
       const canvasRadar = document.getElementById('graficoRadar');
       if (canvasRadar) {
         canvasRadar.addEventListener('click', (evt) => {
@@ -898,14 +903,6 @@
         });
       }
 
-      // Clic sobre los botones rápidos de cada pilar debajo del radar
-      document.querySelectorAll('[data-pilar-jump]').forEach(chip => {
-        chip.addEventListener('click', () => {
-          abrirRadarNivel1(chip.dataset.pilarJump);
-        });
-      });
-
-      // Botones Atrás y Radar Original
       btnRadarBack.addEventListener('click', () => {
         if (rNivel === 3 && rSubcatActual) abrirRadarNivel2(rSubcatActual);
         else if (rNivel === 2) abrirRadarNivel1(rPilarActual);
@@ -913,6 +910,179 @@
       });
 
       btnRadarReset.addEventListener('click', () => mostrarVistaRadar(0));
+    }
+
+    // =========================================================================
+    // MOTOR 4: TIEMPO EN LA APLICACIÓN (4 NIVELES: AÑO -> MES -> SEMANA -> DÍA)
+    // =========================================================================
+    const tiempoDataEl = document.getElementById('datos-tiempo');
+    if (tiempoDataEl) {
+      const tiempoData = JSON.parse(tiempoDataEl.textContent);
+      const jerarquia = tiempoData.jerarquia || [];
+
+      let tNivel = 0; // 0: Meses del Año, 1: Semanas del Mes, 2: Días de la Semana, 3: Actividad del Día
+      let mesObjActual = null;
+      let semObjActual = null;
+      let diaNombreActual = null;
+
+      const tHeader = document.getElementById('tiempoDrillHeader');
+      const tBreadcrumb = document.getElementById('tiempoBreadcrumb');
+      const btnTiempoBack = document.getElementById('btnTiempoBack');
+      const btnTiempoReset = document.getElementById('btnTiempoReset');
+      const wrapperChart = document.getElementById('tiempoChartWrapper');
+      const vistaNivel3 = document.getElementById('tiempoNivel3');
+      const tituloCard = document.getElementById('tituloTiempoCard');
+      const labelTotal = document.getElementById('labelTotalTiempo');
+      const valorTotal = document.getElementById('total-tiempo');
+      const badgeNivel = document.getElementById('badgeNivelTiempo');
+      const hintClick = document.getElementById('hintTiempoClick');
+      const canvasTiempo = document.getElementById('graficoTiempo');
+
+      function actualizarGraficoTiempo(labels, data, unidad, colores) {
+        const chartT = Chart.getChart(canvasTiempo);
+        if (!chartT) return;
+        chartT.data.labels = labels;
+        chartT.data.datasets[0].data = data;
+        chartT.data.datasets[0].backgroundColor = colores;
+        chartT.options.scales.y.ticks.callback = (v) => `${v} ${unidad}`;
+        chartT.update();
+      }
+
+      // NIVEL 0: Vista Anual por Meses
+      function abrirTiempoNivel0() {
+        tNivel = 0;
+        tHeader.classList.add('d-none');
+        wrapperChart.classList.remove('d-none');
+        wrapperChart.classList.add('d-flex');
+        vistaNivel3.classList.add('d-none');
+        vistaNivel3.classList.remove('d-flex');
+
+        const labels = jerarquia.map(m => m.mes_corto);
+        const valores = jerarquia.map(m => m.horas);
+        const sumaHrs = valores.reduce((a, b) => a + b, 0);
+
+        tituloCard.textContent = 'Tiempo en la aplicación';
+        labelTotal.textContent = 'Total Semestre:';
+        valorTotal.textContent = `${sumaHrs} hrs`;
+        badgeNivel.textContent = 'Vista por Meses';
+        hintClick.innerHTML = `<i class="bi bi-hand-index-thumb text-danger"></i> Toca la barra de cualquier <strong>Mes</strong> para desglosar sus semanas`;
+
+        actualizarGraficoTiempo(labels, valores, 'hrs', '#D62D5A');
+      }
+
+      // NIVEL 1: Semanas del Mes seleccionado
+      function abrirTiempoNivel1(mesObj) {
+        tNivel = 1;
+        mesObjActual = mesObj;
+        tHeader.classList.remove('d-none');
+        wrapperChart.classList.remove('d-none');
+        wrapperChart.classList.add('d-flex');
+        vistaNivel3.classList.add('d-none');
+        vistaNivel3.classList.remove('d-flex');
+
+        const semanas = mesObj.semanas || [];
+        const labels = semanas.map(s => s.nombre);
+        const valores = semanas.map(s => s.horas);
+
+        tBreadcrumb.innerHTML = `<i class="bi bi-clock-history text-danger"></i> Año ➔ ${mesObj.mes_largo}`;
+        tituloCard.textContent = `Tiempo en ${mesObj.mes_largo}`;
+        labelTotal.textContent = `Total ${mesObj.mes_largo}:`;
+        valorTotal.textContent = `${mesObj.horas} hrs`;
+        badgeNivel.textContent = 'Semanas del Mes';
+        hintClick.innerHTML = `<i class="bi bi-hand-index-thumb text-danger"></i> Toca una <strong>Semana</strong> para ver tus minutos día por día`;
+
+        actualizarGraficoTiempo(labels, valores, 'hrs', '#E87265');
+      }
+
+      // NIVEL 2: Días de la Semana seleccionada
+      function abrirTiempoNivel2(semObj) {
+        tNivel = 2;
+        semObjActual = semObj;
+        tHeader.classList.remove('d-none');
+        wrapperChart.classList.remove('d-none');
+        wrapperChart.classList.add('d-flex');
+        vistaNivel3.classList.add('d-none');
+        vistaNivel3.classList.remove('d-flex');
+
+        const labels = semObj.dias_labels || [];
+        const valores = semObj.dias_data || [];
+        const totalMin = valores.reduce((a, b) => a + b, 0);
+
+        tBreadcrumb.innerHTML = `<i class="bi bi-clock-history text-danger"></i> ${mesObjActual.mes_largo} ➔ ${semObj.nombre}`;
+        tituloCard.textContent = `${semObj.nombre} de ${mesObjActual.mes_largo}`;
+        labelTotal.textContent = 'Tiempo en la semana:';
+        valorTotal.textContent = `${totalMin} min`;
+        badgeNivel.textContent = 'Días de la Semana';
+        hintClick.innerHTML = `<i class="bi bi-hand-index-thumb text-danger"></i> Toca cualquier <strong>Día</strong> para ver qué hiciste en la app`;
+
+        actualizarGraficoTiempo(labels, valores, 'min', '#A63A32');
+      }
+
+      // NIVEL 3: Actividad detallada del Día seleccionado
+      function abrirTiempoNivel3(diaLabel, minutosDia) {
+        tNivel = 3;
+        diaNombreActual = diaLabel;
+        tHeader.classList.remove('d-none');
+        wrapperChart.classList.add('d-none');
+        wrapperChart.classList.remove('d-flex');
+        vistaNivel3.classList.remove('d-none');
+        vistaNivel3.classList.add('d-flex');
+
+        tBreadcrumb.innerHTML = `<i class="bi bi-clock-history text-danger"></i> ${semObjActual.nombre} ➔ ${diaLabel}`;
+        tituloCard.textContent = `Actividad del ${diaLabel} (${mesObjActual.mes_largo})`;
+        labelTotal.textContent = 'Tiempo conectado ese día:';
+        valorTotal.textContent = `${minutosDia} min`;
+        badgeNivel.textContent = 'Detalle de Actividad';
+
+        const tbody = document.getElementById('tbodyTiempoNivel3');
+        tbody.innerHTML = '';
+        const listaAct = (semObjActual.actividades && semObjActual.actividades[diaLabel]) || [];
+
+        listaAct.forEach(act => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="fw-semibold"><i class="bi ${act.icono} me-1"></i>${act.tipo}</span></td>
+            <td><strong class="text-dark">${act.persona}</strong></td>
+            <td><small>${act.detalle}</small></td>
+            <td><span class="affinity-pill">${act.duracion}</span></td>
+          `;
+          tr.addEventListener('click', () => {
+            window.location.href = '/usuario/mensajes/';
+          });
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Inicializamos el gráfico en el Nivel 0 (Vista Anual por Meses)
+      if (jerarquia.length > 0 && canvasTiempo) {
+        setTimeout(() => abrirTiempoNivel0(), 50);
+
+        canvasTiempo.addEventListener('click', (evt) => {
+          const chartT = Chart.getChart(canvasTiempo);
+          if (!chartT) return;
+          const points = chartT.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+          if (points.length === 0) return;
+          const idx = points[0].index;
+
+          if (tNivel === 0 && jerarquia[idx]) {
+            abrirTiempoNivel1(jerarquia[idx]);
+          } else if (tNivel === 1 && mesObjActual && mesObjActual.semanas[idx]) {
+            abrirTiempoNivel2(mesObjActual.semanas[idx]);
+          } else if (tNivel === 2 && semObjActual) {
+            const diaElegido = semObjActual.dias_labels[idx];
+            const minElegido = semObjActual.dias_data[idx];
+            abrirTiempoNivel3(diaElegido, minElegido);
+          }
+        });
+      }
+
+      btnTiempoBack.addEventListener('click', () => {
+        if (tNivel === 3 && semObjActual) abrirTiempoNivel2(semObjActual);
+        else if (tNivel === 2 && mesObjActual) abrirTiempoNivel1(mesObjActual);
+        else abrirTiempoNivel0();
+      });
+
+      btnTiempoReset.addEventListener('click', () => abrirTiempoNivel0());
     }
   });
   </script>

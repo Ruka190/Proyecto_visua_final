@@ -19,6 +19,8 @@ urlpatterns = [
     path('usuario/buscador/', views.buscadorU, name='buscadorU'),
     path('usuario/mensajes/', views.mensajesU, name='mensajesU'),
     path('usuario/notificaciones/', views.notificacionesU, name='notificacionesU'),
+    path('usuario/mantenedor-limites/', views.mantenedor_disgustosU, name='mantenedor_disgustosU'),
+    path('usuario/mantenedor-conexiones/', views.mantenedor_matchesU, name='mantenedor_matchesU'),
     
     ## Administrador
     path('administrador/', views.administrador, name='administrador'),

@@ -72,6 +72,34 @@
             transform: translateY(-2px);
         }
 
+        /* Botones amigables de gestión personal */
+        .btn-profile-action {
+            background-color: #FFFDFB;
+            border: 1px solid #F3CFC4;
+            color: #5c3b44;
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .btn-profile-action:hover {
+            background-color: #D62D5A;
+            border-color: #D62D5A;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-profile-action:hover i {
+            color: #ffffff !important;
+        }
+
         /* Secciones internas (Cajas suaves) */
         .info-box {
             background-color: rgba(255, 255, 255, 0.65);
@@ -147,14 +175,20 @@
     <main class="profile-main-container">
         <div class="profile-card">
             
-            <!-- Botón de Editar Perfil ubicado en la esquina superior derecha -->
-            <div class="d-flex justify-content-end mb-2">
-                <a href="{% url 'editar_perfilU' %}" class="btn btn-sm btn-light border rounded-pill px-3 py-2 text-secondary shadow-sm" style="font-size: 0.82rem; font-weight: 600;">
-                    <i class="bi bi-pencil-square text-danger me-1"></i> Editar Perfil
+            <!-- Accesos directos y amigables para personalizar la experiencia -->
+            <div class="d-flex justify-content-end flex-wrap gap-2 mb-3">
+                <a href="{% url 'editar_perfilU' %}" class="btn-profile-action">
+                    <i class="bi bi-Sliders text-danger"></i><i class="bi bi-pencil-square text-danger"></i> Editar mi Perfil
+                </a>
+                <a href="{% url 'mantenedor_disgustosU' %}" class="btn-profile-action">
+                    <i class="bi bi-heartbreak text-danger"></i> Mis Límites
+                </a>
+                <a href="{% url 'mantenedor_matchesU' %}" class="btn-profile-action">
+                    <i class="bi bi-hearts text-danger"></i> Mis Matches y Chats
                 </a>
             </div>
 
-            <!-- Cabecera del Perfil (Avatar y Nombre conectados a AWS RDS) -->
+            <!-- Cabecera del Perfil -->
             <div class="text-center mb-5">
                 <div class="profile-avatar-wrapper">
                     <img src="{% static 'usuario/img/javier.jpg' %}" alt="{{ usuario.nombre|default:'Javier' }}" class="profile-avatar">
@@ -209,14 +243,14 @@
                 </div>
             </div>
 
-            <!-- Sección: Mis Fotos (Galería dinámica conectada) -->
+            <!-- Sección: Mis Fotos -->
             <div class="info-box mb-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="section-title mb-0">
                         <i class="bi bi-images text-danger"></i> Mis Fotos ({{ total_fotos }}/6)
                     </h2>
                     <a href="{% url 'editar_perfilU' %}" class="text-muted small text-decoration-none">
-                        <i class="bi bi-plus-circle text-danger me-1"></i> Administrar o añadir fotos
+                        <i class="bi bi-plus-circle text-danger me-1"></i> Cambiar o añadir fotos
                     </a>
                 </div>
 

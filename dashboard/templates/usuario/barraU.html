@@ -56,13 +56,31 @@
         box-shadow: 0 4px 12px rgba(232, 114, 101, 0.4);
     }
 
-    .avatar-circle { padding: 0; overflow: hidden; border-color: #7b2c3a; }
-    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .avatar-circle {
+        padding: 0;
+        overflow: hidden;
+        border-color: #7b2c3a;
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: all 0.2s ease;
+    }
+
+    .avatar-circle.active {
+        background-color: transparent !important;
+        border: 3px solid #D62D5A !important;
+        box-shadow: 0 0 0 3px rgba(214, 45, 90, 0.22) !important;
+    }
     
     /* Textos y elementos exclusivos de Desktop */
     .nav-item-text { display: none; }
     .sidebar-header-box { display: none; }
     .sidebar-toggle-btn { display: none; }
+    .sidebar-divider { display: none; }
 
     /* =========================================
        Navegación Desktop (Menú Lateral Izquierdo)
@@ -182,33 +200,49 @@
             text-overflow: ellipsis;
         }
 
+        .sidebar-nav-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .sidebar-divider {
+            display: block;
+            width: 100%;
+            height: 1px;
+            background-color: #f0e2dd;
+            margin-top: auto;
+            margin-bottom: 0.8rem;
+        }
+
         .avatar-circle {
             border-radius: 14px !important;
             border: none !important;
             padding: 0 12px !important;
             height: 52px !important;
+            margin-bottom: 0 !important;
         }
         
         .avatar-circle img {
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: inline-block;
             margin-right: 12px;
             border: 2px solid #E87265;
         }
 
-        .sidebar-nav-container {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
+        .avatar-circle.active {
+            background-color: #FDECE7 !important;
+            border: none !important;
+            border-left: 4px solid #E87265 !important;
+            border-radius: 0 14px 14px 0 !important;
+            box-shadow: none !important;
         }
-        
-        .avatar-container {
-            margin-top: auto;
-            border-top: 1px solid #f0e2dd;
-            padding-top: 1rem;
-            border-radius: 0 !important;
+
+        .avatar-circle.active img {
+            border-color: #D62D5A;
+            box-shadow: 0 0 0 3px rgba(214, 45, 90, 0.18);
         }
 
         /* =========================================
@@ -235,10 +269,13 @@
         }
 
         body.sidebar-collapsed .nav-item-circle {
-            justify-content: center;
-            padding: 0;
+            width: 48px;
             height: 48px;
-            border-radius: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            justify-content: center;
+            padding: 0 !important;
+            border-radius: 50% !important;
             margin-bottom: 0.8rem;
         }
 
@@ -248,21 +285,31 @@
         }
 
         body.sidebar-collapsed .nav-item-circle.active {
-            border-left: none;
-            border-radius: 50%;
+            border-left: none !important;
+            border-radius: 50% !important;
             background-color: #E87265 !important;
             color: #ffffff !important;
         }
 
-        body.sidebar-collapsed .avatar-circle img {
-            margin-right: 0;
-            width: 38px;
-            height: 38px;
+        /* Avatar circular limpio sin fondo cuadrado cuando está colapsado */
+        body.sidebar-collapsed .avatar-circle,
+        body.sidebar-collapsed .avatar-circle.active {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
 
-        body.sidebar-collapsed .avatar-container {
-            padding-top: 0.5rem;
-            border-top: none;
+        body.sidebar-collapsed .avatar-circle img {
+            margin-right: 0;
+            width: 42px;
+            height: 42px;
+            border: 2.5px solid #E3B9AE;
+        }
+
+        body.sidebar-collapsed .avatar-circle.active img {
+            border: 3px solid #D62D5A;
+            box-shadow: 0 0 0 4px rgba(232, 114, 101, 0.28);
+            transform: scale(1.04);
         }
     }
 </style>
@@ -290,7 +337,7 @@
             <span class="nav-item-text">Inicio</span>
         </a>
 
-        <!-- Buscador (Icono de Lupa actualizado) -->
+        <!-- Buscador -->
         <a href="{% url 'buscadorU' %}" class="nav-item-circle {% if request.resolver_match.url_name == 'buscadorU' %}active{% endif %}" title="Buscador">
             <i class="bi bi-search"></i>
             <span class="nav-item-text">Buscador</span>
@@ -308,8 +355,11 @@
             <span class="nav-item-text">Notificaciones</span>
         </a>
 
-        <!-- Avatar / Perfil -->
-        <a href="{% url 'perfilU' %}" class="nav-item-circle avatar-circle avatar-container {% if request.resolver_match.url_name == 'perfilU' %}active{% endif %}" title="Mi Perfil">
+        <!-- Separador sutil antes del perfil en PC -->
+        <div class="sidebar-divider"></div>
+
+        <!-- Avatar / Perfil (activo tanto en perfilU como en sus subpáginas) -->
+        <a href="{% url 'perfilU' %}" class="nav-item-circle avatar-circle {% if request.resolver_match.url_name == 'perfilU' or request.resolver_match.url_name == 'editar_perfilU' or request.resolver_match.url_name == 'mantenedor_disgustosU' or request.resolver_match.url_name == 'mantenedor_matchesU' or request.resolver_match.url_name == 'graficosU' %}active{% endif %}" title="Mi Perfil">
             <img src="{% static 'usuario/img/javier.jpg' %}" alt="Perfil">
             <span class="nav-item-text">Mi Perfil</span>
         </a>

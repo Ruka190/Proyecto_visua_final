@@ -10,22 +10,21 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2&pf=8f567vrm@ibjmb^5r_0-__d7lh87f!(pedu@$@nhxdu-c'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# Configuración de despliegue: define estos valores en el entorno local o en Elastic Beanstalk.
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false').lower() in ('1', 'true', 'yes')
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
 
 
 # Application definition
@@ -74,18 +73,16 @@ WSGI_APPLICATION = 'BeyondDate.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-# CAPA DE DATOS: Configuración del motor y conexión con AWS RDS (MySQL)
-# Establece la comunicación remota entre el servidor Django y la base 
-# de datos alojada en la nube para la gestión de usuarios, perfiles y matches.
+# Conexión a la instancia RDS existente; no crear una base nueva en Beanstalk.
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'beyonddatedb',
-        'USER': 'admin',
-        'PASSWORD': 'Jforno2013',
-        'HOST': 'beyonddatedb.cni0iagumyh8.us-east-1.rds.amazonaws.com',
-        'PORT': '3306',
+        'NAME': os.environ['RDS_DB_NAME'],
+        'USER': os.environ['RDS_USERNAME'],
+        'PASSWORD': os.environ['RDS_PASSWORD'],
+        'HOST': os.environ['RDS_HOSTNAME'],
+        'PORT': os.environ.get('RDS_PORT', '3306'),
     }
 }
 
@@ -124,7 +121,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Email

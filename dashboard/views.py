@@ -4,6 +4,12 @@ import json
 from django.core.cache import cache
 from django.shortcuts import render, redirect
 from django.db.models import Count, Sum, Avg, Q
+from django.contrib import messages
+from django.db import IntegrityError
+from django.urls import reverse
+from urllib.parse import urlencode
+from collections import Counter, defaultdict
+from uuid import uuid4
 from .models import (
     Administrador,
     Cliente,
@@ -931,16 +937,18 @@ def administrador(request):
 
 
 def admin_inicio(request):
+    # 1. Datos de Conexiones recientes
     labels = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"]
     datasets = [{
-        "data": [120, 180, 90, 220, 150],
-        "borderColor": "#B94448",
-        "backgroundColor": "#B944482E",
-        "tension": 0.2,
-        "fill": True,
-    }]
+            "data": [120, 180, 90, 220, 150],
+            "borderColor": "#B94448",
+            "backgroundColor": "#B944482E",
+            "tension": 0.2,
+            "fill": True,
+        }]
     matches_totales = 20012
 
+    # 2. Datos del Histórico de Matches (Conexión a BD AWS)
     matches_exitosos = Match.objects.filter(estado=1, fechamatch__isnull=False)
 
     conteo_dias = {"Lun": 0, "Mar": 0, "Mié": 0, "Jue": 0, "Vie": 0, "Sáb": 0, "Dom": 0}
@@ -983,16 +991,87 @@ def admin_inicio(request):
         },
     }
 
+    # 3. Distribución de edades y Gustos
     edades_labels = ["18-19", "20-29", "30-39", "40-49", "50-59", "60+"]
-    hombres_por_edad = {"18-19": 38, "20-29": 55, "30-39": 64, "40-49": 52, "60+": 22}
-    mujeres_por_edad = {"18-19": 42, "20-29": 61, "30-39": 70, "40-49": 58, "60+": 35}
+    conteos = {
+        grupo: {rango: 0 for rango in edades_labels}
+        for grupo in ("Hombres", "Mujeres", "Otros")
+    }
+    hoy = date.today()
+
+    for nacimiento, sexo in Cliente.objects.values_list(
+        "fechanacimiento", "sexo"
+    ).iterator():
+        if not nacimiento:
+            continue
+
+        edad = hoy.year - nacimiento.year - (
+            (hoy.month, hoy.day) < (nacimiento.month, nacimiento.day)
+        )
+        if edad < 18:
+            continue
+
+        if edad < 20:
+            rango = "18-19"
+        elif edad < 30:
+            rango = "20-29"
+        elif edad < 40:
+            rango = "30-39"
+        elif edad < 50:
+            rango = "40-49"
+        elif edad < 60:
+            rango = "50-59"
+        else:
+            rango = "60+"
+
+        sexo = (sexo or "").strip().casefold()
+        if sexo in ("masculino", "hombre", "m"):
+            grupo = "Hombres"
+        elif sexo in ("femenino", "mujer", "f"):
+            grupo = "Mujeres"
+        else:
+            grupo = "Otros"
+        conteos[grupo][rango] += 1
+
     datasets2 = [
-        {"label": "Hombres", "data": [-hombres_por_edad.get(rango, 0) for rango in edades_labels], "backgroundColor": "#652E38"},
-        {"label": "Mujeres", "data": [mujeres_por_edad.get(rango, 0) for rango in edades_labels], "backgroundColor": "#E86E67"},
+        {
+            "label": "Hombres",
+            "data": [-conteos["Hombres"][r] for r in edades_labels],
+            "backgroundColor": "#652E38",
+        },
+        {
+            "label": "Mujeres",
+            "data": [conteos["Mujeres"][r] for r in edades_labels],
+            "backgroundColor": "#E86E67",
+        },
+        {
+            "label": "Otros",
+            "data": [conteos["Otros"][r] for r in edades_labels],
+            "backgroundColor": "#C7B6BC",
+        },
     ]
 
     gustos_labels = ["Música", "Viajes", "Cine", "Deporte", "Libros"]
     gustos_valores = [60, 55, 49, 32, 2]
+
+    conexiones_resientes = {
+        "labels": ["Lun", "Mar", "Mié"],
+        "usuarios": {"hombres": [3, 4, 2], "mujeres": [5, 2, 4]},
+        "administradores": {"hombres": [1, 0, 1], "mujeres": [0, 1, 0]}
+        }
+
+    matches_diarios = [
+        {
+            "fecha": fila["fechamatch"].isoformat(),
+            "total": fila["total"],
+        }
+        for fila in (
+            matches_exitosos.order_by()
+            .values("fechamatch")
+            .annotate(total=Count("idmatch"))
+            .order_by("fechamatch")
+        )
+    ]
 
     context = {
         "clientes_registrados": 20,
@@ -1008,12 +1087,260 @@ def admin_inicio(request):
         "gustos_valores_json": json.dumps(gustos_valores),
         "kpi_matchs": 60.3,
         "kpi_estancados": 3.25,
+        "conexiones_recientes_json": json.dumps(conexiones_resientes),
+        "matches_diarios_json": json.dumps(matches_diarios, ensure_ascii=False),
+        "edades_desde_bd": True,
     }
+    ######## Bloque para probar el sankey
+    parejas = {}
+    registros = (
+        Match.objects.filter(estado__in=[0, 1])
+        .order_by("-fechamatch", "-idmatch")
+        .values_list("cliente1rut", "cliente2rut", "estado")
+    )
+    for rut1, rut2, estado in registros:
+        if rut1 and rut2 and rut1 != rut2:
+            parejas.setdefault(tuple(sorted((rut1, rut2))), (rut1, rut2, estado))
+
+    ruts = {rut for pareja in parejas for rut in pareja}
+
+    def preferencias_por_usuario(modelo):
+        datos = defaultdict(lambda: defaultdict(set))
+        filas = modelo.objects.filter(rut__in=ruts).values_list(
+            "rut", "categoria", "descripcion"
+        )
+        for rut, categoria, descripcion in filas:
+            if categoria and descripcion:
+                datos[rut][categoria].add(descripcion.strip().casefold())
+        return datos
+
+    gustos = preferencias_por_usuario(Gusto)
+    disgustos = preferencias_por_usuario(Disgusto)
+
+    def categoria_compartida(datos, rut1, rut2, alternativa):
+        coincidencias = []
+        for categoria in datos[rut1].keys() & datos[rut2].keys():
+            cantidad = len(datos[rut1][categoria] & datos[rut2][categoria])
+            if cantidad:
+                coincidencias.append((cantidad, categoria))
+        return sorted(coincidencias, key=lambda item: (-item[0], item[1]))[0][1] if coincidencias else alternativa
+
+    conteo = Counter()
+    for rut1, rut2, estado in parejas.values():
+        gusto = categoria_compartida(gustos, rut1, rut2, "Sin gusto común")
+        disgusto = categoria_compartida(disgustos, rut1, rut2, "Sin disgusto común")
+        resultado = "Match" if estado == 1 else "No match"
+        conteo[(gusto, disgusto, resultado)] += 1
+
+    context["sankey_admin_json"] = json.dumps({
+        "sintetico": False,
+        "paths": [
+            {"gusto": gusto, "disgusto": disgusto,
+            "resultado": resultado, "total": total}
+            for (gusto, disgusto, resultado), total in conteo.items()
+        ],
+    }, ensure_ascii=False)
+    ########
+
+    ####### Radar
+    pilares = [
+        "Valores", "Hobbies", "Dinámica Social",
+        "Lenguaje del Amor", "Metas & Futuro",
+    ]
+
+    def datos_radar(modelo):
+        por_persona = defaultdict(list)
+        por_descripcion = defaultdict(list)
+
+        for rut, categoria, descripcion, valor in modelo.objects.values_list(
+            "rut", "categoria", "descripcion", "valor"
+        ):
+            categoria = (categoria or "").strip()
+            if categoria not in pilares or not rut:
+                continue
+            try:
+                puntuacion = float(str(valor).replace(",", "."))
+            except (TypeError, ValueError):
+                continue
+            if not 0 <= puntuacion <= 100:
+                continue
+
+            por_persona[(categoria, rut)].append(puntuacion)
+            if descripcion:
+                por_descripcion[(categoria, descripcion.strip())].append(puntuacion)
+
+        promedios = []
+        detalle = {}
+        for categoria in pilares:
+            valores = [
+                sum(puntos) / len(puntos)
+                for (cat, _rut), puntos in por_persona.items()
+                if cat == categoria
+            ]
+            promedios.append(round(sum(valores) / len(valores), 1) if valores else None)
+
+            items = [
+                (nombre, puntos)
+                for (cat, nombre), puntos in por_descripcion.items()
+                if cat == categoria
+            ]
+            items.sort(key=lambda item: (-len(item[1]), item[0]))
+            detalle[categoria] = [
+                {"nombre": nombre, "porcentaje": round(sum(puntos) / len(puntos), 1)}
+                for nombre, puntos in items[:5]
+            ]
+
+        return promedios, detalle
+
+    gustos_data, gustos_detalle = datos_radar(Gusto)
+    disgustos_data, disgustos_detalle = datos_radar(Disgusto)
+
+    sexo_por_rut = dict(
+        Cliente.objects.values_list("usuario_rut_id", "sexo")
+    )
+
+    def agregar_genero(detalle, modelo):
+        usuarios_por_preferencia = defaultdict(set)
+
+        for rut, categoria, descripcion, valor in modelo.objects.values_list(
+            "rut", "categoria", "descripcion", "valor"
+        ):
+            if not rut or not categoria or not descripcion:
+                continue
+            try:
+                puntuacion = float(str(valor).replace(",", "."))
+            except (TypeError, ValueError):
+                continue
+            if not 0 <= puntuacion <= 100:
+                continue
+
+            clave = (categoria.strip(), descripcion.strip())
+            usuarios_por_preferencia[clave].add(rut)
+
+        for categoria, items in detalle.items():
+            for item in items:
+                conteo = {"hombres": 0, "mujeres": 0, "otros": 0}
+                for rut in usuarios_por_preferencia[(categoria, item["nombre"])]:
+                    sexo = (sexo_por_rut.get(rut) or "").strip().casefold()
+                    if sexo in ("masculino", "hombre"):
+                        conteo["hombres"] += 1
+                    elif sexo in ("femenino", "mujer"):
+                        conteo["mujeres"] += 1
+                    else:
+                        conteo["otros"] += 1
+                item["genero"] = conteo
+
+    agregar_genero(gustos_detalle, Gusto)
+    agregar_genero(disgustos_detalle, Disgusto)
+
+
+    context["radar_admin_json"] = json.dumps({
+        "categorias": pilares,
+        "gustos_data": gustos_data,
+        "disgustos_data": disgustos_data,
+        "drilldown": {
+            "gustos": gustos_detalle,
+            "disgustos": disgustos_detalle,
+        },
+    }, ensure_ascii=False)
+
+    clientes = {
+        rut: (orientacion, nacimiento)
+        for rut, orientacion, nacimiento in Cliente.objects.values_list(
+            "usuario_rut_id", "orientacionsexual", "fechanacimiento"
+        )
+    }
+
+    por_orientacion = defaultdict(Counter)
+    por_brecha = defaultdict(Counter)
+
+    for rut1, rut2, estado in parejas.values():
+        persona1 = clientes.get(rut1)
+        persona2 = clientes.get(rut2)
+        if not persona1 or not persona2:
+            continue
+
+        clave_resultado = "match" if estado == 1 else "no_match"
+        orientacion1, nacimiento1 = persona1
+        orientacion2, nacimiento2 = persona2
+
+        if orientacion1 and orientacion2:
+            grupo = " + ".join(sorted(
+                [orientacion1.strip(), orientacion2.strip()],
+                key=str.casefold
+            ))
+            por_orientacion[grupo][clave_resultado] += 1
+
+        if nacimiento1 and nacimiento2:
+            diferencia = abs((nacimiento1 - nacimiento2).days) / 365.2425
+            if diferencia < 3:
+                grupo = "0–2 años"
+            elif diferencia < 6:
+                grupo = "3–5 años"
+            elif diferencia < 10:
+                grupo = "6–9 años"
+            else:
+                grupo = "10 años o más"
+            por_brecha[grupo][clave_resultado] += 1
+
+    def filas_factor(conteos, orden=None):
+        nombres = orden or sorted(
+            conteos,
+            key=lambda nombre: -sum(conteos[nombre].values())
+        )
+        return [
+            {
+                "label": nombre,
+                "match": conteos[nombre]["match"],
+                "no_match": conteos[nombre]["no_match"],
+            }
+            for nombre in nombres
+            if nombre in conteos
+        ]
+
+    context["match_factores_json"] = json.dumps({
+        "sintetico": False,
+        "orientacion": filas_factor(por_orientacion),
+        "brecha_edad": filas_factor(
+            por_brecha,
+            ["0–2 años", "3–5 años", "6–9 años", "10 años o más"]
+        ),
+    }, ensure_ascii=False)
+        #######
+    ####kpis
+    resultados_diarios = (
+        Match.objects
+        .filter(fechamatch__isnull=False, estado__in=[0, 1])
+        .values("fechamatch")
+        .annotate(
+            match=Count("idmatch", filter=Q(estado=1)),
+            no_match=Count("idmatch", filter=Q(estado=0)),
+        )
+        .order_by("fechamatch")
+    )
+
+    context["kpi_diarios_json"] = json.dumps([
+        {
+            "fecha": fila["fechamatch"].isoformat(),
+            "match": fila["match"],
+            "no_match": fila["no_match"],
+        }
+        for fila in resultados_diarios
+    ], ensure_ascii=False)
+
+        #####
 
     return render(request, "admin/inicio.html", context)
 
 
 def admin_estadisticas(request):
+    """
+    [CONEXIÓN A BASE DE DATOS - AWS RDS]
+    Función que consulta la tabla 'Match' en la base de datos de AWS para
+    generar dinámicamente el histórico de matches según la fecha real (fechamatch)
+    agrupada por días de la semana y periodos.
+    """
+    # Consulta a la BD filtrando los matches exitosos (estado=1)
     matches_exitosos = Match.objects.filter(estado=1, fechamatch__isnull=False)
 
     conteo_dias = {"Lun": 0, "Mar": 0, "Mié": 0, "Jue": 0, "Vie": 0, "Sáb": 0, "Dom": 0}
@@ -1057,6 +1384,7 @@ def admin_estadisticas(request):
         },
     }
 
+    # 2. Distribución de edades (Datos simulados para lucir bien el panel)
     edades_labels = ["18-19", "20-29", "30-39", "40-49", "50-59", "60+"]
     hombres_por_edad = {"18-19": 38, "20-29": 55, "30-39": 64, "40-49": 52, "60+": 22}
     mujeres_por_edad = {"18-19": 42, "20-29": 61, "30-39": 70, "40-49": 58, "60+": 35}
@@ -1073,6 +1401,7 @@ def admin_estadisticas(request):
         },
     ]
 
+    # 3. Top gustos (Datos simulados)
     gustos_labels = ["Música", "Viajes", "Cine", "Deporte", "Libros"]
     gustos_valores = [60, 55, 49, 32, 2]
 
@@ -1089,75 +1418,316 @@ def admin_estadisticas(request):
     return render(request, "admin/estadisticas.html", context)
 
 
+RUT_ADMIN_DEMO = "admin-demo"
+
 def admin_notificaciones(request):
-    notificaciones = [
+    if not request.session.get("es_admin"):
+        return redirect("login_view")
+
+    es_demo = not request.session.get("admin_rut")
+    if request.method == "POST" and request.POST.get("accion") in ("editar", "eliminar"):
+        accion = request.POST["accion"]
+        aviso_id = request.POST.get("idnotificacion", "").strip()
+
+        if es_demo:
+            permitidos = Notificacion.objects.filter(rut=RUT_ADMIN_DEMO)
+        else:
+            ruts_admin = Administrador.objects.values_list(
+                "usuario_rut_id", flat=True
+            )
+            permitidos = Notificacion.objects.filter(rut__in=ruts_admin)
+
+        aviso = permitidos.filter(idnotificacion=aviso_id).first()
+
+        if aviso is None:
+            messages.error(request, "No se encontró la notificación.")
+        elif accion == "editar":
+            tipo = request.POST.get("tipo", "")
+            mensaje = request.POST.get("mensaje", "").strip()
+
+            if tipo not in ("Reporte", "Mensaje", "Sistema"):
+                messages.error(request, "Tipo de aviso no válido.")
+            elif not mensaje or len(mensaje) > 180:
+                messages.error(request, "Escribe un mensaje de hasta 180 caracteres.")
+            else:
+                aviso.informacion = f"{tipo}: {mensaje}"
+                try:
+                    aviso.save(update_fields=["informacion"])
+                    messages.success(request, "Notificación actualizada.")
+                except IntegrityError:
+                    messages.error(request, "La base de datos rechazó el cambio.")
+        else:
+            try:
+                aviso.delete()
+                messages.success(request, "Notificación eliminada.")
+            except IntegrityError:
+                messages.error(request, "No se pudo eliminar la notificación.")
+
+        return redirect("admin_notificaciones")
+    if request.method == "POST" and request.POST.get("accion") == "crear":
+        rut = (
+            RUT_ADMIN_DEMO if es_demo
+            else request.POST.get("rut", "").strip()
+        )
+        tipo = request.POST.get("tipo", "")
+        mensaje = request.POST.get("mensaje", "").strip()
+
+        if tipo not in ("Reporte", "Mensaje", "Sistema"):
+            messages.error(request, "Selecciona un tipo válido.")
+        elif not mensaje or len(mensaje) > 180:
+            messages.error(request, "Escribe un mensaje de hasta 180 caracteres.")
+        elif not es_demo and not Administrador.objects.filter(
+            usuario_rut_id=rut
+        ).exists():
+            messages.error(request, "Selecciona un administrador válido.")
+        else:
+            Notificacion.objects.create(
+                idnotificacion=f"ADM-{uuid4().hex}",
+                rut=rut,
+                informacion=f"{tipo}: {mensaje}",
+                fecha=date.today(),
+                estado=0,
+            )
+            messages.success(request, "Notificación creada.")
+
+        return redirect("admin_notificaciones")
+
+    if es_demo:
+        registros = Notificacion.objects.filter(rut=RUT_ADMIN_DEMO)
+    else:
+        ruts_admin = Administrador.objects.values_list(
+            "usuario_rut_id", flat=True
+        )
+        registros = Notificacion.objects.filter(rut__in=ruts_admin)
+
+    registros = registros.order_by("-fecha", "-idnotificacion")[:50]
+
+    notificaciones_reales = []
+    for n in registros:
+        texto = (n.informacion or "").casefold()
+        if any(palabra in texto for palabra in ("reporte", "denuncia", "moderaci")):
+            tipo, titulo = "reportes", "Revisar reporte"
+        elif any(palabra in texto for palabra in ("mensaje", "correo", "comunicaci")):
+            tipo, titulo = "mensajes", "Revisar comunicación"
+        else:
+            tipo, titulo = "sistema", "Aviso del sistema"
+
+        notificaciones_reales.append({
+            "id": n.idnotificacion,
+            "tipo": tipo,
+            "titulo": titulo,
+            "informacion": n.informacion,
+            "fecha": n.fecha,
+            "no_leida": n.estado == 0,
+        })
+
+
+    administradores_destino = [
         {
-            "id_notificacion": 1,
-            "tema": "Reporte",
-            "fecha": "Enero",
-            "id_usuario": 2,
-            "mensaje": "Usuario reportado por feo",
-            "estado": 1
-        },
-        {
-            "id_notificacion": 2,
-            "tema": "Mensaje",
-            "fecha": "Febrero",
-            "id_usuario": 3,
-            "mensaje": "Nuevo correo en bandeja",
-            "estado": 1
-        },
-        {
-            "id_notificacion": 3,
-            "tema": "Reporte",
-            "fecha": "Marzo",
-            "id_usuario": 1,
-            "mensaje": "Usuario menor de edad",
-            "estado": 2
+            "rut": admin.usuario_rut.rut,
+            "nombre": f"{admin.usuario_rut.nombre} {admin.usuario_rut.apellidopaterno}",
         }
+        for admin in Administrador.objects.select_related("usuario_rut")
     ]
 
     return render(
         request,
         "admin/notificacion.html",
-        {"notificaciones": notificaciones}
+        {
+        "notificaciones_reales": notificaciones_reales,
+        "administradores_destino": administradores_destino,
+        "notificaciones_demo_bd": True,
+        "acciones_notificaciones_habilitadas": True,
+    },
     )
 
 
 def admin_usuarios(request):
+    if request.method == "POST":
+        accion = request.POST.get("accion", "")
+        rut = request.POST.get("rut", "").strip()
+        usuario = Usuario.objects.filter(rut=rut).first()
+
+        if usuario is None:
+            messages.error(request, "No se encontró el usuario.")
+            return redirect("admin_usuarios")
+
+        if accion == "editar":
+            nombre = request.POST.get("nombre", "").strip()
+            paterno = request.POST.get("apellidopaterno", "").strip()
+            materno = request.POST.get("apellidomaterno", "").strip()
+            correo = request.POST.get("correo", "").strip()
+            telefono = request.POST.get("telefono", "").strip()
+            estado = request.POST.get("estado", "")
+
+            if not all((nombre, paterno, materno, correo, telefono)):
+                messages.error(request, "Completa todos los campos.")
+            elif not telefono.isdecimal() or int(telefono) > 2147483647:
+                messages.error(request, "El teléfono debe ser un número válido.")
+            elif estado not in ("Activo", "Suspendido"):
+                messages.error(request, "Estado no válido.")
+            else:
+                usuario.nombre = nombre
+                usuario.apellidopaterno = paterno
+                usuario.apellidomaterno = materno
+                usuario.correo = correo
+                usuario.telefono = int(telefono)
+                usuario.estado = 1 if estado == "Activo" else 0
+
+                try:
+                    usuario.save(update_fields=[
+                        "nombre", "apellidopaterno", "apellidomaterno",
+                        "correo", "telefono", "estado",
+                    ])
+                    messages.success(request, "Usuario actualizado.")
+                except IntegrityError:
+                    messages.error(request, "La base de datos rechazó el cambio.")
+
+        elif accion == "eliminar":
+            try:
+                usuario.delete()
+                messages.success(request, "Usuario eliminado.")
+            except IntegrityError:
+                messages.error(
+                    request,
+                    "No se pudo eliminar: existen registros relacionados.",
+                )
+        else:
+            messages.error(request, "Acción no reconocida.")
+
+        return redirect("admin_usuarios")
+
+
+
+    registros = Usuario.objects.values(
+        "rut", "nombre", "apellidopaterno",
+        "apellidomaterno", "correo", "estado", "telefono"
+    ).order_by("nombre", "apellidopaterno")
+
     users = [
         {
-            "rut": "12.345.678-9",
-            "nombre": "María",
-            "apellidoPaterno": "González",
-            "apellidoMaterno": "Pérez",
-            "correo": "maria@ejemplo.cl",
-            "estado": "Activo",
-        },
-        {
-            "rut": "18.765.432-1",
-            "nombre": "Juan",
-            "apellidoPaterno": "Soto",
-            "apellidoMaterno": "Rojas",
-            "correo": "juan@ejemplo.cl",
-            "estado": "Suspendido",
-        },
+            "rut": u["rut"],
+            "nombre": u["nombre"],
+            "apellidoPaterno": u["apellidopaterno"],
+            "apellidoMaterno": u["apellidomaterno"],
+            "correo": u["correo"],
+            "estado": "Activo" if u["estado"] == 1 else "Suspendido",
+            "telefono": u["telefono"],
+            "editar_url": request.path,
+            "eliminar_url": request.path,
+        }
+        for u in registros
     ]
 
-    return render(
-        request,
-        "admin/usuarios.html",
-        {"users": users}
-    )
+    return render(request, "admin/usuarios.html", {"users": users})
 
 
 def admin_mensajes(request):
-    mensajes_db = Mensaje.objects.all().order_by('-fechaenvio', '-idmensaje')[:30]
-    return render(
-        request,
-        "admin/mensajes.html",
-        {"mensajes": mensajes_db}
+    if not request.session.get("es_admin"):
+        return redirect("login_view")
+
+    rut_admin = request.session.get("admin_rut") or RUT_ADMIN_DEMO
+
+    if request.method == "POST":
+        receptor_rut = request.POST.get("receptor_rut", "").strip()
+        contenido = request.POST.get("contenido", "").strip()
+
+        if not Usuario.objects.filter(rut=receptor_rut).exists():
+            messages.error(request, "No se encontró al usuario destinatario.")
+        elif not contenido or len(contenido) > 200:
+            messages.error(request, "Escribe un mensaje de hasta 200 caracteres.")
+        else:
+            Mensaje.objects.create(
+                idmensaje=f"MSG-ADM-{uuid4().hex[:20]}",
+                rut1=rut_admin,
+                rut2=receptor_rut,
+                contenido=contenido,
+                fechaenvio=date.today(),
+                leido=0,
+            )
+            cache.delete(f"chat_historial_{receptor_rut}_{rut_admin}")
+            cache.delete(f"contactos_usuario_{receptor_rut}")
+            messages.success(request, "Respuesta enviada.")
+
+        url = reverse("admin_mensajes")
+        return redirect(f"{url}?{urlencode({'chat': receptor_rut})}")
+
+    registros = list(
+        Mensaje.objects.filter(
+            Q(rut1=rut_admin) | Q(rut2=rut_admin)
+        ).order_by("-fechaenvio", "-idmensaje")
     )
+
+    ruts = {
+        m.rut2 if m.rut1 == rut_admin else m.rut1
+        for m in registros
+    }
+    usuarios = {
+        u.rut: u
+        for u in Usuario.objects.filter(rut__in=ruts)
+    }
+
+    conversaciones = {}
+    for m in registros:
+        otro_rut = m.rut2 if m.rut1 == rut_admin else m.rut1
+        usuario = usuarios.get(otro_rut)
+        if usuario is None:
+            continue
+
+        if otro_rut not in conversaciones:
+            conversaciones[otro_rut] = {
+                "rut": otro_rut,
+                "nombre": f"{usuario.nombre} {usuario.apellidopaterno}".strip(),
+                "fecha": m.fechaenvio.strftime("%d/%m/%Y"),
+                "ultimo_mensaje": m.contenido,
+                "no_leidos": 0,
+                "activo": False,
+            }
+
+        if m.rut2 == rut_admin and m.leido == 0:
+            conversaciones[otro_rut]["no_leidos"] += 1
+
+    rut_activo = request.GET.get("chat", "").strip()
+    if rut_activo not in conversaciones:
+        rut_activo = next(iter(conversaciones), "")
+
+    historial_admin = []
+    conversacion_activa = None
+
+    if rut_activo:
+        Mensaje.objects.filter(
+            rut1=rut_activo,
+            rut2=rut_admin,
+            leido=0,
+        ).update(leido=1)
+
+        conversaciones[rut_activo]["no_leidos"] = 0
+        conversaciones[rut_activo]["activo"] = True
+        conversacion_activa = conversaciones[rut_activo]
+
+        historial = Mensaje.objects.filter(
+            Q(rut1=rut_admin, rut2=rut_activo) |
+            Q(rut1=rut_activo, rut2=rut_admin)
+        ).order_by("-fechaenvio", "-idmensaje")[:50]
+
+        historial_admin = [
+            {
+                "contenido": m.contenido,
+                "fecha": m.fechaenvio.strftime("%d/%m/%Y"),
+                "es_admin": m.rut1 == rut_admin,
+            }
+            for m in reversed(list(historial))
+        ]
+
+    return render(request, "admin/mensajes.html", {
+        "conversaciones_admin": list(conversaciones.values()),
+        "conversacion_activa": conversacion_activa,
+        "historial_admin": historial_admin,
+        "total_pendientes": sum(
+            c["no_leidos"] for c in conversaciones.values()
+        ),
+        "mensajeria_admin_habilitada": True,
+    })
     
     
 # =========================================================================
@@ -1366,15 +1936,22 @@ def login_view(request):
         rut_input = request.POST.get('rut', '').strip()
         pass_input = request.POST.get('password', '').strip()
 
+        # Atajos rápidos para desarrollo
         if rut_input == 'admin' and pass_input == 'admin123':
+            request.session["es_admin"] = True
+            request.session.pop("admin_rut", None)
             return redirect('admin_inicio')
         if rut_input == 'user' and pass_input == 'user123':
             return redirect('inicioU')
 
+        # Lógica real validando en AWS
         try:
+            # Nota: Asegúrate de que el campo en tu modelo se llame 'contrasena' o 'contraseña' según el inspectdb
             usuario = Usuario.objects.get(rut=rut_input, contrasena=pass_input)
             es_admin = Administrador.objects.filter(usuario_rut=usuario).exists()
             if es_admin:
+                request.session["es_admin"] = True
+                request.session["admin_rut"] = usuario.rut
                 return redirect('admin_inicio')
             else:
                 return redirect('inicioU')
